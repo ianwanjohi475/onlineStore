@@ -10,7 +10,7 @@ import { useCart } from "@/context/cart";
 import { useToast } from "@/context/toast";
 import type { Product } from "@/lib/types";
 import { discountPercent, formatPrice } from "@/lib/utils";
-import { ProductArt } from "./product-art";
+import { ProductImage } from "./product-image";
 
 export function QuickView({
   product,
@@ -72,11 +72,7 @@ export function QuickView({
               <X size={16} />
             </button>
 
-            <ProductArt
-              category={product.category}
-              accent={product.accent}
-              className="aspect-square rounded-2xl"
-            />
+            <ProductImage product={product} className="aspect-square rounded-2xl" />
 
             <div className="flex flex-col">
               <span className="eyebrow">{product.tagline}</span>

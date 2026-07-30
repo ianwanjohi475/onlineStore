@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/cart";
 import { formatPrice } from "@/lib/utils";
-import { ProductArt } from "@/components/product/product-art";
+import { ProductImage } from "@/components/product/product-image";
 
 const FREE_SHIP = 5000;
 
@@ -74,7 +74,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                 <ul className="flex-1 divide-y divide-border overflow-y-auto">
                   {cart.lines.map((line) => (
                     <li key={line.product.slug} className="flex gap-3 p-4">
-                      <ProductArt category={line.product.category} accent={line.product.accent} className="size-20 shrink-0 rounded-xl" glow={false} />
+                      <ProductImage product={line.product} className="size-20 shrink-0 rounded-xl" glow={false} />
                       <div className="flex flex-1 flex-col">
                         <div className="flex justify-between gap-2">
                           <Link href={`/product/${line.product.slug}`} onClick={onClose} className="line-clamp-1 text-sm font-semibold hover:text-brand-600">

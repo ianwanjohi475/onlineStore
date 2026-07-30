@@ -4,7 +4,7 @@ import { Heart, LogOut, MapPin, Package, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ProductArt } from "@/components/product/product-art";
+import { ProductImage } from "@/components/product/product-image";
 import { useWishlist } from "@/context/wishlist";
 import { productMap, products } from "@/lib/data/products";
 import { cn, formatPrice } from "@/lib/utils";
@@ -91,7 +91,7 @@ export default function AccountPage() {
                   <div className="mt-4 flex items-center gap-2">
                     {o.items.map((slug) => {
                       const p = productMap[slug];
-                      return p ? <ProductArt key={slug} category={p.category} accent={p.accent} className="size-14 rounded-xl" glow={false} /> : null;
+                      return p ? <ProductImage key={slug} product={p} className="size-14 rounded-xl" glow={false} /> : null;
                     })}
                     <div className="ml-auto text-right">
                       <p className="text-xs text-muted">Total</p>
@@ -118,7 +118,7 @@ export default function AccountPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 {(wishlist.hydrated ? saved : products.slice(0, 2)).map((p) => (
                   <Link key={p.slug} href={`/product/${p.slug}`} className="card-surface flex items-center gap-3 p-3">
-                    <ProductArt category={p.category} accent={p.accent} className="size-16 rounded-xl" glow={false} />
+                    <ProductImage product={p} className="size-16 rounded-xl" glow={false} />
                     <div>
                       <p className="text-sm font-semibold">{p.name}</p>
                       <p className="text-sm text-brand-600 dark:text-brand-400">{formatPrice(p.price)}</p>
