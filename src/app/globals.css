@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+/* next-themes toggles the `dark` class on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Static design tokens ─────────────────────────────────── */
+@theme {
+  --color-brand-50: #e9fff4;
+  --color-brand-100: #c6ffe3;
+  --color-brand-200: #8ffac8;
+  --color-brand-300: #54f0a8;
+  --color-brand-400: #22e188;
+  --color-brand-500: #00e676;
+  --color-brand-600: #00c060;
+  --color-brand-700: #00994d;
+  --color-brand-800: #0b7a42;
+  --color-brand-900: #0b3d2e;
+  --color-brand-950: #052e1c;
+
+  --radius-4xl: 2rem;
+  --shadow-glow: 0 0 60px -12px color-mix(in oklab, var(--color-brand-500) 55%, transparent);
+  --shadow-card: 0 18px 50px -24px rgb(0 0 0 / 0.35);
+
+  --animate-shimmer: shimmer 2.2s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 34s linear infinite;
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-spin-slow: spin 14s linear infinite;
+}
+
+/* ── Semantic tokens that flip per theme ──────────────────── */
+:root {
+  --background: #f7f9f8;
+  --surface: #ffffff;
+  --surface-2: #eef2f0;
+  --foreground: #0a140f;
+  --muted: #5b6b63;
+  --border: #e2e8e4;
+  --ring: #00c060;
+}
+
+.dark {
+  --background: #050a08;
+  --surface: #0b120e;
+  --surface-2: #121a15;
+  --foreground: #eaf2ed;
+  --muted: #8ca79a;
+  --border: #1c271f;
+  --ring: #00e676;
+}
+
+/* Map semantic tokens to Tailwind color utilities (resolved at runtime) */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-brand-500);
+    color: #04150c;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--muted) 40%, transparent);
+    border-radius: 999px;
+    border: 3px solid var(--background);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-brand-600); }
+}
+
+@layer components {
+  .container-x {
+    width: min(1280px, 100% - 2.5rem);
+    margin-inline: auto;
+  }
+  .glass {
+    background: color-mix(in oklab, var(--surface) 72%, transparent);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  }
+  .text-gradient {
+    background: linear-gradient(100deg, var(--color-brand-400), var(--color-brand-600) 60%, var(--color-brand-300));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-brand-600);
+  }
+  .dark .eyebrow { color: var(--color-brand-400); }
+  .card-surface {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-4xl);
+  }
+}
+
+/* ── Keyframes ─────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes aurora {
+  0% { transform: translate3d(-6%, -3%, 0) rotate(0deg) scale(1.1); }
+  50% { transform: translate3d(6%, 4%, 0) rotate(8deg) scale(1.25); }
+  100% { transform: translate3d(-3%, 6%, 0) rotate(-6deg) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
