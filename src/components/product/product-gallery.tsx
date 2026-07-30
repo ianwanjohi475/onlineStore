@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ProductArt } from "./product-art";
+import { ProductImage } from "./product-image";
 
 /** Gallery with thumbnail selection and hover-zoom (pan-follows-cursor). */
 export function ProductGallery({ product }: { product: Product }) {
@@ -49,9 +50,8 @@ export function ProductGallery({ product }: { product: Product }) {
         onMouseMove={onMove}
         className="relative aspect-square flex-1 cursor-zoom-in overflow-hidden rounded-[2rem] border border-border"
       >
-        <ProductArt
-          category={product.category}
-          accent={accent}
+        <ProductImage
+          product={product}
           className={cn("size-full transition-transform duration-200", zoom && "scale-[1.7]")}
         />
         <div

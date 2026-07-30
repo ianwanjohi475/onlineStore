@@ -5,7 +5,7 @@ import { ArrowRight, Star, Truck, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ProductArt } from "@/components/product/product-art";
+import { ProductImage } from "@/components/product/product-image";
 import { productMap } from "@/lib/data/products";
 import { formatPrice } from "@/lib/utils";
 
@@ -52,11 +52,10 @@ export function Hero() {
       {/* aurora backdrop */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div
-          className="absolute -left-1/4 top-0 size-[46rem] animate-aurora rounded-full opacity-30 blur-[120px]"
+          className="absolute right-[-10%] top-[8%] size-[34rem] rounded-full opacity-[0.10] blur-[130px]"
           style={{ background: product.accent }}
         />
-        <div className="absolute -right-1/4 bottom-0 size-[40rem] animate-aurora rounded-full bg-brand-600 opacity-20 blur-[120px] [animation-delay:-6s]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,transparent,var(--background)_70%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       </div>
 
       <div className="container-x grid min-h-[calc(100svh-6.25rem)] items-center gap-8 py-10 lg:grid-cols-2 lg:py-0">
@@ -131,7 +130,7 @@ export function Hero() {
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="relative mx-auto aspect-square w-full max-w-lg"
             >
-              <ProductArt category={product.category} accent={product.accent} className="size-full rounded-[2.5rem] border border-border" />
+              <ProductImage product={product} priority className="size-full rounded-[2.5rem] border border-border shadow-card" />
 
               {/* floating chips */}
               <motion.div
