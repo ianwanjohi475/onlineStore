@@ -4,7 +4,7 @@ import { Check, CreditCard, Loader2, Lock, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ProductArt } from "@/components/product/product-art";
+import { ProductImage } from "@/components/product/product-image";
 import { useCart } from "@/context/cart";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -139,7 +139,7 @@ export default function CheckoutPage() {
               <ul className="divide-y divide-border">
                 {cart.lines.map((l) => (
                   <li key={l.product.slug} className="flex items-center gap-3 py-3">
-                    <ProductArt category={l.product.category} accent={l.product.accent} className="size-14 rounded-xl" glow={false} />
+                    <ProductImage product={l.product} className="size-14 rounded-xl" glow={false} />
                     <div className="flex-1">
                       <p className="text-sm font-semibold">{l.product.name}</p>
                       <p className="text-xs text-muted">Qty {l.quantity}</p>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { products } from "@/lib/data/products";
 import { formatPrice } from "@/lib/utils";
-import { ProductArt } from "@/components/product/product-art";
+import { ProductImage } from "@/components/product/product-image";
 
 const trending = ["Earbuds", "Power bank", "Smartwatch", "GaN charger", "Speaker"];
 
@@ -77,7 +77,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                   onClick={onClose}
                   className="flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-surface-2"
                 >
-                  <ProductArt category={p.category} accent={p.accent} className="size-12 rounded-xl" glow={false} />
+                  <ProductImage product={p} className="size-12 rounded-xl" glow={false} />
                   <div className="flex-1">
                     <p className="text-sm font-semibold">{p.name}</p>
                     <p className="text-xs text-muted">{p.tagline}</p>
