@@ -9,7 +9,7 @@ import { WishlistProvider } from "./wishlist";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
       <ToastProvider>
         <WishlistProvider>
           <CartProvider catalog={productMap}>

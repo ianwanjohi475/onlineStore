@@ -11,7 +11,7 @@ import { useToast } from "@/context/toast";
 import { useWishlist } from "@/context/wishlist";
 import type { Product } from "@/lib/types";
 import { cn, discountPercent, formatPrice } from "@/lib/utils";
-import { ProductArt } from "./product-art";
+import { ProductImage } from "./product-image";
 import { QuickView } from "./quick-view";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
@@ -35,9 +35,8 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         {/* media */}
         <div className="relative m-3 mb-0 overflow-hidden rounded-2xl">
           <Link href={`/product/${product.slug}`} aria-label={product.name}>
-            <ProductArt
-              category={product.category}
-              accent={product.accent}
+            <ProductImage
+              product={product}
               className="aspect-square transition-transform duration-500 group-hover:scale-[1.06]"
             />
           </Link>
