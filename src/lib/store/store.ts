@@ -18,9 +18,14 @@ export function readStore(): StoreData {
   ensure();
   try {
     const raw = JSON.parse(fs.readFileSync(FILE, "utf8")) as StoreData;
+    // Drop auto-generated keyword stock photos — they looked random/unprofessional.
+    // Real image URLs set in the admin are kept; everything else uses the clean render.
+    const products = (raw.products ?? seed.products).map((p) =>
+      p.image && p.image.includes("loremflickr") ? { ...p, image: null } : p,
+    );
     // guard against partial files
     return {
-      products: raw.products ?? seed.products,
+      products,
       categories: raw.categories ?? seed.categories,
       brands: raw.brands ?? seed.brands,
       testimonials: raw.testimonials ?? seed.testimonials,

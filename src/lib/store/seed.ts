@@ -1,12 +1,12 @@
 import { categories } from "@/lib/data/categories";
 import { products } from "@/lib/data/products";
-import { productImages } from "@/lib/data/product-images";
 import { testimonials } from "@/lib/data/content";
 import type { Brand, Order, OrderStatus, StoreData } from "@/lib/types";
 
 const seededProducts = products.map((p, i) => ({
   ...p,
-  image: productImages[p.slug] ?? null,
+  // Default to the clean, consistent studio render; add real photo URLs in the admin.
+  image: null,
   brand: ["oraimo", "oraimo-pro", "oraimo-fit"][i % 3],
   stock: p.inStock ? 8 + ((i * 7) % 90) : 0,
 }));

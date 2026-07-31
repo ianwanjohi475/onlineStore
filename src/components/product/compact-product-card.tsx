@@ -33,7 +33,7 @@ export function CompactProductCard({ product, showSold = false }: { product: Pro
         <button
           onClick={() => { wishlist.toggle(product.slug); toast(wished ? "Removed from wishlist" : "Saved to wishlist"); }}
           aria-label="Wishlist"
-          className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-surface/90 text-muted opacity-0 shadow-sm transition-all hover:text-rose-500 group-hover:opacity-100"
+          className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-surface/90 text-muted shadow-sm transition-colors hover:text-rose-500"
         >
           <Heart size={15} className={cn(wished && "fill-rose-500 text-rose-500")} />
         </button>
@@ -41,7 +41,7 @@ export function CompactProductCard({ product, showSold = false }: { product: Pro
           onClick={() => { cart.add(product); toast(`${product.name} added to cart`); }}
           disabled={!product.inStock}
           aria-label="Add to cart"
-          className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-brand-500 text-brand-950 opacity-0 shadow-lg transition-all hover:bg-brand-400 group-hover:opacity-100 disabled:opacity-40"
+          className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-brand-500 text-brand-950 shadow-lg transition-all hover:scale-105 hover:bg-brand-400 disabled:opacity-40"
         >
           <Plus size={17} />
         </button>
