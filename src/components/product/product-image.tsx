@@ -12,7 +12,7 @@ const studioBg =
 
 /**
  * Prefers a real photograph (local /products/* via next/image, or a remote URL via <img>),
- * and gracefully falls back to the generated studio render if the image is missing or fails.
+ * fades it in on load, and gracefully falls back to the studio render on any error.
  */
 export function ProductImage({
   product,
@@ -29,35 +29,37 @@ export function ProductImage({
 }) {
   const src = productImages[product.slug];
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   if (!src || failed) {
     return <ProductArt category={product.category} accent={product.accent} className={className} glow={glow} />;
   }
 
-  const isLocal = src.startsWith("/");
+  const fade = cn("transition-opacity duration-500", loaded ? "opacity-100" : "opacity-0");
 
   return (
     <div className={cn(studioBg, className)}>
-      {isLocal ? (
+      {!loaded && <div className="absolute inset-0 animate-pulse bg-surface-2" aria-hidden />}
+      {src.startsWith("/") ? (
         <Image
           src={src}
           alt={product.name}
           fill
           sizes={sizes}
           priority={priority}
+          onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
-          className="object-cover"
+          className={cn("object-cover", fade)}
         />
       ) : (
-        // Remote keyword photos: plain img avoids remote-host/redirect config and
-        // lets us fall back cleanly on any load error.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt={product.name}
           loading={priority ? "eager" : "lazy"}
+          onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
-          className="absolute inset-0 size-full object-cover"
+          className={cn("absolute inset-0 size-full object-cover", fade)}
         />
       )}
     </div>
