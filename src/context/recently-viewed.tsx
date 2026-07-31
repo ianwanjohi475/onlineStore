@@ -15,7 +15,12 @@ export function RecentlyViewedProvider({ children }: { children: React.ReactNode
   const [slugs, setSlugs, hydrated] = useLocalStorage<string[]>("oraimo.recent", []);
 
   const push = useCallback(
-    (slug: string) => setSlugs((prev) => [slug, ...prev.filter((s) => s !== slug)].slice(0, 8)),
+    (slug: string) =>
+      setSlugs((prev) => {
+        // No-op if already at the front — prevents a re-render/effect loop.
+        if (prev[0] === slug) return prev;
+        return [slug, ...prev.filter((s) => s !== slug)].slice(0, 8);
+      }),
     [setSlugs],
   );
 

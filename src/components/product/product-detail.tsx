@@ -20,14 +20,14 @@ export function ProductDetail({ product }: { product: Product }) {
   const cart = useCart();
   const wishlist = useWishlist();
   const toast = useToast();
-  const recent = useRecentlyViewed();
+  const { push: pushRecent } = useRecentlyViewed();
   const [qty, setQty] = useState(1);
   const [color, setColor] = useState(product.colors[0]);
   const [tab, setTab] = useState<(typeof tabs)[number]>("Description");
 
   useEffect(() => {
-    recent.push(product.slug);
-  }, [product.slug, recent]);
+    pushRecent(product.slug);
+  }, [product.slug, pushRecent]);
 
   const off = product.compareAt ? discountPercent(product.compareAt, product.price) : 0;
   const wished = wishlist.has(product.slug);
