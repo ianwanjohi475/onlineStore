@@ -46,6 +46,8 @@ export interface Product {
   features: string[];
   specs: Record<string, string>;
   inStock: boolean;
+  stock?: number;
+  brand?: string;
   /** used to seed flash-sale and best-seller ordering */
   soldPercent?: number;
   description: string;
@@ -54,12 +56,49 @@ export interface Product {
 }
 
 export interface HeroSlide {
+  id: string;
   slug: string;
   eyebrow: string;
   title: string;
+  subtitle?: string;
   copy: string;
+  buttonText: string;
+  buttonLink: string;
   from: string;
   to: string;
+  overlay: number;
+  active: boolean;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface Brand {
+  slug: string;
+  name: string;
+  color: string;
+}
+
+export interface OrderItem {
+  slug: string;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+export type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+
+export interface Order {
+  id: string;
+  number: string;
+  date: string;
+  status: OrderStatus;
+  items: OrderItem[];
+  subtotal: number;
+  shipping: number;
+  discount: number;
+  total: number;
+  payment: string;
+  customer: { name: string; email: string; phone: string; address: string; city: string };
 }
 
 export interface Announcement {
@@ -84,11 +123,20 @@ export interface SiteSettings {
   shippingFee: number;
   whatsapp: string;
   promos: PromoCode[];
+  seoTitle: string;
+  seoDescription: string;
+  supportEmail: string;
+  address: string;
+  footerBlurb: string;
+  socials: { label: string; href: string }[];
 }
 
 export interface StoreData {
   products: Product[];
   categories: Category[];
+  brands: Brand[];
+  testimonials: Testimonial[];
+  orders: Order[];
   settings: SiteSettings;
 }
 

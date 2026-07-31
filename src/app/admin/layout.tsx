@@ -1,25 +1,43 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Package,
-  Settings as SettingsIcon, ShapesIcon,
+  BadgePercent, ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Menu,
+  MessageSquareQuote, Package, Settings as SettingsIcon, ShapesIcon, ShoppingCart,
+  Sparkles, Tag, Users, X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { api } from "@/components/admin/kit";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 
-const nav = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/banners", label: "Banners & hero", icon: ImageIcon },
-  { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/categories", label: "Categories", icon: ShapesIcon },
-  { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
+const groups = [
+  { label: "Overview", items: [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+    { href: "/admin/customers", label: "Customers", icon: Users },
+  ] },
+  { label: "Catalog", items: [
+    { href: "/admin/products", label: "Products", icon: Package },
+    { href: "/admin/categories", label: "Categories", icon: ShapesIcon },
+    { href: "/admin/brands", label: "Brands", icon: Tag },
+  ] },
+  { label: "Content", items: [
+    { href: "/admin/banners", label: "Banners", icon: ImageIcon },
+    { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
+  ] },
+  { label: "Store", items: [
+    { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
+    { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
+  ] },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   if (pathname === "/admin/login") return <>{children}</>;
 
@@ -28,57 +46,66 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push("/admin/login");
   };
 
+  const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
+
+  const SidebarInner = (
+    <>
+      <Link href="/admin" className="flex items-center gap-2.5 px-2 py-1" onClick={() => setMobileOpen(false)}>
+        <span className="grid size-9 place-items-center rounded-xl bg-brand-500 text-brand-950"><Sparkles size={18} /></span>
+        <div className="leading-tight">
+          <p className="font-display text-sm font-bold">Oraimo</p>
+          <p className="text-[0.7rem] text-muted">Commerce admin</p>
+        </div>
+      </Link>
+      <nav className="mt-6 flex flex-1 flex-col gap-5 overflow-y-auto">
+        {groups.map((g) => (
+          <div key={g.label}>
+            <p className="mb-1.5 px-3 text-[0.65rem] font-bold uppercase tracking-wider text-muted">{g.label}</p>
+            <div className="flex flex-col gap-0.5">
+              {g.items.map((n) => (
+                <Link key={n.href} href={n.href} onClick={() => setMobileOpen(false)}
+                  className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    isActive(n.href) ? "bg-brand-500/12 text-brand-700 dark:text-brand-300" : "text-muted hover:bg-surface-2 hover:text-foreground")}>
+                  <n.icon size={17} /> {n.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+      <div className="mt-4 flex flex-col gap-0.5 border-t border-border pt-3">
+        <Link href="/" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-surface-2"><ExternalLink size={17} /> View store</Link>
+        <button onClick={logout} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-surface-2"><LogOut size={17} /> Sign out</button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-surface p-4 lg:flex">
-        <Link href="/admin" className="mb-6 flex items-center gap-2 px-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-brand-500 text-brand-950">
-            <LayoutDashboard size={17} />
-          </span>
-          <span className="font-display font-bold">Oraimo Admin</span>
-        </Link>
-        <nav className="flex flex-1 flex-col gap-1">
-          {nav.map((n) => {
-            const active = n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href);
-            return (
-              <Link
-                key={n.href}
-                href={n.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  active ? "bg-brand-500/12 text-brand-700 dark:text-brand-300" : "text-muted hover:bg-surface-2",
-                )}
-              >
-                <n.icon size={18} /> {n.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="mt-4 flex flex-col gap-1 border-t border-border pt-4">
-          <Link href="/" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted hover:bg-surface-2">
-            <ExternalLink size={18} /> View store
-          </Link>
-          <button onClick={logout} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted hover:bg-surface-2">
-            <LogOut size={18} /> Sign out
-          </button>
-        </div>
-      </aside>
+      {/* desktop sidebar */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface p-4 lg:flex">{SidebarInner}</aside>
 
-      <div className="flex-1">
-        {/* mobile top bar */}
-        <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
-          <span className="font-display font-bold">Oraimo Admin</span>
-          <button onClick={logout} className="text-sm text-muted">Sign out</button>
-        </div>
-        {/* mobile nav */}
-        <nav className="flex gap-1 overflow-x-auto border-b border-border bg-surface px-3 py-2 lg:hidden">
-          {nav.map((n) => (
-            <Link key={n.href} href={n.href} className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted hover:bg-surface-2">
-              {n.label}
-            </Link>
-          ))}
-        </nav>
-        <main className="mx-auto max-w-5xl p-5 sm:p-8">{children}</main>
+      {/* mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-[95] lg:hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+            <motion.aside initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }} className="absolute inset-y-0 left-0 flex w-72 flex-col bg-surface p-4">{SidebarInner}</motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur-md">
+          <button onClick={() => setMobileOpen(true)} className="grid size-9 place-items-center rounded-lg hover:bg-surface-2 lg:hidden"><Menu size={20} /></button>
+          <div className="hidden lg:block" />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/" className="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:border-brand-500 sm:inline-flex"><ExternalLink size={15} /> View store</Link>
+            <span className="grid size-9 place-items-center rounded-full bg-brand-500 text-sm font-bold text-brand-950">A</span>
+          </div>
+        </header>
+        <main className="mx-auto w-full max-w-6xl flex-1 p-5 sm:p-8">{children}</main>
       </div>
     </div>
   );

@@ -29,6 +29,8 @@ export default function CheckoutPage() {
   const [pay, setPay] = useState<"mpesa" | "card">("mpesa");
   const [placing, setPlacing] = useState(false);
   const [done, setDone] = useState(false);
+  const [orderNo, setOrderNo] = useState("");
+  const [customer, setCustomer] = useState({ name: "", email: "", phone: "", address: "", city: "" });
 
   if (done) {
     return (
@@ -38,7 +40,7 @@ export default function CheckoutPage() {
         </div>
         <h1 className="font-display text-3xl font-bold">Order confirmed 🎉</h1>
         <p className="max-w-md text-muted">
-          Thank you! Your order <b className="text-foreground">#ORA-{Math.floor(100000 + Math.random() * 900000)}</b> is
+          Thank you! Your order <b className="text-foreground">{orderNo || "confirmed"}</b> is
           confirmed. We&apos;ve sent tracking details to your phone and email.
         </p>
         <div className="flex gap-3">
@@ -79,13 +81,27 @@ export default function CheckoutPage() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="card-surface p-6">
           {step === 0 && (
-            <form className="grid gap-4 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); setStep(1); }}>
-              <Field label="Full name" required placeholder="Jane Wanjiru" className="sm:col-span-2" />
-              <Field label="Email" type="email" required placeholder="jane@email.com" />
-              <Field label="Phone" type="tel" required placeholder="+254 7…" />
-              <Field label="Delivery address" required placeholder="Street, building, apt" className="sm:col-span-2" />
-              <Field label="City / Town" required placeholder="Nairobi" />
-              <Field label="Postal code" placeholder="00100" />
+            <form
+              className="grid gap-4 sm:grid-cols-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const f = new FormData(e.currentTarget);
+                setCustomer({
+                  name: String(f.get("name") || ""),
+                  email: String(f.get("email") || ""),
+                  phone: String(f.get("phone") || ""),
+                  address: String(f.get("address") || ""),
+                  city: String(f.get("city") || ""),
+                });
+                setStep(1);
+              }}
+            >
+              <Field name="name" label="Full name" required placeholder="Jane Wanjiru" className="sm:col-span-2" />
+              <Field name="email" label="Email" type="email" required placeholder="jane@email.com" />
+              <Field name="phone" label="Phone" type="tel" required placeholder="+254 7…" />
+              <Field name="address" label="Delivery address" required placeholder="Street, building, apt" className="sm:col-span-2" />
+              <Field name="city" label="City / Town" required placeholder="Nairobi" />
+              <Field name="postal" label="Postal code" placeholder="00100" />
               <div className="sm:col-span-2">
                 <Button type="submit" size="lg" className="w-full">Continue to payment</Button>
               </div>
@@ -154,7 +170,19 @@ export default function CheckoutPage() {
                   disabled={placing}
                   onClick={() => {
                     setPlacing(true);
-                    setTimeout(() => { cart.clear(); setDone(true); }, 1600);
+                    const payload = {
+                      items: cart.lines.map((l) => ({ slug: l.product.slug, name: l.product.name, quantity: l.quantity, price: l.product.price })),
+                      subtotal: cart.subtotal,
+                      shipping: cart.shipping,
+                      discount: cart.discount,
+                      total: cart.total,
+                      payment: pay === "mpesa" ? "M-Pesa" : "Card",
+                      customer,
+                    };
+                    fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+                      .then((r) => r.json())
+                      .then((d) => { setOrderNo(d.number || ""); cart.clear(); setDone(true); })
+                      .catch(() => { cart.clear(); setDone(true); });
                   }}
                 >
                   {placing ? <><Loader2 size={18} className="animate-spin" /> Placing…</> : <>Place order · {formatPrice(cart.total)}</>}
