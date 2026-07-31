@@ -1,12 +1,13 @@
 "use client";
 
 import { useRecentlyViewed } from "@/context/recently-viewed";
-import { productMap } from "@/lib/data/products";
+import { useCatalog } from "@/context/catalog";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { ProductCard } from "./product-card";
 
 export function RecentlyViewed({ exclude }: { exclude?: string }) {
   const recent = useRecentlyViewed();
+  const { productMap } = useCatalog();
   if (!recent.hydrated) return null;
 
   const items = recent.slugs

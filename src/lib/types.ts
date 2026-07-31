@@ -49,6 +49,47 @@ export interface Product {
   /** used to seed flash-sale and best-seller ordering */
   soldPercent?: number;
   description: string;
+  /** product photo URL or /path; falls back to a generated render when empty */
+  image?: string | null;
+}
+
+export interface HeroSlide {
+  slug: string;
+  eyebrow: string;
+  title: string;
+  copy: string;
+  from: string;
+  to: string;
+}
+
+export interface Announcement {
+  text: string;
+  href: string;
+  cta: string;
+}
+
+export interface PromoCode {
+  code: string;
+  kind: "percent" | "ship";
+  value?: number;
+  label: string;
+}
+
+export interface SiteSettings {
+  brandName: string;
+  heroTagline: string;
+  announcements: Announcement[];
+  heroSlides: HeroSlide[];
+  freeShipThreshold: number;
+  shippingFee: number;
+  whatsapp: string;
+  promos: PromoCode[];
+}
+
+export interface StoreData {
+  products: Product[];
+  categories: Category[];
+  settings: SiteSettings;
 }
 
 export interface CartLine {

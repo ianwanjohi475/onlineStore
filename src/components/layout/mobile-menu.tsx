@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, X } from "lucide-react";
 import Link from "next/link";
-import { categories } from "@/lib/data/categories";
+import { useCatalog } from "@/context/catalog";
 
 const primary = [
   { href: "/shop", label: "Shop all" },
@@ -16,6 +16,7 @@ const primary = [
 ];
 
 export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { categories } = useCatalog();
   return (
     <AnimatePresence>
       {open && (

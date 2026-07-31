@@ -5,13 +5,8 @@ import { ChevronRight } from "lucide-react";
 import { ProductDetail } from "@/components/product/product-detail";
 import { RelatedProducts } from "@/components/product/related-products";
 import { RecentlyViewed } from "@/components/product/recently-viewed";
-import { categoryMap } from "@/lib/data/categories";
-import { getProduct, getRelated, products } from "@/lib/data/products";
+import { getCategory, getProduct, getRelated } from "@/lib/store/store";
 import { formatPrice } from "@/lib/utils";
-
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
-}
 
 export async function generateMetadata({
   params,
@@ -38,7 +33,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!product) notFound();
 
   const related = getRelated(product);
-  const category = categoryMap[product.category];
+  const category = getCategory(product.category);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,7 +63,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <ChevronRight size={12} />
           <Link href="/shop" className="hover:text-foreground">Shop</Link>
           <ChevronRight size={12} />
-          <Link href={`/categories/${category.slug}`} className="hover:text-foreground">{category.name}</Link>
+          <Link href={`/categories/${category?.slug ?? product.category}`} className="hover:text-foreground">{category?.name ?? product.category}</Link>
           <ChevronRight size={12} />
           <span className="text-foreground">{product.name}</span>
         </nav>

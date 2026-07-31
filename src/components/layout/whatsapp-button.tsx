@@ -3,8 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useCatalog } from "@/context/catalog";
 
 export function WhatsAppButton() {
+  const { settings } = useCatalog();
   const [open, setOpen] = useState(false);
   const [show, setShow] = useState(false);
 
@@ -38,7 +40,7 @@ export function WhatsAppButton() {
               Hi 👋 Need help choosing? Chat with us on WhatsApp — we usually reply in minutes.
             </p>
             <a
-              href="https://wa.me/254700000000"
+              href={`https://wa.me/${settings.whatsapp}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 flex h-10 items-center justify-center gap-2 rounded-full bg-[#25D366] text-sm font-semibold text-white transition-opacity hover:opacity-90"

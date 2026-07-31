@@ -3,7 +3,7 @@ import { Flame } from "lucide-react";
 import { PageHero } from "@/components/ui/page-hero";
 import { Countdown } from "@/components/ui/countdown";
 import { ProductGrid } from "@/components/product/product-grid";
-import { flashSaleProducts } from "@/lib/data/products";
+import { getFlashSale } from "@/lib/store/store";
 
 export const metadata: Metadata = {
   title: "Flash Sales",
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 
 export default function FlashSalesPage() {
   const target = Date.now() + 8 * 3600 * 1000;
+  const flashSaleProducts = getFlashSale();
 
   return (
     <>

@@ -2,11 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/context/providers";
-import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { WhatsAppButton } from "@/components/layout/whatsapp-button";
-import { ScrollProgress } from "@/components/layout/scroll-progress";
+import { StoreChrome } from "@/components/layout/store-chrome";
 import { Pwa } from "@/components/pwa/pwa";
+import { getCategories, getProducts, getSettings } from "@/lib/store/store";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
 const spaceGrotesk = Space_Grotesk({
@@ -60,6 +59,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Render on demand so admin edits to the store reflect immediately.
+export const dynamic = "force-dynamic";
+
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
@@ -79,6 +81,9 @@ const orgJsonLd = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const products = getProducts();
+  const categories = getCategories();
+  const settings = getSettings();
   return (
     <html
       lang="en"
@@ -90,12 +95,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
-        <Providers>
-          <ScrollProgress />
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
-          <WhatsAppButton />
+        <Providers products={products} categories={categories} settings={settings}>
+          <StoreChrome footer={<SiteFooter />}>{children}</StoreChrome>
           <Pwa />
         </Providers>
       </body>

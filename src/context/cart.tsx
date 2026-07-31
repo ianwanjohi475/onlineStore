@@ -2,23 +2,13 @@
 
 import { createContext, useContext, useMemo } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import type { CartLine, Product } from "@/lib/types";
+import type { CartLine, Product, PromoCode } from "@/lib/types";
 
 interface StoredLine {
   slug: string;
   quantity: number;
   color?: string;
 }
-
-const SHIPPING = 300;
-export const FREE_SHIP_THRESHOLD = 5000;
-
-/** Demo promo codes. */
-const PROMOS: Record<string, { kind: "percent" | "ship"; value?: number; label: string }> = {
-  ORAIMO10: { kind: "percent", value: 10, label: "10% off your order" },
-  WELCOME5: { kind: "percent", value: 5, label: "5% welcome discount" },
-  FREESHIP: { kind: "ship", label: "Free shipping" },
-};
 
 interface CartValue {
   lines: CartLine[];
@@ -30,6 +20,7 @@ interface CartValue {
   total: number;
   promoCode: string | null;
   promoLabel: string | null;
+  freeShipThreshold: number;
   freeShipProgress: number;
   add: (product: Product, quantity?: number, color?: string) => void;
   remove: (slug: string) => void;
@@ -46,12 +37,23 @@ const CartContext = createContext<CartValue | null>(null);
 export function CartProvider({
   children,
   catalog,
+  promos,
+  freeShip,
+  shippingFee,
 }: {
   children: React.ReactNode;
   catalog: Record<string, Product>;
+  promos: PromoCode[];
+  freeShip: number;
+  shippingFee: number;
 }) {
   const [stored, setStored, hydrated] = useLocalStorage<StoredLine[]>("oraimo.cart", []);
   const [promoCode, setPromoCode] = useLocalStorage<string | null>("oraimo.promo", null);
+
+  const promoMap = useMemo(
+    () => Object.fromEntries(promos.map((p) => [p.code.toUpperCase(), p])),
+    [promos],
+  );
 
   const lines = useMemo(
     () =>
@@ -71,23 +73,18 @@ export function CartProvider({
       (n, l) => n + (l.product.compareAt ? (l.product.compareAt - l.product.price) * l.quantity : 0),
       0,
     );
-    const promo = promoCode ? PROMOS[promoCode] : undefined;
+    const promo = promoCode ? promoMap[promoCode] : undefined;
     const discount = promo?.kind === "percent" ? Math.round((subtotal * (promo.value ?? 0)) / 100) : 0;
-    const freeShip = subtotal >= FREE_SHIP_THRESHOLD || promo?.kind === "ship";
-    const shipping = subtotal === 0 || freeShip ? 0 : SHIPPING;
+    const freeShipUnlocked = subtotal >= freeShip || promo?.kind === "ship";
+    const shipping = subtotal === 0 || freeShipUnlocked ? 0 : shippingFee;
     const total = Math.max(0, subtotal - discount) + shipping;
 
     return {
-      lines,
-      count,
-      subtotal,
-      savings,
-      discount,
-      shipping,
-      total,
+      lines, count, subtotal, savings, discount, shipping, total,
       promoCode: promo ? promoCode : null,
       promoLabel: promo?.label ?? null,
-      freeShipProgress: Math.min(100, (subtotal / FREE_SHIP_THRESHOLD) * 100),
+      freeShipThreshold: freeShip,
+      freeShipProgress: Math.min(100, (subtotal / freeShip) * 100),
       hydrated,
       has: (slug) => stored.some((s) => s.slug === slug),
       add: (product, quantity = 1, color) =>
@@ -102,22 +99,17 @@ export function CartProvider({
       remove: (slug) => setStored((prev) => prev.filter((s) => s.slug !== slug)),
       setQuantity: (slug, quantity) =>
         setStored((prev) =>
-          quantity <= 0
-            ? prev.filter((s) => s.slug !== slug)
-            : prev.map((s) => (s.slug === slug ? { ...s, quantity } : s)),
+          quantity <= 0 ? prev.filter((s) => s.slug !== slug) : prev.map((s) => (s.slug === slug ? { ...s, quantity } : s)),
         ),
       clear: () => setStored([]),
       applyPromo: (code) => {
         const key = code.trim().toUpperCase();
-        if (PROMOS[key]) {
-          setPromoCode(key);
-          return true;
-        }
+        if (promoMap[key]) { setPromoCode(key); return true; }
         return false;
       },
       clearPromo: () => setPromoCode(null),
     };
-  }, [lines, stored, setStored, promoCode, setPromoCode, hydrated]);
+  }, [lines, stored, setStored, promoCode, setPromoCode, promoMap, freeShip, shippingFee, hydrated]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

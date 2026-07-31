@@ -4,13 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useCart, FREE_SHIP_THRESHOLD } from "@/context/cart";
+import { useCart } from "@/context/cart";
 import { formatPrice } from "@/lib/utils";
 import { ProductImage } from "@/components/product/product-image";
 
 export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const cart = useCart();
-  const remaining = Math.max(0, FREE_SHIP_THRESHOLD - cart.subtotal);
+  const remaining = Math.max(0, cart.freeShipThreshold - cart.subtotal);
   const progress = cart.freeShipProgress;
 
   return (

@@ -4,24 +4,22 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Truck, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-const messages = [
-  { text: "Flash Sale — up to 40% off audio", href: "/flash-sales", cta: "Shop deals" },
-  { text: "Free next-day delivery in Nairobi over KES 5,000", href: "/shop", cta: "Start shopping" },
-  { text: "12-month warranty on every genuine product", href: "/about#warranty", cta: "Learn more" },
-];
+import { useCatalog } from "@/context/catalog";
 
 export function AnnouncementBar() {
+  const { settings } = useCatalog();
+  const messages = settings.announcements;
   const [i, setI] = useState(0);
   const [closed, setClosed] = useState(false);
 
   useEffect(() => {
+    if (messages.length === 0) return;
     const id = setInterval(() => setI((n) => (n + 1) % messages.length), 4500);
     return () => clearInterval(id);
-  }, []);
+  }, [messages.length]);
 
-  if (closed) return null;
-  const m = messages[i];
+  if (closed || messages.length === 0) return null;
+  const m = messages[Math.min(i, messages.length - 1)];
 
   return (
     <div className="relative bg-gradient-to-r from-brand-950 via-brand-900 to-brand-950 text-brand-50">

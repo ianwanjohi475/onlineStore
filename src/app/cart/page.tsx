@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { OrderSummary } from "@/components/cart/order-summary";
 import { ProductImage } from "@/components/product/product-image";
 import { RecentlyViewed } from "@/components/product/recently-viewed";
-import { useCart, FREE_SHIP_THRESHOLD } from "@/context/cart";
+import { useCart } from "@/context/cart";
 import { useToast } from "@/context/toast";
 import { useWishlist } from "@/context/wishlist";
 import { formatPrice } from "@/lib/utils";
@@ -15,7 +15,7 @@ export default function CartPage() {
   const cart = useCart();
   const wishlist = useWishlist();
   const toast = useToast();
-  const remaining = Math.max(0, FREE_SHIP_THRESHOLD - cart.subtotal);
+  const remaining = Math.max(0, cart.freeShipThreshold - cart.subtotal);
 
   if (cart.hydrated && cart.lines.length === 0) {
     return (

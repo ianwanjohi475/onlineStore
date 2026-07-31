@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductCardSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { categories } from "@/lib/data/categories";
+import { useCatalog } from "@/context/catalog";
 import type { CategorySlug, Product } from "@/lib/types";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -31,6 +31,7 @@ export function ShopBrowser({
   initialCategory?: CategorySlug;
   initialSort?: Sort;
 }) {
+  const { categories } = useCatalog();
   const [active, setActive] = useState<CategorySlug | "all">(initialCategory ?? "all");
   const [sort, setSort] = useState<Sort>(initialSort);
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX);

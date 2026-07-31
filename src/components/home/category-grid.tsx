@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
-import { categories } from "@/lib/data/categories";
+import { getCategories } from "@/lib/store/store";
 
 const icons: Record<string, LucideIcon> = {
   Headphones,
@@ -26,6 +26,7 @@ const icons: Record<string, LucideIcon> = {
 };
 
 export function CategoryGrid() {
+  const categories = getCategories();
   return (
     <section className="container-x py-20">
       <div className="flex flex-wrap items-end justify-between gap-4">
