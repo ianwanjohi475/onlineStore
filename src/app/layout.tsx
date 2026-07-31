@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/context/providers";
@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import { ScrollProgress } from "@/components/layout/scroll-progress";
+import { Pwa } from "@/components/pwa/pwa";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
 const spaceGrotesk = Space_Grotesk({
@@ -47,7 +48,25 @@ export const metadata: Metadata = {
     title: "Oraimo — Smart Accessories, Powered for Life",
     description: "Genuine Oraimo audio, wearables and power. Fast delivery across Kenya.",
   },
-  icons: { icon: "/favicon.ico" },
+  manifest: "/manifest.webmanifest",
+  applicationName: "Oraimo",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Oraimo" },
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#050a08" },
+  ],
+  width: "device-width",
+  initialScale: 1,
 };
 
 const orgJsonLd = {
@@ -77,6 +96,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <main className="flex-1">{children}</main>
           <SiteFooter />
           <WhatsAppButton />
+          <Pwa />
         </Providers>
       </body>
     </html>

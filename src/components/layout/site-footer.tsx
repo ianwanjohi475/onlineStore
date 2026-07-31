@@ -20,7 +20,8 @@ const columns = [
     links: [
       { label: "Contact us", href: "/contact" },
       { label: "Track order", href: "/track-order" },
-      { label: "Warranty", href: "/about#warranty" },
+      { label: "Shipping", href: "/shipping" },
+      { label: "Returns & warranty", href: "/returns" },
       { label: "FAQ", href: "/contact#faq" },
     ],
   },
@@ -28,9 +29,10 @@ const columns = [
     title: "Company",
     links: [
       { label: "About", href: "/about" },
-      { label: "My account", href: "/account" },
-      { label: "Wishlist", href: "/wishlist" },
-      { label: "Cart", href: "/cart" },
+      { label: "Services", href: "/services" },
+      { label: "Journal", href: "/blog" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
     ],
   },
 ];

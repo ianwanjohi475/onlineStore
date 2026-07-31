@@ -1,4 +1,5 @@
 import { ArrowRight, Clock } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -16,15 +17,13 @@ export function BlogPreviews() {
         </Reveal>
       </div>
       <div className="mt-10 grid gap-6 md:grid-cols-3">
-        {blogPosts.map((post, i) => (
+        {blogPosts.slice(0, 3).map((post, i) => (
           <Reveal key={post.slug} index={i}>
-            <article className="card-surface group flex h-full flex-col overflow-hidden">
-              <div
-                className="relative flex h-44 items-end p-5"
-                style={{ background: `linear-gradient(135deg, ${post.accent[0]}, ${post.accent[1]})` }}
-              >
-                <div aria-hidden className="absolute -right-8 -top-8 size-32 rounded-full bg-white/20 blur-2xl" />
-                <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+            <Link href={`/blog/${post.slug}`} className="card-surface group flex h-full flex-col overflow-hidden">
+              <div className="relative h-44 overflow-hidden">
+                <Image src={post.image} alt={post.title} fill sizes="(max-width:768px) 100vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <span className="absolute bottom-4 left-4 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
                   {post.category}
                 </span>
               </div>
@@ -40,7 +39,7 @@ export function BlogPreviews() {
                   Read more <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
                 </span>
               </div>
-            </article>
+            </Link>
           </Reveal>
         ))}
       </div>
