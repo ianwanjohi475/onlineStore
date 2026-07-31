@@ -1,0 +1,73 @@
+"use client";
+
+import { Heart, Plus } from "lucide-react";
+import Link from "next/link";
+import { Rating } from "@/components/ui/rating";
+import { useCart } from "@/context/cart";
+import { useToast } from "@/context/toast";
+import { useWishlist } from "@/context/wishlist";
+import type { Product } from "@/lib/types";
+import { cn, discountPercent, formatPrice } from "@/lib/utils";
+import { ProductImage } from "./product-image";
+
+/** Dense marketplace-style product card (Jumia/Kilimall feel). */
+export function CompactProductCard({ product, showSold = false }: { product: Product; showSold?: boolean }) {
+  const cart = useCart();
+  const wishlist = useWishlist();
+  const toast = useToast();
+  const off = product.compareAt ? discountPercent(product.compareAt, product.price) : 0;
+  const wished = wishlist.has(product.slug);
+  const sold = product.soldPercent ?? 0;
+
+  return (
+    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-brand-500/50 hover:shadow-card">
+      <div className="relative">
+        <Link href={`/product/${product.slug}`} aria-label={product.name}>
+          <ProductImage product={product} glow={false} sizes="(max-width:768px) 45vw, 200px" className="aspect-square" />
+        </Link>
+        {off > 0 && (
+          <span className="absolute left-0 top-2 rounded-r-md bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
+            -{off}%
+          </span>
+        )}
+        <button
+          onClick={() => { wishlist.toggle(product.slug); toast(wished ? "Removed from wishlist" : "Saved to wishlist"); }}
+          aria-label="Wishlist"
+          className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-surface/90 text-muted opacity-0 shadow-sm transition-all hover:text-rose-500 group-hover:opacity-100"
+        >
+          <Heart size={15} className={cn(wished && "fill-rose-500 text-rose-500")} />
+        </button>
+        <button
+          onClick={() => { cart.add(product); toast(`${product.name} added to cart`); }}
+          disabled={!product.inStock}
+          aria-label="Add to cart"
+          className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-brand-500 text-brand-950 opacity-0 shadow-lg transition-all hover:bg-brand-400 group-hover:opacity-100 disabled:opacity-40"
+        >
+          <Plus size={17} />
+        </button>
+      </div>
+
+      <div className="flex flex-1 flex-col p-3">
+        <Link href={`/product/${product.slug}`} className="line-clamp-2 text-sm leading-snug transition-colors hover:text-brand-600 dark:hover:text-brand-400">
+          {product.name}
+        </Link>
+        <div className="mt-1.5 flex items-baseline gap-1.5">
+          <span className="font-bold">{formatPrice(product.price)}</span>
+          {product.compareAt && <span className="text-xs text-muted line-through">{formatPrice(product.compareAt)}</span>}
+        </div>
+        <div className="mt-1">
+          <Rating value={product.rating} count={product.reviewCount} size={12} />
+        </div>
+
+        {showSold && (
+          <div className="mt-2">
+            <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+              <div className="h-full rounded-full bg-gradient-to-r from-rose-500 to-brand-500" style={{ width: `${sold}%` }} />
+            </div>
+            <p className="mt-1 text-[0.65rem] font-semibold text-rose-500">{sold}% sold</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
