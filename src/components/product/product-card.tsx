@@ -1,35 +1,26 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Eye, Heart, ShoppingBag } from "lucide-react";
+import { Eye, Heart } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Rating } from "@/components/ui/rating";
-import { useCart } from "@/context/cart";
 import { useToast } from "@/context/toast";
 import { useWishlist } from "@/context/wishlist";
 import type { Product } from "@/lib/types";
 import { cn, discountPercent, formatPrice } from "@/lib/utils";
+import { AddToCartButton } from "./add-to-cart-button";
 import { ProductImage } from "./product-image";
 import { QuickView } from "./quick-view";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
-  const cart = useCart();
   const wishlist = useWishlist();
   const toast = useToast();
   const [quickOpen, setQuickOpen] = useState(false);
-  const [added, setAdded] = useState(false);
 
   const off = product.compareAt ? discountPercent(product.compareAt, product.price) : 0;
   const wished = wishlist.has(product.slug);
-
-  const add = () => {
-    cart.add(product);
-    toast(`${product.name} added to cart`);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1400);
-  };
 
   return (
     <>
@@ -81,17 +72,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             {product.compareAt && <span className="pb-0.5 text-sm text-muted line-through">{formatPrice(product.compareAt)}</span>}
           </div>
 
-          <button
-            onClick={add}
-            disabled={!product.inStock}
-            className={cn(
-              "mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all",
-              added ? "bg-brand-600 text-white" : "bg-brand-500 text-brand-950 hover:bg-brand-400",
-              "disabled:bg-surface-2 disabled:text-muted",
-            )}
-          >
-            {!product.inStock ? "Sold out" : added ? <><Check size={16} /> Added</> : <><ShoppingBag size={15} /> Add to cart</>}
-          </button>
+          <AddToCartButton product={product} variant="full" className="mt-3" />
         </div>
       </motion.article>
 
