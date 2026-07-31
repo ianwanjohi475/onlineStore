@@ -3,9 +3,11 @@ import Image from "next/image";
 import { Rating } from "@/components/ui/rating";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { testimonials } from "@/lib/data/content";
+import { getTestimonials } from "@/lib/store/store";
 
 export function Testimonials() {
+  const testimonials = getTestimonials();
+  if (testimonials.length === 0) return null;
   return (
     <section className="container-x py-20">
       <SectionHeading

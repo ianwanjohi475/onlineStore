@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ComponentType } from "react";
 import { NewsletterForm } from "@/components/home/newsletter-form";
 import { Logo } from "./logo";
-import { getCategories } from "@/lib/store/store";
+import { getCategories, getSettings } from "@/lib/store/store";
 
 const columns = [
   {
@@ -77,6 +77,7 @@ const socials: { icon: ComponentType; label: string }[] = [
 
 export function SiteFooter() {
   const categories = getCategories();
+  const settings = getSettings();
   return (
     <footer className="mt-20 border-t border-border bg-surface">
       {/* trust strip */}
@@ -103,10 +104,7 @@ export function SiteFooter() {
       <div className="container-x grid gap-10 py-14 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Logo />
-          <p className="mt-4 max-w-xs text-sm text-muted">
-            Smart accessories, powered for life. Genuine Oraimo audio, wearables and power —
-            delivered fast across Kenya and backed by a real warranty.
-          </p>
+          <p className="mt-4 max-w-xs text-sm text-muted">{settings.footerBlurb}</p>
           <div className="mt-5 flex gap-2">
             {socials.map((s) => (
               <a

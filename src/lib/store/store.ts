@@ -22,6 +22,9 @@ export function readStore(): StoreData {
     return {
       products: raw.products ?? seed.products,
       categories: raw.categories ?? seed.categories,
+      brands: raw.brands ?? seed.brands,
+      testimonials: raw.testimonials ?? seed.testimonials,
+      orders: raw.orders ?? seed.orders,
       settings: { ...seed.settings, ...raw.settings },
     };
   } catch {
@@ -68,4 +71,31 @@ export function getRelated(product: Product, limit = 4): Product[] {
     .filter((p) => p.category === product.category && p.slug !== product.slug)
     .concat(all.filter((p) => p.category !== product.category && p.slug !== product.slug))
     .slice(0, limit);
+}
+export function getTestimonials() {
+  return readStore().testimonials;
+}
+export function getBrands() {
+  return readStore().brands;
+}
+export function getBrand(slug: string) {
+  return readStore().brands.find((b) => b.slug === slug);
+}
+export function getOrders() {
+  return readStore().orders;
+}
+export function addOrder(order: import("@/lib/types").Order) {
+  const store = readStore();
+  store.orders.unshift(order);
+  writeStore(store);
+}
+/** Only active slides currently within their optional schedule window. */
+export function getActiveSlides() {
+  const now = Date.now();
+  return readStore().settings.heroSlides.filter((s) => {
+    if (s.active === false) return false;
+    if (s.startDate && new Date(s.startDate).getTime() > now) return false;
+    if (s.endDate && new Date(s.endDate).getTime() < now) return false;
+    return true;
+  });
 }

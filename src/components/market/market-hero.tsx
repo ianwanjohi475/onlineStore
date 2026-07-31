@@ -17,7 +17,14 @@ const icons: Record<string, LucideIcon> = {
 
 export function MarketHero() {
   const { productMap, categories, settings } = useCatalog();
-  const slides = settings.heroSlides.filter((s) => productMap[s.slug]);
+  const now = Date.now();
+  const slides = settings.heroSlides.filter(
+    (s) =>
+      productMap[s.slug] &&
+      s.active !== false &&
+      (!s.startDate || new Date(s.startDate).getTime() <= now) &&
+      (!s.endDate || new Date(s.endDate).getTime() >= now),
+  );
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -84,8 +91,8 @@ export function MarketHero() {
                   <span className="font-display text-2xl font-bold">{formatPrice(product.price)}</span>
                   {off > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold">-{off}%</span>}
                 </div>
-                <Link href={`/product/${slide.slug}`} className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-brand-950 transition-colors hover:bg-brand-400">
-                  Shop now <ChevronRight size={16} />
+                <Link href={slide.buttonLink || `/product/${slide.slug}`} className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-brand-950 transition-colors hover:bg-brand-400">
+                  {slide.buttonText || "Shop now"} <ChevronRight size={16} />
                 </Link>
               </div>
               <div className="relative hidden sm:block">

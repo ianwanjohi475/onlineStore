@@ -16,14 +16,14 @@ const spaceGrotesk = Space_Grotesk({
 
 const siteUrl = "https://oraimo-store.example";
 
-export const metadata: Metadata = {
+export function generateMetadata(): Metadata {
+  return {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Oraimo — Smart Accessories, Powered for Life",
-    template: "%s · Oraimo",
+    default: getSettings().seoTitle,
+    template: `%s · ${getSettings().brandName}`,
   },
-  description:
-    "Shop genuine Oraimo earbuds, smartwatches, power banks, chargers, cables and speakers. Fast delivery across Kenya, 12-month warranty and unbeatable flash-sale prices.",
+  description: getSettings().seoDescription,
   keywords: [
     "Oraimo",
     "earbuds",
@@ -57,7 +57,8 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
-};
+  };
+}
 
 // Render on demand so admin edits to the store reflect immediately.
 export const dynamic = "force-dynamic";
