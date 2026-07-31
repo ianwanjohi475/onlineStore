@@ -8,31 +8,27 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ProductImage } from "@/components/product/product-image";
-import { categories } from "@/lib/data/categories";
-import { productMap } from "@/lib/data/products";
+import { useCatalog } from "@/context/catalog";
 import { discountPercent, formatPrice } from "@/lib/utils";
 
 const icons: Record<string, LucideIcon> = {
   Headphones, Watch, BatteryCharging, Zap, Cable, Speaker, Sparkles, Rocket,
 };
 
-const slides = [
-  { slug: "watch-meta-ultra", eyebrow: "Flagship wearable", title: "Watch Meta Ultra", copy: "AMOLED · on-wrist calling · 14-day battery", from: "#0b3d2e", to: "#022018" },
-  { slug: "freepods-4-pro", eyebrow: "Adaptive ANC", title: "FreePods 4 Pro", copy: "Titanium drivers · 48h playtime · silence on demand", from: "#052e1c", to: "#0a2540" },
-  { slug: "soundgo-party-80w", eyebrow: "Turn it up", title: "SoundGo Party 80W", copy: "80W stereo · reactive lights · karaoke ready", from: "#123524", to: "#1a1a1a" },
-];
-
 export function MarketHero() {
+  const { productMap, categories, settings } = useCatalog();
+  const slides = settings.heroSlides.filter((s) => productMap[s.slug]);
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || slides.length === 0) return;
     const id = setInterval(() => setI((n) => (n + 1) % slides.length), 4500);
     return () => clearInterval(id);
-  }, [paused]);
+  }, [paused, slides.length]);
 
-  const slide = slides[i];
+  if (slides.length === 0) return null;
+  const slide = slides[Math.min(i, slides.length - 1)];
   const product = productMap[slide.slug];
   const off = product.compareAt ? discountPercent(product.compareAt, product.price) : 0;
 

@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ComponentType } from "react";
 import { NewsletterForm } from "@/components/home/newsletter-form";
 import { Logo } from "./logo";
-import { categories } from "@/lib/data/categories";
+import { getCategories } from "@/lib/store/store";
 
 const columns = [
   {
@@ -76,6 +76,7 @@ const socials: { icon: ComponentType; label: string }[] = [
 ];
 
 export function SiteFooter() {
+  const categories = getCategories();
   return (
     <footer className="mt-20 border-t border-border bg-surface">
       {/* trust strip */}

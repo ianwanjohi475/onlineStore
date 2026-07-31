@@ -2,16 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageHero } from "@/components/ui/page-hero";
 import { ShopBrowser } from "@/components/shop/shop-browser";
-import { categories, categoryMap } from "@/lib/data/categories";
-import { getProducts, products } from "@/lib/data/products";
-
-export function generateStaticParams() {
-  return categories.map((c) => ({ slug: c.slug }));
-}
+import { getByCategory, getCategory, getNewArrivals, getProducts } from "@/lib/store/store";
+import type { CategorySlug } from "@/lib/types";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const category = categoryMap[slug as keyof typeof categoryMap];
+  const category = getCategory(slug);
   if (!category) return { title: "Category not found" };
   return {
     title: category.name,
@@ -21,11 +17,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const category = categoryMap[slug as keyof typeof categoryMap];
+  const category = getCategory(slug);
   if (!category) notFound();
 
   const isNewArrivals = category.slug === "new-arrivals";
-  const list = isNewArrivals ? products.filter((p) => p.badges.includes("new")) : getProducts({ category: category.slug });
+  const list = isNewArrivals ? getNewArrivals() : getByCategory(category.slug as CategorySlug);
+  const all = getProducts();
 
   return (
     <>
@@ -36,8 +33,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         crumbs={[{ label: "Categories", href: "/categories" }, { label: category.name }]}
       />
       <ShopBrowser
-        products={list.length ? list : products}
-        initialCategory={isNewArrivals ? undefined : category.slug}
+        products={list.length ? list : all}
+        initialCategory={isNewArrivals ? undefined : (category.slug as CategorySlug)}
       />
     </>
   );

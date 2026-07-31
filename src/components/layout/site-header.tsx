@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Heart, Menu, Search, ShoppingBag, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { categories } from "@/lib/data/categories";
+import { useCatalog } from "@/context/catalog";
 import { useCart } from "@/context/cart";
 import { useWishlist } from "@/context/wishlist";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ function CountBadge({ count }: { count: number }) {
 }
 
 export function SiteHeader() {
+  const { categories } = useCatalog();
   const cart = useCart();
   const wishlist = useWishlist();
   const [scrolled, setScrolled] = useState(false);

@@ -3,13 +3,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { categories } from "@/lib/data/categories";
+import { getCategories } from "@/lib/store/store";
 
 const icons: Record<string, LucideIcon> = {
   Headphones, Watch, BatteryCharging, Zap, Cable, Speaker, Sparkles, Rocket,
 };
 
 export function CategoryStrip() {
+  const categories = getCategories();
   return (
     <section className="container-x py-4">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">

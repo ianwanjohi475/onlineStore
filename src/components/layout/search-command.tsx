@@ -4,13 +4,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Search, TrendingUp, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { products } from "@/lib/data/products";
+import { useCatalog } from "@/context/catalog";
 import { formatPrice } from "@/lib/utils";
 import { ProductImage } from "@/components/product/product-image";
 
 const trending = ["Earbuds", "Power bank", "Smartwatch", "GaN charger", "Speaker"];
 
 export function SearchCommand({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { products } = useCatalog();
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
           p.tagline.toLowerCase().includes(q),
       )
       .slice(0, 6);
-  }, [query]);
+  }, [query, products]);
 
   return (
     <AnimatePresence>

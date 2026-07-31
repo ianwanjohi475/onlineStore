@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/ui/page-hero";
 import { ShopBrowser } from "@/components/shop/shop-browser";
-import { products } from "@/lib/data/products";
+import { getProducts } from "@/lib/store/store";
 
 export const metadata: Metadata = {
   title: "Shop all products",
@@ -27,7 +27,7 @@ export default async function ShopPage({
         description="Genuine Oraimo tech, filtered your way. Every product ships fast and carries a 12-month warranty."
         crumbs={[{ label: "Shop" }]}
       />
-      <ShopBrowser products={products} initialSort={initialSort} />
+      <ShopBrowser products={getProducts()} initialSort={initialSort} />
     </>
   );
 }

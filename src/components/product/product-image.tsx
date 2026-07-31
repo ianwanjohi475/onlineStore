@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { Product } from "@/lib/types";
-import { productImages } from "@/lib/data/product-images";
 import { cn } from "@/lib/utils";
 import { ProductArt } from "./product-art";
 
@@ -27,7 +26,7 @@ export function ProductImage({
   sizes?: string;
   priority?: boolean;
 }) {
-  const src = productImages[product.slug];
+  const src = product.image;
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 

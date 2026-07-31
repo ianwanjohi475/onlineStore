@@ -5,10 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
 import { useWishlist } from "@/context/wishlist";
-import { productMap } from "@/lib/data/products";
+import { useCatalog } from "@/context/catalog";
 
 export default function WishlistPage() {
   const wishlist = useWishlist();
+  const { productMap } = useCatalog();
   const items = wishlist.slugs.map((s) => productMap[s]).filter(Boolean);
 
   return (
