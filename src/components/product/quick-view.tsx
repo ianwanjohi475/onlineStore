@@ -1,15 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { Check, Minus, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Rating } from "@/components/ui/rating";
-import { Button } from "@/components/ui/button";
-import { useCart } from "@/context/cart";
-import { useToast } from "@/context/toast";
 import type { Product } from "@/lib/types";
 import { discountPercent, formatPrice } from "@/lib/utils";
+import { AddToCartButton } from "./add-to-cart-button";
 import { ProductImage } from "./product-image";
 
 export function QuickView({
@@ -21,8 +19,6 @@ export function QuickView({
   open: boolean;
   onClose: () => void;
 }) {
-  const cart = useCart();
-  const toast = useToast();
   const [qty, setQty] = useState(1);
   const [color, setColor] = useState(product.colors[0]);
 
@@ -120,17 +116,7 @@ export function QuickView({
                     <Plus size={15} />
                   </button>
                 </div>
-                <Button
-                  className="flex-1"
-                  disabled={!product.inStock}
-                  onClick={() => {
-                    cart.add(product, qty, color);
-                    toast(`${product.name} added to cart`);
-                    onClose();
-                  }}
-                >
-                  <ShoppingBag size={16} /> {product.inStock ? "Add to cart" : "Sold out"}
-                </Button>
+                <AddToCartButton product={product} quantity={qty} color={color} variant="full" className="flex-1" />
               </div>
 
               <Link

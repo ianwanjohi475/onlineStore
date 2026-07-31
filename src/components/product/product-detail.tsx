@@ -1,23 +1,21 @@
 "use client";
 
-import { Check, Heart, Minus, Plus, RotateCcw, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
+import { Check, Heart, Minus, Plus, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
-import { useCart } from "@/context/cart";
 import { useToast } from "@/context/toast";
 import { useWishlist } from "@/context/wishlist";
 import { useRecentlyViewed } from "@/context/recently-viewed";
 import type { Product } from "@/lib/types";
 import { cn, discountPercent, formatPrice } from "@/lib/utils";
+import { AddToCartButton } from "./add-to-cart-button";
 import { ProductGallery } from "./product-gallery";
 import { Reviews } from "./reviews";
 
 const tabs = ["Description", "Specifications", "Reviews"] as const;
 
 export function ProductDetail({ product }: { product: Product }) {
-  const cart = useCart();
   const wishlist = useWishlist();
   const toast = useToast();
   const { push: pushRecent } = useRecentlyViewed();
@@ -89,14 +87,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <span className="w-10 text-center font-semibold tabular-nums">{qty}</span>
               <button onClick={() => setQty((q) => q + 1)} className="grid size-11 place-items-center" aria-label="Increase"><Plus size={16} /></button>
             </div>
-            <Button
-              size="lg"
-              className="flex-1"
-              disabled={!product.inStock}
-              onClick={() => { cart.add(product, qty, color); toast(`${product.name} added to cart`); }}
-            >
-              <ShoppingBag size={18} /> Add to cart
-            </Button>
+            <AddToCartButton product={product} quantity={qty} color={color} variant="lg" className="flex-1" />
             <button
               onClick={() => { wishlist.toggle(product.slug); toast(wished ? "Removed from wishlist" : "Saved to wishlist"); }}
               aria-label="Toggle wishlist"

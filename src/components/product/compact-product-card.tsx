@@ -1,18 +1,17 @@
 "use client";
 
-import { Heart, Plus } from "lucide-react";
+import { Heart } from "lucide-react";
 import Link from "next/link";
 import { Rating } from "@/components/ui/rating";
-import { useCart } from "@/context/cart";
 import { useToast } from "@/context/toast";
 import { useWishlist } from "@/context/wishlist";
 import type { Product } from "@/lib/types";
 import { cn, discountPercent, formatPrice } from "@/lib/utils";
+import { AddToCartButton } from "./add-to-cart-button";
 import { ProductImage } from "./product-image";
 
 /** Dense marketplace-style product card (Jumia/Kilimall feel). */
 export function CompactProductCard({ product, showSold = false }: { product: Product; showSold?: boolean }) {
-  const cart = useCart();
   const wishlist = useWishlist();
   const toast = useToast();
   const off = product.compareAt ? discountPercent(product.compareAt, product.price) : 0;
@@ -37,14 +36,7 @@ export function CompactProductCard({ product, showSold = false }: { product: Pro
         >
           <Heart size={15} className={cn(wished && "fill-rose-500 text-rose-500")} />
         </button>
-        <button
-          onClick={() => { cart.add(product); toast(`${product.name} added to cart`); }}
-          disabled={!product.inStock}
-          aria-label="Add to cart"
-          className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-brand-500 text-brand-950 shadow-lg transition-all hover:scale-105 hover:bg-brand-400 disabled:opacity-40"
-        >
-          <Plus size={17} />
-        </button>
+        <AddToCartButton product={product} variant="icon" className="absolute bottom-2 right-2 size-9 shadow-lg" />
       </div>
 
       <div className="flex flex-1 flex-col p-3">
