@@ -4,13 +4,12 @@ import { Check, CreditCard, Loader2, Lock, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { OrderSummary } from "@/components/cart/order-summary";
 import { ProductImage } from "@/components/product/product-image";
 import { useCart } from "@/context/cart";
 import { cn, formatPrice } from "@/lib/utils";
 
 const steps = ["Details", "Payment", "Review"] as const;
-const SHIPPING = 300;
-const FREE_SHIP = 5000;
 
 function Field({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
@@ -30,9 +29,6 @@ export default function CheckoutPage() {
   const [pay, setPay] = useState<"mpesa" | "card">("mpesa");
   const [placing, setPlacing] = useState(false);
   const [done, setDone] = useState(false);
-
-  const shipping = cart.subtotal >= FREE_SHIP ? 0 : SHIPPING;
-  const total = cart.subtotal + shipping;
 
   if (done) {
     return (
@@ -161,22 +157,32 @@ export default function CheckoutPage() {
                     setTimeout(() => { cart.clear(); setDone(true); }, 1600);
                   }}
                 >
-                  {placing ? <><Loader2 size={18} className="animate-spin" /> Placing…</> : <>Place order · {formatPrice(total)}</>}
+                  {placing ? <><Loader2 size={18} className="animate-spin" /> Placing…</> : <>Place order · {formatPrice(cart.total)}</>}
                 </Button>
               </div>
             </div>
           )}
         </div>
 
-        <aside className="h-fit lg:sticky lg:top-28">
-          <div className="card-surface p-6">
-            <h2 className="font-display text-lg font-bold">Summary</h2>
-            <dl className="mt-4 space-y-3 text-sm">
-              <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd className="font-semibold tabular-nums">{formatPrice(cart.subtotal)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Shipping</dt><dd className="font-semibold">{shipping === 0 ? "Free" : formatPrice(shipping)}</dd></div>
-              <div className="flex justify-between border-t border-border pt-3 text-base"><dt className="font-semibold">Total</dt><dd className="font-display font-bold tabular-nums">{formatPrice(total)}</dd></div>
-            </dl>
+        <aside className="flex h-fit flex-col gap-4 lg:sticky lg:top-32">
+          <div className="card-surface p-5">
+            <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-muted">
+              {cart.count} item{cart.count !== 1 && "s"}
+            </h2>
+            <ul className="flex flex-col gap-3">
+              {cart.lines.map((l) => (
+                <li key={l.product.slug} className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <ProductImage product={l.product} glow={false} className="size-14 rounded-xl" sizes="56px" />
+                    <span className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-foreground text-[0.65rem] font-bold text-background">{l.quantity}</span>
+                  </div>
+                  <p className="line-clamp-2 flex-1 text-sm">{l.product.name}</p>
+                  <span className="text-sm font-semibold">{formatPrice(l.product.price * l.quantity)}</span>
+                </li>
+              ))}
+            </ul>
           </div>
+          <OrderSummary />
         </aside>
       </div>
     </div>
