@@ -38,6 +38,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const current = [...groups.flatMap((g) => g.items)].find((n) => (n.href === "/admin" ? pathname === "/admin" : pathname.startsWith(n.href)));
 
   if (pathname === "/admin/login") return <>{children}</>;
 
@@ -90,19 +92,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {mobileOpen && (
           <div className="fixed inset-0 z-[95] lg:hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-            <motion.aside initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }} className="absolute inset-y-0 left-0 flex w-72 flex-col bg-surface p-4">{SidebarInner}</motion.aside>
+            <motion.aside initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }} className="absolute inset-y-0 left-0 flex w-72 flex-col bg-surface p-4">
+              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="absolute right-3 top-3 grid size-9 place-items-center rounded-full text-muted hover:bg-surface-2 hover:text-foreground">
+                <X size={18} />
+              </button>
+              {SidebarInner}
+            </motion.aside>
           </div>
         )}
       </AnimatePresence>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur-md">
-          <button onClick={() => setMobileOpen(true)} className="grid size-9 place-items-center rounded-lg hover:bg-surface-2 lg:hidden"><Menu size={20} /></button>
-          <div className="hidden lg:block" />
+          <div className="flex items-center gap-2">
+            <button onClick={() => setMobileOpen(true)} aria-label="Open menu" className="grid size-9 place-items-center rounded-lg hover:bg-surface-2 lg:hidden"><Menu size={20} /></button>
+            <span className="font-display text-sm font-semibold">{current?.label ?? "Admin"}</span>
+          </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Link href="/" className="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:border-brand-500 sm:inline-flex"><ExternalLink size={15} /> View store</Link>
-            <span className="grid size-9 place-items-center rounded-full bg-brand-500 text-sm font-bold text-brand-950">A</span>
+            <div className="relative">
+              <button onClick={() => setProfileOpen((o) => !o)} aria-label="Account menu" className="grid size-9 place-items-center rounded-full bg-brand-500 text-sm font-bold text-brand-950">A</button>
+              <AnimatePresence>
+                {profileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-surface shadow-card">
+                      <div className="border-b border-border px-4 py-3">
+                        <p className="text-sm font-semibold">Administrator</p>
+                        <p className="text-xs text-muted">Signed in</p>
+                      </div>
+                      <Link href="/" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-surface-2"><ExternalLink size={15} /> View store</Link>
+                      <button onClick={logout} className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-rose-500 hover:bg-surface-2"><LogOut size={15} /> Sign out</button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 p-5 sm:p-8">{children}</main>
