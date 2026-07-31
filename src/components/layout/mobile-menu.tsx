@@ -7,7 +7,9 @@ import { categories } from "@/lib/data/categories";
 
 const primary = [
   { href: "/shop", label: "Shop all" },
+  { href: "/services", label: "Services" },
   { href: "/flash-sales", label: "Flash sales" },
+  { href: "/blog", label: "Journal" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
   { href: "/track-order", label: "Track order" },

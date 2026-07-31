@@ -64,6 +64,7 @@ export interface Testimonial {
   rating: number;
   quote: string;
   accent: string;
+  avatar: string;
 }
 
 export interface BlogPost {
@@ -74,4 +75,7 @@ export interface BlogPost {
   readMinutes: number;
   date: string;
   accent: [string, string];
+  image: string;
+  author: string;
+  body: string[];
 }

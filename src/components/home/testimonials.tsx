@@ -1,4 +1,5 @@
 import { Quote } from "lucide-react";
+import Image from "next/image";
 import { Rating } from "@/components/ui/rating";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -22,11 +23,8 @@ export function Testimonials() {
               <blockquote className="flex-1 text-sm leading-relaxed">{t.quote}</blockquote>
               <Rating value={t.rating} className="mt-4" />
               <figcaption className="mt-4 flex items-center gap-3 border-t border-border pt-4">
-                <span
-                  className="grid size-10 place-items-center rounded-full font-display font-bold text-brand-950"
-                  style={{ background: t.accent }}
-                >
-                  {t.author.split(" ").map((n) => n[0]).join("")}
+                <span className="relative size-10 shrink-0 overflow-hidden rounded-full">
+                  <Image src={t.avatar} alt={t.author} fill sizes="40px" className="object-cover" />
                 </span>
                 <div>
                   <p className="text-sm font-semibold">{t.author}</p>
