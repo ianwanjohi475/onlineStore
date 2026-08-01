@@ -64,10 +64,10 @@ export default function AdminDashboard() {
 
       {/* four headline KPIs */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total revenue" value={m ? formatPrice(m.revenue) : "—"} icon={DollarSign} spark={m?.buckets.map((b) => b.total)} />
-        <StatCard label="Today's revenue" value={m ? formatPrice(m.todayRevenue) : "—"} icon={TrendingUp} />
-        <StatCard label="Orders" value={m ? String(m.orders) : "—"} icon={ShoppingCart} />
-        <StatCard label="Customers" value={m ? String(m.customers) : "—"} icon={Users} />
+        <StatCard label="Total revenue" value={m ? formatPrice(m.revenue) : "—"} icon={DollarSign} hint="Paid & fulfilled orders" />
+        <StatCard label="Today's revenue" value={m ? formatPrice(m.todayRevenue) : "—"} icon={TrendingUp} hint="Since midnight" />
+        <StatCard label="Orders" value={m ? String(m.orders) : "—"} icon={ShoppingCart} hint="All time" />
+        <StatCard label="Customers" value={m ? String(m.customers) : "—"} icon={Users} hint="Unique buyers" />
       </div>
 
       {/* revenue chart + a compact status summary */}
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
               <h2 className="font-display text-lg font-bold">Revenue</h2>
               <p className="text-sm text-muted">Last 6 months</p>
             </div>
-            <span className="font-display text-xl font-bold tabular-nums">{m ? formatPrice(m.revenue) : "—"}</span>
+            <span className="text-xl font-bold tabular-nums">{m ? formatPrice(m.revenue) : "—"}</span>
           </div>
           {m ? <BarChart data={m.buckets.map((b) => b.total)} labels={m.buckets.map((b) => b.label)} /> : <div className="h-44 animate-pulse rounded-xl bg-surface-2" />}
         </Card>
@@ -182,7 +182,7 @@ function StatusRow({ color, label, value, href }: { color: string; label: string
   return (
     <Link href={href} className="flex items-center justify-between text-sm transition-colors hover:text-brand-600 dark:hover:text-brand-400">
       <span className="flex items-center gap-2.5"><span className={cn("size-2 rounded-full", color)} /> {label}</span>
-      <span className="font-display text-base font-bold tabular-nums">{value ?? "—"}</span>
+      <span className="text-base font-bold tabular-nums">{value ?? "—"}</span>
     </Link>
   );
 }
