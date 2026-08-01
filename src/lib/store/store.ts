@@ -1,8 +1,19 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
-import type { CategorySlug, Product, StoreData } from "@/lib/types";
+import type { CategorySlug, Order, Product, StoreData } from "@/lib/types";
 import { seed } from "./seed";
+
+/** Backfill fields that older persisted orders may be missing. */
+function normalizeOrder(o: Order): Order {
+  return {
+    ...o,
+    paymentStatus: o.paymentStatus ?? (o.status === "cancelled" ? "refunded" : o.status === "pending" ? "pending" : "paid"),
+    timeline: o.timeline ?? [{ at: o.date, label: "Order placed" }],
+    notes: o.notes ?? [],
+    refunded: o.refunded ?? 0,
+  };
+}
 
 const DIR = path.join(process.cwd(), "data");
 const FILE = path.join(DIR, "store.json");
@@ -29,8 +40,9 @@ export function readStore(): StoreData {
       categories: raw.categories ?? seed.categories,
       brands: raw.brands ?? seed.brands,
       testimonials: raw.testimonials ?? seed.testimonials,
-      orders: raw.orders ?? seed.orders,
+      orders: (raw.orders ?? seed.orders).map(normalizeOrder),
       settings: { ...seed.settings, ...raw.settings },
+      suspendedCustomers: raw.suspendedCustomers ?? [],
     };
   } catch {
     return seed;

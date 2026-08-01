@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { InfoPage } from "@/components/ui/info-page";
 
-export const metadata: Metadata = { title: "Shipping & delivery", description: "Delivery times, costs and tracking for Oraimo orders across Kenya." };
+export const metadata: Metadata = { title: "Shipping & delivery", description: "Delivery times, costs and tracking for your orders across Kenya." };
 
 export default function ShippingPage() {
   return (

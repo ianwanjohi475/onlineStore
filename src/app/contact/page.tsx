@@ -8,13 +8,13 @@ import { faqs } from "@/lib/data/content";
 
 export const metadata: Metadata = {
   title: "Contact & support",
-  description: "Get help from the Oraimo team — WhatsApp, phone or email. Fast answers, real people, and a full FAQ.",
+  description: "Get help from SIR VERT ENTERPRISE — WhatsApp, phone or email. When you call, we answer.",
 };
 
 const channels = [
-  { icon: MessageCircle, label: "WhatsApp", value: "+254 700 000 000", sub: "Fastest — replies in minutes" },
-  { icon: Phone, label: "Call us", value: "+254 700 000 000", sub: "Mon–Sat, 8am–8pm" },
-  { icon: Mail, label: "Email", value: "help@oraimo.example", sub: "We reply within a few hours" },
+  { icon: MessageCircle, label: "WhatsApp", value: "+254 799 239 739", sub: "Fastest — replies in minutes" },
+  { icon: Phone, label: "Call us", value: "+254 799 239 739", sub: "Mon–Sat, 8am–8pm" },
+  { icon: Mail, label: "Email", value: "sales@sirvertenterprise.co.ke", sub: "We reply within a few hours" },
   { icon: MapPin, label: "Visit", value: "Nairobi CBD", sub: "Pickup & walk-in support" },
 ];
 

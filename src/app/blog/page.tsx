@@ -8,7 +8,7 @@ import { blogPosts } from "@/lib/data/content";
 
 export const metadata: Metadata = {
   title: "Journal",
-  description: "Buying guides, how-tos and explainers from the Oraimo team — pick the right gear and get the most from it.",
+  description: "Buying guides, how-tos and explainers from the SIR VERT ENTERPRISE team — pick the right gear and get the most from it.",
 };
 
 export default function BlogPage() {

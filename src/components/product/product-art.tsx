@@ -150,6 +150,65 @@ function Render({ category, accent, uid }: { category: CategorySlug; accent: str
           <rect x="152" y="120" width="26" height="18" rx="5" fill={`url(#${g("metal")})`} transform="rotate(20 165 129)" />
         </svg>
       );
+    case "cameras":
+      return (
+        <svg viewBox="0 0 260 240" className="size-full">
+          {common}
+          {shadow}
+          {/* dome camera body */}
+          <rect x="86" y="150" width="88" height="26" rx="10" fill={`url(#${g("metal")})`} />
+          <path d="M74 150a56 56 0 0 1 112 0z" fill={`url(#${g("body")})`} />
+          <path d="M74 150a56 56 0 0 1 112 0z" fill={`url(#${g("sheen")})`} />
+          {/* lens */}
+          <circle cx="130" cy="126" r="26" fill="#05070c" />
+          <circle cx="130" cy="126" r="18" fill="none" stroke={`url(#${g("metal")})`} strokeWidth="4" />
+          <circle cx="130" cy="126" r="9" fill={accent} opacity="0.85" />
+          <circle cx="124" cy="120" r="3" fill="#fff" opacity="0.5" />
+          {/* status LED */}
+          <circle cx="104" cy="162" r="3" fill={accent} />
+        </svg>
+      );
+    case "home-appliances":
+      return (
+        <svg viewBox="0 0 260 240" className="size-full">
+          {common}
+          {shadow}
+          {/* upright appliance body */}
+          <rect x="90" y="52" width="80" height="140" rx="22" fill={`url(#${g("body")})`} />
+          <rect x="90" y="52" width="80" height="140" rx="22" fill={`url(#${g("sheen")})`} />
+          {/* control panel */}
+          <rect x="104" y="70" width="52" height="30" rx="8" fill="#05070c" />
+          <circle cx="118" cy="85" r="6" fill={accent} />
+          <rect x="132" y="80" width="18" height="4" rx="2" fill={accent} opacity="0.6" />
+          <rect x="132" y="88" width="12" height="4" rx="2" fill="#fff" opacity="0.2" />
+          {/* vents */}
+          {Array.from({ length: 4 }).map((_, i) => (
+            <rect key={i} x="106" y={120 + i * 14} width="48" height="6" rx="3" fill="#000" opacity="0.25" />
+          ))}
+        </svg>
+      );
+    case "computing":
+      return (
+        <svg viewBox="0 0 260 240" className="size-full">
+          {common}
+          {shadow}
+          {/* keyboard slab */}
+          <rect x="66" y="120" width="128" height="60" rx="12" fill={`url(#${g("body")})`} />
+          <rect x="66" y="120" width="128" height="60" rx="12" fill={`url(#${g("sheen")})`} />
+          <g fill="#05070c">
+            {Array.from({ length: 3 }).map((_, r) =>
+              Array.from({ length: 8 }).map((_, c) => (
+                <rect key={`${r}-${c}`} x={78 + c * 14} y={130 + r * 14} width="10" height="10" rx="2" />
+              )),
+            )}
+          </g>
+          <rect x="104" y="172" width="52" height="4" rx="2" fill={accent} opacity="0.5" />
+          {/* mouse */}
+          <ellipse cx="208" cy="150" rx="0" ry="0" fill="none" />
+          <path d="M74 92c0-14 10-24 24-24s24 10 24 24v6H74z" fill={`url(#${g("metal")})`} />
+          <rect x="96" y="70" width="4" height="16" rx="2" fill={accent} />
+        </svg>
+      );
     default:
       return (
         <svg viewBox="0 0 260 240" className="size-full">

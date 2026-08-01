@@ -1,7 +1,7 @@
 "use client";
 
-import { Package, Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ImageOff, Loader2, Package, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Btn, Card, ConfirmDialog, Drawer, EmptyState, Field, PageHeader, Pagination,
   SearchInput, Select, StatusPill, TextArea, Toggle, api, usePaginated,
@@ -155,13 +155,9 @@ function ProductEditor({ product, categories, brands, onClose, onSaved }: { prod
     <Drawer open title={product ? "Edit product" : "Add product"} onClose={onClose}
       footer={<div className="flex gap-3"><Btn variant="outline" className="flex-1" onClick={onClose}>Cancel</Btn><Btn className="flex-1" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save"}</Btn></div>}>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4 rounded-xl border border-border p-3">
-          <ProductImage product={preview} glow={false} className="size-20 shrink-0 rounded-xl" sizes="80px" />
-          <p className="text-xs text-muted">Live preview. Paste an image URL, or leave blank for a generated graphic.</p>
-        </div>
+        <ImageUploader preview={preview} value={f.image ?? null} onChange={(url) => set("image", url)} />
         <Field label="Product name" value={f.name ?? ""} onChange={(e) => set("name", e.target.value)} />
         <Field label="Tagline" value={f.tagline ?? ""} onChange={(e) => set("tagline", e.target.value)} />
-        <Field label="Image URL" value={f.image ?? ""} onChange={(e) => set("image", e.target.value || null)} />
         <div className="grid grid-cols-2 gap-4">
           <Select label="Category" value={f.category} onChange={(e) => set("category", e.target.value as Product["category"])}>{categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</Select>
           <Select label="Brand" value={f.brand ?? ""} onChange={(e) => set("brand", e.target.value)}>{brands.map((b) => <option key={b.slug} value={b.slug}>{b.name}</option>)}</Select>
@@ -188,5 +184,58 @@ function ProductEditor({ product, categories, brands, onClose, onSaved }: { prod
         <TextArea label="Key features (one per line)" rows={3} value={(f.features ?? []).join("\n")} onChange={(e) => set("features", e.target.value.split("\n").filter(Boolean))} />
       </div>
     </Drawer>
+  );
+}
+
+function ImageUploader({ preview, value, onChange }: { preview: Product; value: string | null; onChange: (url: string | null) => void }) {
+  const toast = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [drag, setDrag] = useState(false);
+
+  const upload = async (file: File) => {
+    if (!file.type.startsWith("image/")) { toast("Please choose an image file", "info"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast("Image must be 5MB or smaller", "info"); return; }
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      onChange(data.url);
+      toast("Photo uploaded");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Upload failed", "info");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start gap-4">
+        <div className="relative shrink-0">
+          <ProductImage product={preview} glow={false} className="size-24 rounded-xl border border-border" sizes="96px" />
+          {value && (
+            <button type="button" onClick={() => onChange(null)} aria-label="Remove photo"
+              className="absolute -right-2 -top-2 grid size-6 place-items-center rounded-full bg-rose-500 text-white shadow"><ImageOff size={13} /></button>
+          )}
+        </div>
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={(e) => { e.preventDefault(); setDrag(false); const file = e.dataTransfer.files?.[0]; if (file) upload(file); }}
+          onClick={() => inputRef.current?.click()}
+          className={`flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed p-4 text-center transition-colors ${drag ? "border-brand-500 bg-brand-500/5" : "border-border hover:border-brand-500/60"}`}
+        >
+          {uploading ? <Loader2 size={20} className="animate-spin text-brand-500" /> : <Upload size={20} className="text-muted" />}
+          <p className="text-sm font-medium">{uploading ? "Uploading…" : "Upload photo"}</p>
+          <p className="text-xs text-muted">Drag & drop or click · PNG/JPG up to 5MB</p>
+        </div>
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) upload(file); e.target.value = ""; }} />
+      <Field label="Or paste an image URL" value={value ?? ""} onChange={(e) => onChange(e.target.value || null)} placeholder="https://…  or  /uploads/photo.jpg" />
+    </div>
   );
 }

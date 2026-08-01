@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CreditCard, Loader2, Lock, Smartphone } from "lucide-react";
+import { Banknote, Check, CreditCard, Loader2, Lock, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ function Field({ label, ...props }: { label: string } & React.InputHTMLAttribute
 export default function CheckoutPage() {
   const cart = useCart();
   const [step, setStep] = useState(0);
-  const [pay, setPay] = useState<"mpesa" | "card">("mpesa");
+  const [pay, setPay] = useState<"mpesa" | "card" | "cod">("mpesa");
   const [placing, setPlacing] = useState(false);
   const [done, setDone] = useState(false);
   const [orderNo, setOrderNo] = useState("");
@@ -111,10 +111,11 @@ export default function CheckoutPage() {
           {step === 1 && (
             <div className="flex flex-col gap-4">
               <h2 className="font-display text-lg font-bold">Payment method</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   { id: "mpesa" as const, icon: Smartphone, label: "M-Pesa", sub: "Pay via STK push" },
                   { id: "card" as const, icon: CreditCard, label: "Card", sub: "Visa / Mastercard" },
+                  { id: "cod" as const, icon: Banknote, label: "Cash on delivery", sub: "Pay when it arrives" },
                 ].map((m) => (
                   <button
                     key={m.id}
@@ -129,14 +130,16 @@ export default function CheckoutPage() {
                   </button>
                 ))}
               </div>
-              {pay === "mpesa" ? (
-                <Field label="M-Pesa phone number" type="tel" placeholder="+254 7…" />
-              ) : (
+              {pay === "mpesa" && <Field label="M-Pesa phone number" type="tel" placeholder="+254 7…" />}
+              {pay === "card" && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Card number" placeholder="4242 4242 4242 4242" className="sm:col-span-2" />
                   <Field label="Expiry" placeholder="MM / YY" />
                   <Field label="CVC" placeholder="123" />
                 </div>
+              )}
+              {pay === "cod" && (
+                <p className="rounded-xl bg-surface-2 p-3 text-sm text-muted">Pay in cash when your order is delivered. Please have the exact amount ready.</p>
               )}
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
@@ -176,7 +179,7 @@ export default function CheckoutPage() {
                       shipping: cart.shipping,
                       discount: cart.discount,
                       total: cart.total,
-                      payment: pay === "mpesa" ? "M-Pesa" : "Card",
+                      payment: pay === "mpesa" ? "M-Pesa" : pay === "card" ? "Card" : "Cash on Delivery",
                       customer,
                     };
                     fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })

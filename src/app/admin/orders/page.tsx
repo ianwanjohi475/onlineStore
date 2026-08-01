@@ -1,79 +1,104 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
+import { ArrowUpDown, ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Btn, Card, Drawer, EmptyState, PageHeader, Pagination, SearchInput, Select,
-  StatusPill, api, usePaginated,
+  Card, EmptyState, PageHeader, Pagination, SearchInput, StatusPill, Toggle, api, usePaginated,
 } from "@/components/admin/kit";
-import { useToast } from "@/context/toast";
-import type { Order, OrderStatus } from "@/lib/types";
+import { ORDER_STATUSES, PAYMENT_STATUSES, titleCase } from "@/lib/orders";
+import type { Order } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 
-const STATUSES: OrderStatus[] = ["pending", "processing", "shipped", "delivered", "cancelled"];
+type SortKey = "date" | "total" | "number";
 
 export default function OrdersAdmin() {
-  const toast = useToast();
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<string>("all");
-  const [open, setOpen] = useState<Order | null>(null);
+  const [status, setStatus] = useState("all");
+  const [payment, setPayment] = useState("all");
+  const [sort, setSort] = useState<SortKey>("date");
+  const [asc, setAsc] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const load = () => api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([]));
-  useEffect(() => { load(); }, []);
+  useEffect(() => { api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([])); }, []);
 
   const filtered = useMemo(() => {
-    return (orders ?? []).filter((o) => {
-      if (status !== "all" && o.status !== status) return false;
-      const q = query.toLowerCase();
-      return !q || o.number.toLowerCase().includes(q) || o.customer.name.toLowerCase().includes(q) || o.customer.email.toLowerCase().includes(q);
+    let list = (orders ?? []).filter((o) => (showArchived ? true : !o.archived));
+    if (status !== "all") list = list.filter((o) => o.status === status);
+    if (payment !== "all") list = list.filter((o) => o.paymentStatus === payment);
+    const q = query.trim().toLowerCase();
+    if (q) list = list.filter((o) =>
+      o.number.toLowerCase().includes(q) ||
+      o.customer.name.toLowerCase().includes(q) ||
+      o.customer.email.toLowerCase().includes(q) ||
+      (o.transactionId ?? "").toLowerCase().includes(q));
+    list = [...list].sort((a, b) => {
+      let d = 0;
+      if (sort === "date") d = new Date(a.date).getTime() - new Date(b.date).getTime();
+      else if (sort === "total") d = a.total - b.total;
+      else d = a.number.localeCompare(b.number);
+      return asc ? d : -d;
     });
-  }, [orders, query, status]);
+    return list;
+  }, [orders, query, status, payment, sort, asc, showArchived]);
 
-  const { slice, page, pages, setPage } = usePaginated(filtered, 10);
+  const { slice, page, pages, setPage } = usePaginated(filtered, 12);
 
-  const setStatusFor = async (o: Order, s: OrderStatus) => {
-    await api("/api/admin/orders", "PUT", { id: o.id, status: s });
-    toast(`Order marked ${s}`);
-    setOpen(open ? { ...open, status: s } : null);
-    load();
+  const toggleSort = (key: SortKey) => {
+    if (sort === key) setAsc((a) => !a);
+    else { setSort(key); setAsc(false); }
   };
+
+  const selectCls = "h-10 rounded-lg border border-border bg-surface px-3 text-sm capitalize outline-none focus:border-brand-500";
 
   return (
     <div>
-      <PageHeader title="Orders" subtitle={orders ? `${orders.length} total orders` : "Loading…"} />
+      <PageHeader title="Orders" subtitle={orders ? `${filtered.length} of ${orders.length} orders` : "Loading…"} />
 
       <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
-        <SearchInput value={query} onChange={setQuery} placeholder="Search order # or customer" />
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500">
+        <SearchInput value={query} onChange={setQuery} placeholder="Order #, customer or transaction" />
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectCls}>
           <option value="all">All statuses</option>
-          {STATUSES.map((s) => <option key={s} value={s} className="capitalize">{s}</option>)}
+          {ORDER_STATUSES.map((s) => <option key={s} value={s}>{titleCase(s)}</option>)}
         </select>
+        <select value={payment} onChange={(e) => setPayment(e.target.value)} className={selectCls}>
+          <option value="all">All payments</option>
+          {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{titleCase(s)}</option>)}
+        </select>
+        <div className="ml-auto"><Toggle label="Show archived" checked={showArchived} onChange={setShowArchived} /></div>
       </Card>
 
       <Card>
         {orders === null ? (
           <div className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-12 animate-pulse rounded-lg bg-surface-2" />)}</div>
         ) : filtered.length === 0 ? (
-          <EmptyState icon={ShoppingCart} title="No orders found" desc="Orders placed at checkout will appear here." />
+          <EmptyState icon={ShoppingCart} title="No orders found" desc="Orders placed at checkout appear here automatically." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-xs uppercase tracking-wide text-muted">
                 <tr className="border-b border-border">
-                  <th className="px-5 py-3 font-semibold">Order</th>
+                  <th className="px-5 py-3 font-semibold"><SortBtn label="Order" active={sort === "number"} onClick={() => toggleSort("number")} /></th>
                   <th className="px-5 py-3 font-semibold">Customer</th>
-                  <th className="hidden px-5 py-3 font-semibold sm:table-cell">Date</th>
+                  <th className="hidden px-5 py-3 font-semibold md:table-cell"><SortBtn label="Date" active={sort === "date"} onClick={() => toggleSort("date")} /></th>
+                  <th className="hidden px-5 py-3 font-semibold sm:table-cell">Payment</th>
                   <th className="px-5 py-3 font-semibold">Status</th>
-                  <th className="px-5 py-3 text-right font-semibold">Total</th>
+                  <th className="px-5 py-3 text-right font-semibold"><SortBtn label="Total" active={sort === "total"} onClick={() => toggleSort("total")} right /></th>
                 </tr>
               </thead>
               <tbody>
                 {slice.map((o) => (
-                  <tr key={o.id} onClick={() => setOpen(o)} className="cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-2">
-                    <td className="px-5 py-3 font-medium">{o.number}</td>
-                    <td className="px-5 py-3"><p className="font-medium">{o.customer.name}</p><p className="text-xs text-muted">{o.customer.city}</p></td>
-                    <td className="hidden px-5 py-3 text-muted sm:table-cell">{new Date(o.date).toLocaleDateString("en-KE", { day: "numeric", month: "short" })}</td>
+                  <tr key={o.id} onClick={() => router.push(`/admin/orders/${o.id}`)} className="group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-2">
+                    <td className="px-5 py-3">
+                      <Link href={`/admin/orders/${o.id}`} onClick={(e) => e.stopPropagation()} className="font-medium group-hover:text-brand-600 dark:group-hover:text-brand-400">{o.number}</Link>
+                      {o.archived && <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[0.6rem] text-muted">archived</span>}
+                    </td>
+                    <td className="px-5 py-3"><p className="font-medium">{o.customer.name}</p><p className="text-xs text-muted">{o.customer.city || o.customer.email}</p></td>
+                    <td className="hidden px-5 py-3 text-muted md:table-cell">{new Date(o.date).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</td>
+                    <td className="hidden px-5 py-3 sm:table-cell"><div className="flex flex-col items-start gap-1"><span className="text-xs text-muted">{o.payment}</span><StatusPill status={o.paymentStatus} /></div></td>
                     <td className="px-5 py-3"><StatusPill status={o.status} /></td>
                     <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatPrice(o.total)}</td>
                   </tr>
@@ -84,51 +109,14 @@ export default function OrdersAdmin() {
           </div>
         )}
       </Card>
-
-      <Drawer open={!!open} title={open?.number ?? ""} onClose={() => setOpen(null)}>
-        {open && (
-          <div className="flex flex-col gap-5">
-            <div className="flex items-center justify-between">
-              <StatusPill status={open.status} />
-              <span className="text-sm text-muted">{new Date(open.date).toLocaleString("en-KE")}</span>
-            </div>
-
-            <Select label="Update status" value={open.status} onChange={(e) => setStatusFor(open, e.target.value as OrderStatus)}>
-              {STATUSES.map((s) => <option key={s} value={s} className="capitalize">{s}</option>)}
-            </Select>
-
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Customer</p>
-              <div className="rounded-xl border border-border p-4 text-sm">
-                <p className="font-medium">{open.customer.name}</p>
-                <p className="text-muted">{open.customer.email}</p>
-                <p className="text-muted">{open.customer.phone}</p>
-                <p className="text-muted">{open.customer.address}, {open.customer.city}</p>
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Items</p>
-              <div className="divide-y divide-border rounded-xl border border-border">
-                {open.items.map((it) => (
-                  <div key={it.slug} className="flex items-center justify-between p-3 text-sm">
-                    <span>{it.name} <span className="text-muted">× {it.quantity}</span></span>
-                    <span className="font-semibold">{formatPrice(it.price * it.quantity)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-border p-4 text-sm">
-              <div className="flex justify-between"><span className="text-muted">Subtotal</span><span>{formatPrice(open.subtotal)}</span></div>
-              {open.discount > 0 && <div className="flex justify-between text-brand-600 dark:text-brand-400"><span>Discount</span><span>−{formatPrice(open.discount)}</span></div>}
-              <div className="flex justify-between"><span className="text-muted">Shipping</span><span>{open.shipping === 0 ? "Free" : formatPrice(open.shipping)}</span></div>
-              <div className="mt-2 flex justify-between border-t border-border pt-2 font-bold"><span>Total</span><span>{formatPrice(open.total)}</span></div>
-              <p className="mt-2 text-xs text-muted">Paid via {open.payment}</p>
-            </div>
-          </div>
-        )}
-      </Drawer>
     </div>
+  );
+}
+
+function SortBtn({ label, active, onClick, right }: { label: string; active: boolean; onClick: () => void; right?: boolean }) {
+  return (
+    <button onClick={onClick} className={`inline-flex items-center gap-1 uppercase tracking-wide transition-colors hover:text-foreground ${active ? "text-foreground" : ""} ${right ? "flex-row-reverse" : ""}`}>
+      {label} <ArrowUpDown size={12} className={active ? "text-brand-500" : "opacity-40"} />
+    </button>
   );
 }

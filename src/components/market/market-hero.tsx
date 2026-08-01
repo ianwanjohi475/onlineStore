@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BatteryCharging, Cable, ChevronRight, Headphones, Rocket, Speaker, Sparkles,
+  BatteryCharging, Cable, Camera, ChevronRight, Headphones, Home, Monitor, Rocket, Speaker, Sparkles,
   Truck, Watch, Zap, type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import { useCatalog } from "@/context/catalog";
 import { discountPercent, formatPrice } from "@/lib/utils";
 
 const icons: Record<string, LucideIcon> = {
-  Headphones, Watch, BatteryCharging, Zap, Cable, Speaker, Sparkles, Rocket,
+  Headphones, Watch, BatteryCharging, Zap, Cable, Speaker, Home, Monitor, Camera, Sparkles, Rocket,
 };
 
 export function MarketHero() {

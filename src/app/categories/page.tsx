@@ -4,7 +4,7 @@ import { CategoryGrid } from "@/components/home/category-grid";
 
 export const metadata: Metadata = {
   title: "Categories",
-  description: "Shop Oraimo by category — earbuds, smartwatches, power banks, chargers, cables, speakers, accessories and new arrivals.",
+  description: "Shop by category — earbuds, smartwatches, power banks, chargers, home appliances, computer accessories, cameras and more.",
 };
 
 export default function CategoriesPage() {
@@ -14,7 +14,7 @@ export default function CategoriesPage() {
         eyebrow="Find your fit"
         title="All"
         accent="categories"
-        description="Eight ways into the Oraimo range. Pick a lane and start exploring."
+        description="Every way into our range. Pick a lane and start exploring."
         crumbs={[{ label: "Categories" }]}
       />
       <CategoryGrid />

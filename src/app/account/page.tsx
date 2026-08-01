@@ -70,7 +70,7 @@ export default function AccountPage() {
               ))}
               <div className="card-surface p-6 sm:col-span-3">
                 <div className="flex items-center gap-2 text-sm font-semibold"><MapPin size={16} className="text-brand-500" /> Default address</div>
-                <p className="mt-2 text-sm text-muted">Jane Wanjiru · +254 700 000 000<br />Kimathi Street, Nairobi CBD, 00100</p>
+                <p className="mt-2 text-sm text-muted">Jane Wanjiru · +254 799 239 739<br />Kimathi Street, Nairobi CBD, 00100</p>
               </div>
             </div>
           )}

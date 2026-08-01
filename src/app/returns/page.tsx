@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { InfoPage } from "@/components/ui/info-page";
 
-export const metadata: Metadata = { title: "Returns & warranty", description: "Our 15-day returns policy and 12-month warranty on genuine Oraimo products." };
+export const metadata: Metadata = { title: "Returns & warranty", description: "Our 15-day returns policy and warranty on genuine products." };
 
 export default function ReturnsPage() {
   return (

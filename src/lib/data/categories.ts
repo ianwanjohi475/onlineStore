@@ -3,7 +3,7 @@ import type { Category } from "@/lib/types";
 export const categories: Category[] = [
   {
     slug: "earbuds",
-    name: "Earbuds",
+    name: "Earbuds & Audio",
     tagline: "Immersive wireless sound",
     icon: "Headphones",
     gradient: ["#00E676", "#0B3D2E"],
@@ -24,7 +24,7 @@ export const categories: Category[] = [
   },
   {
     slug: "chargers",
-    name: "Chargers",
+    name: "Chargers & Adapters",
     tagline: "Fast, safe, everywhere",
     icon: "Zap",
     gradient: ["#00E676", "#1A1A1A"],
@@ -38,10 +38,31 @@ export const categories: Category[] = [
   },
   {
     slug: "speakers",
-    name: "Speakers",
+    name: "Speakers & Headphones",
     tagline: "Room-filling bass",
     icon: "Speaker",
     gradient: ["#22F58C", "#0A2540"],
+  },
+  {
+    slug: "home-appliances",
+    name: "Home Appliances",
+    tagline: "Smarter everyday living",
+    icon: "Home",
+    gradient: ["#38BDF8", "#0A2540"],
+  },
+  {
+    slug: "computing",
+    name: "Computer Accessories",
+    tagline: "Gear up your desk",
+    icon: "Monitor",
+    gradient: ["#A78BFA", "#1A1A1A"],
+  },
+  {
+    slug: "cameras",
+    name: "Cameras & Security",
+    tagline: "Watch what matters",
+    icon: "Camera",
+    gradient: ["#22D3EE", "#0B3D2E"],
   },
   {
     slug: "accessories",

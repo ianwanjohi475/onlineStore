@@ -7,7 +7,7 @@ import { getFlashSale } from "@/lib/store/store";
 
 export const metadata: Metadata = {
   title: "Flash Sales",
-  description: "Live Oraimo flash deals at their lowest prices. Limited stock, countdown timers — grab yours before they're gone.",
+  description: "Live flash deals at their lowest prices. Limited stock, countdown timers — grab yours before they're gone.",
 };
 
 export default function FlashSalesPage() {
@@ -20,7 +20,7 @@ export default function FlashSalesPage() {
         eyebrow="Limited time"
         title="Flash"
         accent="sales"
-        description="The best Oraimo prices of the season. When the timer hits zero, these deals are gone."
+        description="The best prices of the season. When the timer hits zero, these deals are gone."
         crumbs={[{ label: "Flash Sales" }]}
       />
 

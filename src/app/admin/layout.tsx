@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BadgePercent, ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Menu,
+  BadgePercent, CreditCard, ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Menu,
   MessageSquareQuote, Package, Settings as SettingsIcon, ShapesIcon, ShoppingCart,
   Sparkles, Tag, Users, X,
 } from "lucide-react";
@@ -17,6 +17,7 @@ const groups = [
   { label: "Overview", items: [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+    { href: "/admin/payments", label: "Payments", icon: CreditCard },
     { href: "/admin/customers", label: "Customers", icon: Users },
   ] },
   { label: "Catalog", items: [
@@ -55,7 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <Link href="/admin" className="flex items-center gap-2.5 px-2 py-1" onClick={() => setMobileOpen(false)}>
         <span className="grid size-9 place-items-center rounded-xl bg-brand-500 text-brand-950"><Sparkles size={18} /></span>
         <div className="leading-tight">
-          <p className="font-display text-sm font-bold">Oraimo</p>
+          <p className="font-display text-sm font-bold">SIR VERT</p>
           <p className="text-[0.7rem] text-muted">Commerce admin</p>
         </div>
       </Link>

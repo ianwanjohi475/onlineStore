@@ -1,12 +1,12 @@
 import {
-  BatteryCharging, Cable, Headphones, Rocket, Speaker, Sparkles, Watch, Zap,
+  BatteryCharging, Cable, Camera, Headphones, Home, Monitor, Rocket, Speaker, Sparkles, Watch, Zap,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { getCategories } from "@/lib/store/store";
 
 const icons: Record<string, LucideIcon> = {
-  Headphones, Watch, BatteryCharging, Zap, Cable, Speaker, Sparkles, Rocket,
+  Headphones, Watch, BatteryCharging, Zap, Cable, Speaker, Home, Monitor, Camera, Sparkles, Rocket,
 };
 
 export function CategoryStrip() {

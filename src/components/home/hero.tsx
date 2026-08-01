@@ -50,7 +50,7 @@ export function Hero() {
           </h1>
 
           <p className="mt-6 max-w-md text-lg text-muted">
-            Genuine Oraimo audio, wearables and power — engineered to keep up with your day and
+            Genuine electronics and smart gadgets — engineered to keep up with your day and
             delivered fast across Kenya, warranty included.
           </p>
 

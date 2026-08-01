@@ -52,7 +52,7 @@ export function Pwa() {
             <Download size={20} />
           </span>
           <div className="flex-1">
-            <p className="text-sm font-semibold">Install the Oraimo app</p>
+            <p className="text-sm font-semibold">Install the SIR VERT app</p>
             <p className="text-xs text-muted">Faster, works offline, on your home screen.</p>
           </div>
           <button

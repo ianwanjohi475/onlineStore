@@ -84,18 +84,30 @@ export function Sparkline({ data, className }: { data: number[]; className?: str
 
 /* ── Status + badges ──────────────────────────────────────── */
 const statusStyles: Record<string, string> = {
+  // fulfilment
   delivered: "bg-brand-500/12 text-brand-600 dark:text-brand-400",
+  "out-for-delivery": "bg-teal-500/12 text-teal-600 dark:text-teal-400",
   shipped: "bg-sky-500/12 text-sky-500",
+  packed: "bg-indigo-500/12 text-indigo-500",
   processing: "bg-amber-500/12 text-amber-600",
+  confirmed: "bg-violet-500/12 text-violet-500",
   pending: "bg-surface-2 text-muted",
   cancelled: "bg-rose-500/12 text-rose-500",
+  refunded: "bg-orange-500/12 text-orange-500",
+  returned: "bg-fuchsia-500/12 text-fuchsia-500",
+  // payment
+  paid: "bg-brand-500/12 text-brand-600 dark:text-brand-400",
+  failed: "bg-rose-500/12 text-rose-500",
+  "partially-refunded": "bg-orange-500/12 text-orange-500",
+  // customer / generic
   active: "bg-brand-500/12 text-brand-600 dark:text-brand-400",
+  suspended: "bg-rose-500/12 text-rose-500",
   hidden: "bg-surface-2 text-muted",
 };
 export function StatusPill({ status }: { status: string }) {
   return (
     <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold capitalize", statusStyles[status] ?? "bg-surface-2 text-muted")}>
-      <span className="size-1.5 rounded-full bg-current" /> {status}
+      <span className="size-1.5 rounded-full bg-current" /> {status.replace(/-/g, " ")}
     </span>
   );
 }

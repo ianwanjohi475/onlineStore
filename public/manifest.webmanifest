@@ -1,7 +1,7 @@
 {
-  "name": "Oraimo — Smart Accessories",
-  "short_name": "Oraimo",
-  "description": "Shop genuine Oraimo earbuds, smartwatches, power banks, chargers, cables and speakers. Fast delivery, 12-month warranty.",
+  "name": "SIR VERT ENTERPRISE — Electronics & Services",
+  "short_name": "SIR VERT",
+  "description": "Shop genuine earbuds, smartwatches, power banks, chargers, home appliances and computer accessories. Plus networking services — fibre splicing, WiFi installation, router configuration and PC repair.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
