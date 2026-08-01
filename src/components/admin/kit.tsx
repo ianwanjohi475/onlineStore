@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, ChevronDown, Search, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /* ── Page scaffolding ─────────────────────────────────────── */
@@ -41,46 +41,24 @@ export function Card({
 export function StatCard({
   label,
   value,
-  delta,
   icon: Icon,
-  spark,
+  hint,
 }: {
   label: string;
   value: string;
-  delta?: { value: string; up: boolean };
   icon: React.ComponentType<{ size?: number; className?: string }>;
-  spark?: number[];
+  hint?: string;
 }) {
-  // briefly flash a ring when the value changes (real-time feedback)
-  const prev = useRef(value);
-  const [flash, setFlash] = useState(false);
-  useEffect(() => {
-    if (prev.current !== value && prev.current !== "—" && value !== "—") {
-      setFlash(true);
-      const t = setTimeout(() => setFlash(false), 1000);
-      prev.current = value;
-      return () => clearTimeout(t);
-    }
-    prev.current = value;
-  }, [value]);
-
   return (
-    <Card className={cn("flex min-h-[7.5rem] flex-col p-5 transition-shadow duration-500", flash && "ring-2 ring-brand-500/60")}>
-      <div className="flex items-center justify-between">
-        <span className="grid size-10 place-items-center rounded-xl bg-brand-500/12 text-brand-600 dark:text-brand-400">
-          <Icon size={19} />
+    <Card className="p-5">
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-9 place-items-center rounded-lg bg-brand-500/12 text-brand-600 dark:text-brand-400">
+          <Icon size={17} />
         </span>
-        {delta && (
-          <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", delta.up ? "bg-brand-500/12 text-brand-600 dark:text-brand-400" : "bg-rose-500/12 text-rose-500")}>
-            {delta.up ? "▲" : "▼"} {delta.value}
-          </span>
-        )}
-      </div>
-      <p className="mt-auto pt-4 font-display text-[1.75rem] font-bold leading-none tabular-nums">{value}</p>
-      <div className="mt-2 flex items-end justify-between gap-2">
         <p className="text-sm font-medium text-muted">{label}</p>
-        {spark && <Sparkline data={spark} className="mb-0.5" />}
       </div>
+      <p className="mt-3.5 text-[1.7rem] font-bold leading-none tabular-nums">{value}</p>
+      {hint && <p className="mt-2 text-xs text-muted">{hint}</p>}
     </Card>
   );
 }
@@ -257,21 +235,45 @@ export function Drawer({ open, title, onClose, children, footer }: { open: boole
 }
 
 /* ── Bar chart ────────────────────────────────────────────── */
-export function BarChart({ data, labels, height = 180 }: { data: number[]; labels: string[]; height?: number }) {
+export function BarChart({ data, labels, height = 200 }: { data: number[]; labels: string[]; height?: number }) {
   const max = Math.max(...data, 1);
+  const plot = height - 26; // leave room for the labels row
+  const rows = 4; // horizontal gridlines
   return (
-    <div className="flex items-end gap-2" style={{ height }}>
-      {data.map((d, i) => (
-        <div key={i} className="group flex flex-1 flex-col items-center justify-end gap-2">
-          <div className="relative w-full">
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded bg-foreground px-1.5 py-0.5 text-[0.6rem] font-semibold text-background opacity-0 transition-opacity group-hover:opacity-100">
-              {d.toLocaleString()}
-            </div>
-            <div className="w-full rounded-t-md bg-gradient-to-t from-brand-600 to-brand-400 transition-all" style={{ height: Math.max(4, (d / max) * (height - 30)) }} />
-          </div>
-          <span className="text-[0.65rem] text-muted">{labels[i]}</span>
+    <div>
+      <div className="relative" style={{ height: plot }}>
+        {/* gridlines */}
+        <div className="absolute inset-0 flex flex-col justify-between">
+          {Array.from({ length: rows + 1 }).map((_, i) => (
+            <div key={i} className="h-px w-full bg-border/60" />
+          ))}
         </div>
-      ))}
+        {/* bars */}
+        <div className="absolute inset-0 flex items-end gap-3">
+          {data.map((d, i) => (
+            <div key={i} className="group flex flex-1 items-end justify-center">
+              <div className="relative flex w-full max-w-[2.75rem] justify-center">
+                <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-[0.6rem] font-semibold text-background opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+                  {d.toLocaleString()}
+                </div>
+                <div
+                  className={cn(
+                    "w-full rounded-t-md transition-all duration-300",
+                    d > 0 ? "bg-gradient-to-t from-brand-600 to-brand-400" : "bg-surface-2",
+                  )}
+                  style={{ height: Math.max(6, (d / max) * plot) }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* labels */}
+      <div className="mt-2 flex gap-3">
+        {labels.map((l, i) => (
+          <span key={i} className="flex-1 text-center text-[0.7rem] font-medium text-muted">{l}</span>
+        ))}
+      </div>
     </div>
   );
 }
