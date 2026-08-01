@@ -1,99 +1,62 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
-type Status = "connecting" | "live" | "offline";
-
-interface Sub {
-  onChange?: () => void;
-  onStatus?: (s: Status) => void;
-  onPulse?: () => void;
-}
+import { useEffect, useRef } from "react";
 
 /**
- * A single shared EventSource for the whole app.
+ * Real-time-ish updates via lightweight polling.
  *
- * Opening one stream per component quickly exhausts the browser's ~6
- * connections-per-host budget on HTTP/1.1, which starves client-side
- * navigation and makes the app feel frozen. Instead every `useLive` consumer
- * subscribes to this one connection; it opens on first subscriber and closes
- * when the last one leaves.
+ * We deliberately avoid a long-lived SSE/WebSocket connection: on HTTP/1.1 a
+ * held-open stream eats one of the browser's ~6 connections-per-host and can
+ * starve client-side navigation, making the app feel frozen. Instead we poll a
+ * tiny `/api/version` endpoint every few seconds; each request is short-lived
+ * and released immediately, so navigation is never blocked. `onChange` fires
+ * only when the store version actually changes. Polling pauses while the tab
+ * is hidden.
  */
-const subs = new Set<Sub>();
-let es: EventSource | null = null;
-let baseline = -1;
-let status: Status = "connecting";
-let retry: ReturnType<typeof setTimeout> | null = null;
-
-function broadcastStatus(s: Status) {
-  status = s;
-  subs.forEach((x) => x.onStatus?.(s));
-}
-
-function connect() {
-  if (typeof window === "undefined" || typeof EventSource === "undefined") return;
-  if (es || subs.size === 0) return;
-  broadcastStatus("connecting");
-  es = new EventSource("/api/events");
-  es.onopen = () => broadcastStatus("live");
-  es.onmessage = (e) => {
-    try {
-      const { version } = JSON.parse(e.data) as { version: number };
-      if (baseline === -1) {
-        baseline = version; // ignore initial snapshot
-        return;
-      }
-      if (version !== baseline) {
-        baseline = version;
-        subs.forEach((x) => { x.onPulse?.(); x.onChange?.(); });
-      }
-    } catch {
-      /* ignore malformed */
-    }
-  };
-  es.onerror = () => {
-    broadcastStatus("offline");
-    es?.close();
-    es = null;
-    if (retry) clearTimeout(retry);
-    if (subs.size > 0) retry = setTimeout(connect, 3000);
-  };
-}
-
-function teardownIfIdle() {
-  if (subs.size > 0) return;
-  if (retry) { clearTimeout(retry); retry = null; }
-  es?.close();
-  es = null;
-  baseline = -1;
-  status = "connecting";
-}
-
-/**
- * Subscribe to real-time store updates. `onChange` fires whenever the store
- * version increments. Returns the shared connection status and a per-consumer
- * pulse counter that ticks on each update.
- */
-export function useLive(onChange?: () => void) {
+export function useLive(onChange?: () => void, intervalMs = 4000) {
   const cb = useRef(onChange);
   cb.current = onChange;
-  const [st, setSt] = useState<Status>(status);
-  const [pulse, setPulse] = useState(0);
 
   useEffect(() => {
-    const sub: Sub = {
-      onChange: () => cb.current?.(),
-      onStatus: (s) => setSt(s),
-      onPulse: () => setPulse((p) => p + 1),
-    };
-    subs.add(sub);
-    setSt(status);
-    connect();
-    return () => {
-      subs.delete(sub);
-      teardownIfIdle();
-    };
-  }, []);
+    if (typeof window === "undefined") return;
+    let baseline = -1;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
-  return { status: st, pulse };
+    const schedule = () => {
+      if (stopped) return;
+      timer = setTimeout(tick, intervalMs);
+    };
+
+    const tick = async () => {
+      if (stopped) return;
+      if (document.hidden) return schedule();
+      try {
+        const res = await fetch("/api/version", { cache: "no-store" });
+        if (res.ok) {
+          const { version } = (await res.json()) as { version: number };
+          if (baseline === -1) baseline = version;
+          else if (version !== baseline) {
+            baseline = version;
+            cb.current?.();
+          }
+        }
+      } catch {
+        /* offline / transient — try again next tick */
+      }
+      schedule();
+    };
+
+    // refresh immediately when the tab regains focus
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+
+    // establish the baseline right away so changes are caught from the start
+    tick();
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [intervalMs]);
 }
