@@ -138,7 +138,7 @@ export function ProductDetail({ product }: { product: Product }) {
           {tab === "Description" && (
             <div className="max-w-3xl space-y-4 text-muted">
               <p>{product.description}</p>
-              <p>Every Oraimo product is engineered for daily life and rigorously tested for durability, then backed by a 12-month warranty and responsive local support. This unit ships in fully recyclable packaging with all cables and documentation included.</p>
+              <p>Every product we sell is genuine, tested for daily use, and backed by warranty and responsive local support. This unit ships in fully recyclable packaging with all cables and documentation included.</p>
             </div>
           )}
           {tab === "Specifications" && (

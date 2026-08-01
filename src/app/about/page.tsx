@@ -8,7 +8,7 @@ import { CtaBanner } from "@/components/home/cta-banner";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Our mission: put genuine, reliable Oraimo technology in every hand across Kenya — backed by real warranty and fast, honest service.",
+  description: "Our mission: put genuine, reliable technology in every hand across Kenya — backed by real warranty and fast, honest service.",
 };
 
 const values = [
@@ -42,7 +42,7 @@ export default function AboutPage() {
           <h2 className="mt-3 font-display text-3xl font-bold">Technology that keeps its promises</h2>
           <div className="mt-4 space-y-4 text-muted">
             <p>We started with a simple frustration: great accessories were either overpriced or unreliable, and getting help after a purchase felt impossible. So we built the store we wished existed.</p>
-            <p>Today we deliver genuine Oraimo audio, wearables and power to 47 cities across Kenya — fast, fairly priced, and backed by a warranty we actually honour. Over two million products later, that promise hasn&apos;t changed.</p>
+            <p>Today we deliver genuine electronics, smart gadgets and networking services across Kenya — fast, fairly priced, and backed by a warranty we actually honour. When you call, we answer.</p>
           </div>
         </Reveal>
       </section>

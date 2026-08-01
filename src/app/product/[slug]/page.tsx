@@ -20,7 +20,7 @@ export async function generateMetadata({
     title: product.name,
     description: `${product.tagline}. ${product.description.slice(0, 120)}…`,
     openGraph: {
-      title: `${product.name} · Oraimo`,
+      title: `${product.name} · SIR VERT ENTERPRISE`,
       description: product.tagline,
       type: "website",
     },

@@ -32,7 +32,7 @@ export function WhatsAppButton() {
                 <MessageCircle size={18} />
               </span>
               <div>
-                <p className="text-sm font-semibold">Oraimo Support</p>
+                <p className="text-sm font-semibold">SIR VERT Support</p>
                 <p className="text-xs text-brand-600 dark:text-brand-400">● Online now</p>
               </div>
             </div>

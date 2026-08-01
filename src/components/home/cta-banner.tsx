@@ -17,7 +17,7 @@ export function CtaBanner() {
               Upgrade your everyday tech <span className="text-gradient">today.</span>
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-brand-100/70">
-              Genuine Oraimo gear, unbeatable flash-sale prices, and a warranty that has your back.
+              Genuine gear, unbeatable flash-sale prices, and a warranty that has your back.
               Free delivery on your first order.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">

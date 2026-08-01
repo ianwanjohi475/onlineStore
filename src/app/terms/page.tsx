@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { InfoPage } from "@/components/ui/info-page";
 
-export const metadata: Metadata = { title: "Terms of service", description: "The terms that apply to using the Oraimo Store demo." };
+export const metadata: Metadata = { title: "Terms of service", description: "The terms that apply to using SIR VERT ENTERPRISE." };
 
 export default function TermsPage() {
   return (
@@ -25,7 +25,7 @@ export default function TermsPage() {
           "Products are covered by the warranty described on our Returns & Warranty page. To the extent permitted by law, our liability is limited to the value of the product purchased.",
         ] },
         { heading: "This is a demo", paragraphs: [
-          "This site is a portfolio demonstration and not affiliated with Oraimo. No real transactions take place.",
+          "These terms govern your use of the SIR VERT ENTERPRISE website and services.",
         ] },
       ]}
     />

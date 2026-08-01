@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!category) return { title: "Category not found" };
   return {
     title: category.name,
-    description: `${category.tagline}. Shop genuine Oraimo ${category.name.toLowerCase()} with fast delivery and a 12-month warranty.`,
+    description: `${category.tagline}. Shop genuine ${category.name.toLowerCase()} with fast delivery and a 12-month warranty.`,
   };
 }
 

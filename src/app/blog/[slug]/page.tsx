@@ -59,7 +59,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         <div className="mt-10 rounded-2xl border border-border bg-surface p-6">
           <p className="text-sm font-semibold">Written by {post.author}</p>
-          <p className="mt-1 text-sm text-muted">Part of the Oraimo team, helping you choose and get the most from your tech.</p>
+          <p className="mt-1 text-sm text-muted">Part of the SIR VERT ENTERPRISE team, helping you choose and get the most from your tech.</p>
         </div>
       </div>
 

@@ -134,7 +134,7 @@ export const faqs = [
     a: "Orders placed before 3pm ship the same day. Nairobi deliveries arrive next day; the rest of Kenya within 2–4 working days. You'll get an SMS with live tracking the moment your parcel leaves our warehouse.",
   },
   {
-    q: "What warranty do Oraimo products carry?",
+    q: "What warranty do your products carry?",
     a: "Every product is covered by a 12-month manufacturer warranty, and audio and wearables include a 15-day no-questions replacement window. Warranty claims are handled in-app or over WhatsApp.",
   },
   {
@@ -146,7 +146,7 @@ export const faqs = [
     a: "Yes. Unopened items can be returned within 15 days for a full refund. If a product is faulty, we cover return shipping and send a replacement straight away.",
   },
   {
-    q: "Are these genuine Oraimo products?",
+    q: "Are these genuine products?",
     a: "Always. We are an authorised channel, so every item is 100% genuine and warranty-backed, with a scratch-to-verify authenticity seal on the box.",
   },
 ];

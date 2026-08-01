@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  BadgeCheck,
-  Boxes,
-  CreditCard,
-  Headset,
-  RefreshCw,
-  ShieldCheck,
-  Truck,
-  Wrench,
+  BadgeCheck, Cable, Camera, Cpu, Handshake, Headset, Network, Phone,
+  Router, ShieldCheck, Truck, Wifi, Wrench,
 } from "lucide-react";
 import { PageHero } from "@/components/ui/page-hero";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -19,50 +13,86 @@ import { CtaBanner } from "@/components/home/cta-banner";
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "More than a shop — fast delivery, genuine warranty and repairs, trade-in, business supply, financing and expert setup support for every Oraimo product.",
+    "SIR VERT ENTERPRISE networking & technical services: fibre splicing, WiFi installation, router configuration, structured cabling, CCTV installation and PC repair — plus fast delivery and genuine warranty on every product.",
 };
 
-const services = [
-  { icon: Truck, title: "Fast, tracked delivery", text: "Same-day dispatch before 3pm. Next-day in Nairobi, 2–4 days countrywide, with live SMS tracking.", tag: "Every order" },
-  { icon: ShieldCheck, title: "Warranty & repairs", text: "A 12-month manufacturer warranty on everything, handled in-app or on WhatsApp — most claims resolved same day.", tag: "12 months" },
-  { icon: RefreshCw, title: "Trade-in & upgrade", text: "Send us your old buds, watch or power bank and get store credit toward the latest model.", tag: "Get credit" },
-  { icon: Boxes, title: "Business & bulk supply", text: "Kitting out a team or reselling? Volume pricing, invoicing and dedicated account support.", tag: "For teams" },
-  { icon: CreditCard, title: "Flexible payment", text: "M-Pesa, cards, and pay-on-delivery in Nairobi. Split larger orders into instalments at checkout.", tag: "Buy now, pay later" },
-  { icon: Headset, title: "Expert setup help", text: "Pairing, firmware, or choosing the right fit — our team walks you through it over WhatsApp or call.", tag: "Free advice" },
+const networking = [
+  { icon: Network, title: "Fibre splicing", text: "Professional fusion splicing and termination for FTTH and backbone fibre, with clean, low-loss joins and proper testing." },
+  { icon: Wifi, title: "WiFi installation", text: "Whole-home and office WiFi — surveyed, installed and tuned for strong, reliable coverage in every corner." },
+  { icon: Router, title: "Router configuration", text: "Router and access-point setup, secure passwords, guest networks, port forwarding, VLANs and firmware updates." },
+  { icon: Cable, title: "Structured cabling", text: "Neat, labelled network cabling and patch panels for homes, offices and shops — done to standard." },
+  { icon: Camera, title: "CCTV & IP cameras", text: "Supply and installation of IP and CCTV cameras with remote viewing on your phone, day or night." },
+  { icon: Cpu, title: "PC repair & setup", text: "Diagnostics, upgrades, OS installs, virus clean-ups and data recovery for laptops and desktops." },
+];
+
+const retail = [
+  { icon: Truck, title: "Fast delivery", text: "Same-day dispatch and quick delivery across Nairobi and countrywide, with free delivery over KES 5,000." },
+  { icon: ShieldCheck, title: "Genuine & warranted", text: "Authentic products backed by warranty and responsive local support — we stand behind what we sell." },
+  { icon: Handshake, title: "Business & bulk supply", text: "Volume pricing, invoicing and account support for offices, schools and resellers." },
+  { icon: Headset, title: "Expert advice", text: "Not sure what you need? Talk to us — we help you pick the right product or service for the job." },
 ];
 
 const process = [
-  { icon: Boxes, title: "Order online", text: "Pick your products and check out securely in under a minute." },
-  { icon: Truck, title: "We dispatch fast", text: "Packed and shipped the same day, with tracking sent to your phone." },
-  { icon: BadgeCheck, title: "Delivered & verified", text: "Scratch the authenticity seal to confirm your genuine Oraimo product." },
-  { icon: Wrench, title: "Backed for a year", text: "Any issue in 12 months? We repair or replace, no drama." },
+  { icon: Phone, title: "Get in touch", text: "Call or WhatsApp us with what you need. When you call, we answer." },
+  { icon: BadgeCheck, title: "Free assessment", text: "We assess the site or job and give you a clear, honest quote." },
+  { icon: Wrench, title: "We do the work", text: "Our technicians handle the installation or repair professionally." },
+  { icon: ShieldCheck, title: "Backed & supported", text: "We test everything and stay available for follow-up support." },
 ];
+
+const PHONE = "+254 799 239 739";
+const WHATSAPP = "254799239739";
 
 export default function ServicesPage() {
   return (
     <>
       <PageHero
-        eyebrow="What we do"
-        title="Services that go"
-        accent="beyond the box"
-        description="Buying the product is the easy part. Delivery, warranty, trade-in, support — here's everything that comes with shopping Oraimo."
+        eyebrow="Networking & technical services"
+        title="Fibre, WiFi, CCTV"
+        accent="& PC repair"
+        description="SIR VERT ENTERPRISE is more than a shop. We are your networking consultant — fibre splicing, WiFi installation, router configuration, structured cabling, CCTV and PC repair, delivered by technicians who get it right the first time."
         crumbs={[{ label: "Services" }]}
       />
 
       <section className="container-x py-16">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((s, i) => (
+        <SectionHeading eyebrow="Networking consultancy" title="What we" accent="install & fix" />
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {networking.map((s, i) => (
             <Reveal key={s.title} index={i}>
               <div className="card-surface group flex h-full flex-col p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/40 hover:shadow-card">
-                <div className="flex items-center justify-between">
-                  <span className="grid size-12 place-items-center rounded-2xl bg-brand-500/12 text-brand-600 transition-colors group-hover:bg-brand-500 group-hover:text-brand-950 dark:text-brand-400">
-                    <s.icon size={22} />
-                  </span>
-                  <span className="rounded-full border border-border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-muted">
-                    {s.tag}
-                  </span>
-                </div>
+                <span className="grid size-12 place-items-center rounded-2xl bg-brand-500/12 text-brand-600 transition-colors group-hover:bg-brand-500 group-hover:text-brand-950 dark:text-brand-400">
+                  <s.icon size={22} />
+                </span>
                 <h3 className="mt-5 font-display text-lg font-bold">{s.title}</h3>
+                <p className="mt-2 flex-1 text-sm text-muted">{s.text}</p>
+                <Link href="/contact" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline dark:text-brand-400">Request this service →</Link>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* contact strip */}
+      <section className="border-y border-border bg-surface py-10">
+        <div className="container-x flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+          <div>
+            <h2 className="font-display text-xl font-bold">Book a technician today</h2>
+            <p className="mt-1 text-muted">Call or WhatsApp SIR VERT ENTERPRISE — {PHONE}. When you call, we answer.</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg"><a href={`tel:${WHATSAPP}`}><Phone size={18} /> Call now</a></Button>
+            <Button asChild size="lg" variant="outline"><a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener noreferrer">WhatsApp us</a></Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="container-x py-16">
+        <SectionHeading eyebrow="Shopping with us" title="More than" accent="the sale" />
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {retail.map((s, i) => (
+            <Reveal key={s.title} index={i}>
+              <div className="card-surface flex h-full flex-col p-6">
+                <span className="grid size-11 place-items-center rounded-2xl bg-brand-500/12 text-brand-600 dark:text-brand-400"><s.icon size={20} /></span>
+                <h3 className="mt-4 font-display font-bold">{s.title}</h3>
                 <p className="mt-2 flex-1 text-sm text-muted">{s.text}</p>
               </div>
             </Reveal>
@@ -72,17 +102,13 @@ export default function ServicesPage() {
 
       <section className="border-y border-border bg-surface py-16">
         <div className="container-x">
-          <SectionHeading eyebrow="How it works" title="From cart to" accent="covered" align="center" />
+          <SectionHeading eyebrow="How it works" title="From call to" accent="completed" align="center" />
           <div className="mt-12 grid gap-6 md:grid-cols-4">
             {process.map((p, i) => (
               <Reveal key={p.title} index={i}>
                 <div className="relative text-center">
-                  <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-500 text-brand-950 shadow-glow">
-                    <p.icon size={24} />
-                  </span>
-                  <span className="mt-4 block font-display text-xs font-bold uppercase tracking-widest text-muted">
-                    Step {i + 1}
-                  </span>
+                  <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-500 text-brand-950 shadow-glow"><p.icon size={24} /></span>
+                  <span className="mt-4 block font-display text-xs font-bold uppercase tracking-widest text-muted">Step {i + 1}</span>
                   <h3 className="mt-1 font-display font-semibold">{p.title}</h3>
                   <p className="mt-2 text-sm text-muted">{p.text}</p>
                 </div>
@@ -90,39 +116,6 @@ export default function ServicesPage() {
             ))}
           </div>
         </div>
-      </section>
-
-      <section className="container-x py-16">
-        <Reveal>
-          <div className="grid items-center gap-8 rounded-[2rem] border border-border bg-gradient-to-br from-brand-500/10 to-transparent p-8 lg:grid-cols-[1.4fr_1fr] lg:p-12">
-            <div>
-              <span className="eyebrow"><Boxes size={14} /> For business</span>
-              <h2 className="mt-3 font-display text-3xl font-bold">Supplying a team, office or store?</h2>
-              <p className="mt-4 max-w-lg text-muted">
-                From ten units to ten thousand, we handle volume pricing, proper invoicing, and a
-                dedicated account manager so procurement is painless. Tell us what you need and we&apos;ll
-                quote within a day.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild size="lg"><Link href="/contact">Request a quote</Link></Button>
-                <Button asChild size="lg" variant="outline"><Link href="/shop">Browse catalogue</Link></Button>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { k: "48h", v: "Quote turnaround" },
-                { k: "10+", v: "Unit minimum" },
-                { k: "1", v: "Account manager" },
-                { k: "12mo", v: "Warranty on all" },
-              ].map((s) => (
-                <div key={s.v} className="rounded-2xl border border-border bg-surface p-5 text-center">
-                  <p className="font-display text-3xl font-bold text-brand-600 dark:text-brand-400">{s.k}</p>
-                  <p className="mt-1 text-xs text-muted">{s.v}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Reveal>
       </section>
 
       <CtaBanner />

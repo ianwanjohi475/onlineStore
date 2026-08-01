@@ -14,7 +14,7 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-const siteUrl = "https://oraimo-store.example";
+const siteUrl = "https://sirvertenterprise.example";
 
 export function generateMetadata(): Metadata {
   return {
@@ -25,31 +25,33 @@ export function generateMetadata(): Metadata {
   },
   description: getSettings().seoDescription,
   keywords: [
-    "Oraimo",
+    "SIR VERT ENTERPRISE",
     "earbuds",
     "smartwatch",
     "power bank",
     "charger",
-    "USB-C cable",
-    "bluetooth speaker",
+    "home appliances",
+    "computer accessories",
+    "CCTV camera",
+    "fibre splicing",
+    "WiFi installation",
     "Kenya electronics",
   ],
   openGraph: {
     type: "website",
     url: siteUrl,
-    title: "Oraimo — Smart Accessories, Powered for Life",
-    description:
-      "Genuine Oraimo audio, wearables and power. Fast delivery, 12-month warranty, flash-sale prices.",
-    siteName: "Oraimo Store",
+    title: getSettings().seoTitle,
+    description: getSettings().seoDescription,
+    siteName: "SIR VERT ENTERPRISE",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Oraimo — Smart Accessories, Powered for Life",
-    description: "Genuine Oraimo audio, wearables and power. Fast delivery across Kenya.",
+    title: getSettings().seoTitle,
+    description: getSettings().seoDescription,
   },
   manifest: "/manifest.webmanifest",
-  applicationName: "Oraimo",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Oraimo" },
+  applicationName: "SIR VERT ENTERPRISE",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "SIR VERT" },
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
@@ -75,10 +77,10 @@ export const viewport: Viewport = {
 const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "OnlineStore",
-  name: "Oraimo Store",
+  name: "SIR VERT ENTERPRISE",
   url: siteUrl,
-  description: "Genuine Oraimo smart accessories with fast delivery and 12-month warranty.",
-  brand: { "@type": "Brand", name: "Oraimo" },
+  telephone: "+254799239739",
+  description: "Electronics, smart gadgets and networking services — fibre splicing, WiFi installation, router configuration and PC repair. Fast delivery across Kenya.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

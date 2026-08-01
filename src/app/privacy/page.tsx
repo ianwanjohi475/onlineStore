@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { InfoPage } from "@/components/ui/info-page";
 
-export const metadata: Metadata = { title: "Privacy policy", description: "How the Oraimo Store demo handles your information." };
+export const metadata: Metadata = { title: "Privacy policy", description: "How SIR VERT ENTERPRISE handles your information." };
 
 export default function PrivacyPage() {
   return (

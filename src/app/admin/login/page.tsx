@@ -32,7 +32,7 @@ export default function AdminLogin() {
           <span className="grid size-12 place-items-center rounded-2xl bg-brand-500 text-brand-950">
             <LayoutDashboard size={24} />
           </span>
-          <h1 className="mt-4 font-display text-2xl font-bold">Oraimo Admin</h1>
+          <h1 className="mt-4 font-display text-2xl font-bold">SIR VERT Admin</h1>
           <p className="mt-1 text-sm text-muted">Sign in to manage your store</p>
         </div>
         <form onSubmit={submit} className="rounded-2xl border border-border bg-surface p-6">

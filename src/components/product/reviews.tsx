@@ -8,7 +8,7 @@ const titles = ["Exactly as described", "Worth every shilling", "My new favourit
 const bodies = [
   "Arrived next day and works flawlessly. The build quality genuinely surprised me for the price.",
   "I was skeptical but this exceeded expectations. Battery life is as advertised and setup took seconds.",
-  "Second Oraimo product I've bought and the consistency is why I keep coming back. Highly recommend.",
+  "Second order from SIR VERT ENTERPRISE and the consistency is why I keep coming back. Highly recommend.",
   "Does everything it promises. The finish feels premium and it pairs instantly with my phone.",
   "Great deal during the flash sale. No complaints at all after a month of daily use.",
 ];

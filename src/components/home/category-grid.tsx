@@ -1,7 +1,10 @@
 import {
   BatteryCharging,
   Cable,
+  Camera,
   Headphones,
+  Home,
+  Monitor,
   Rocket,
   Speaker,
   Sparkles,
@@ -21,6 +24,9 @@ const icons: Record<string, LucideIcon> = {
   Zap,
   Cable,
   Speaker,
+  Home,
+  Monitor,
+  Camera,
   Sparkles,
   Rocket,
 };

@@ -148,7 +148,7 @@ export function SiteFooter() {
 
       <div className="border-t border-border">
         <div className="container-x flex flex-col items-center justify-between gap-3 py-6 text-xs text-muted md:flex-row">
-          <p>© {new Date().getFullYear()} Oraimo Store demo. A design-system showcase — not affiliated with Oraimo.</p>
+          <p>© {new Date().getFullYear()} SIR VERT ENTERPRISE. All rights reserved. · +254 799 239 739</p>
           <nav className="flex flex-wrap justify-center gap-4">
             {categories.slice(0, 5).map((c) => (
               <Link key={c.slug} href={`/categories/${c.slug}`} className="hover:text-foreground">

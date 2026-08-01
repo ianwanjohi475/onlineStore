@@ -5,6 +5,9 @@ export type CategorySlug =
   | "chargers"
   | "cables"
   | "speakers"
+  | "home-appliances"
+  | "computing"
+  | "cameras"
   | "accessories"
   | "new-arrivals";
 
@@ -85,20 +88,64 @@ export interface OrderItem {
   price: number;
 }
 
-export type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+export type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "processing"
+  | "packed"
+  | "shipped"
+  | "out-for-delivery"
+  | "delivered"
+  | "cancelled"
+  | "refunded"
+  | "returned";
+
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded" | "partially-refunded";
+
+/** A single entry in an order's audit trail. */
+export interface OrderEvent {
+  at: string;
+  label: string;
+  by?: string;
+}
+
+/** An internal admin note attached to an order. */
+export interface OrderNote {
+  at: string;
+  text: string;
+}
+
+export interface Customer {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+}
 
 export interface Order {
   id: string;
   number: string;
   date: string;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
   items: OrderItem[];
   subtotal: number;
   shipping: number;
   discount: number;
   total: number;
+  /** payment method label — M-Pesa, Card, Bank Transfer, Cash on Delivery, PayPal */
   payment: string;
-  customer: { name: string; email: string; phone: string; address: string; city: string };
+  /** payment reference / transaction id */
+  transactionId?: string;
+  /** amount refunded so far (for partial refunds) */
+  refunded?: number;
+  customer: Customer;
+  /** separate billing address when it differs from shipping */
+  billing?: Customer;
+  timeline: OrderEvent[];
+  notes: OrderNote[];
+  archived?: boolean;
 }
 
 export interface Announcement {
@@ -138,6 +185,8 @@ export interface StoreData {
   testimonials: Testimonial[];
   orders: Order[];
   settings: SiteSettings;
+  /** emails of customers whose accounts have been suspended */
+  suspendedCustomers?: string[];
 }
 
 export interface CartLine {
