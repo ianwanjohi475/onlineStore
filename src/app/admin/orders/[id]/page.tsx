@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Btn, Card, Select, StatusPill, TextArea, api } from "@/components/admin/kit";
+import { useLive } from "@/hooks/use-live";
 import { useToast } from "@/context/toast";
 import { ORDER_STATUSES, PAYMENT_STATUSES, titleCase } from "@/lib/orders";
 import type { Order, OrderStatus, PaymentStatus } from "@/lib/types";
@@ -26,6 +27,7 @@ export default function OrderDetail() {
       .then((all: Order[]) => setOrder(all.find((o) => o.id === id) ?? null))
       .catch(() => setOrder(null));
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [id]);
+  useLive(() => { if (!saving) load(); });
 
   const update = async (patch: Record<string, unknown>, msg: string) => {
     setSaving(true);

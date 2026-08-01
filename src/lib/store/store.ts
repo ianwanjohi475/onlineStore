@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { CategorySlug, Order, Product, StoreData } from "@/lib/types";
 import { seed } from "./seed";
+import { bumpStore } from "./events";
 
 /** Backfill fields that older persisted orders may be missing. */
 function normalizeOrder(o: Order): Order {
@@ -49,9 +50,11 @@ export function readStore(): StoreData {
   }
 }
 
-export function writeStore(data: StoreData) {
+export function writeStore(data: StoreData, scope = "store") {
   ensure();
   fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
+  // notify connected clients (dashboards, storefront) that data changed
+  bumpStore(scope);
 }
 
 /* ── storefront getters ─────────────────────────────────── */
@@ -104,7 +107,16 @@ export function getOrders() {
 export function addOrder(order: import("@/lib/types").Order) {
   const store = readStore();
   store.orders.unshift(order);
-  writeStore(store);
+  // Decrement inventory for each ordered item and flag anything that sells out.
+  for (const item of order.items) {
+    const product = store.products.find((p) => p.slug === item.slug);
+    if (!product) continue;
+    if (typeof product.stock === "number") {
+      product.stock = Math.max(0, product.stock - item.quantity);
+      if (product.stock === 0) product.inStock = false;
+    }
+  }
+  writeStore(store, "order");
 }
 /** Only active slides currently within their optional schedule window. */
 export function getActiveSlides() {

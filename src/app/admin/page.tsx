@@ -7,6 +7,7 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { BarChart, Card, PageHeader, StatCard, StatusPill, api } from "@/components/admin/kit";
+import { useLive } from "@/hooks/use-live";
 import { CANCELLED_STATUSES, COMPLETED_STATUSES, OPEN_STATUSES } from "@/lib/orders";
 import type { Order, Product } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
@@ -15,10 +16,12 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [products, setProducts] = useState<Product[] | null>(null);
 
-  useEffect(() => {
+  const load = () => {
     api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([]));
     api("/api/admin/products", "GET").then(setProducts).catch(() => setProducts([]));
-  }, []);
+  };
+  useEffect(() => { load(); }, []);
+  useLive(load);
 
   const m = useMemo(() => {
     if (!orders) return null;

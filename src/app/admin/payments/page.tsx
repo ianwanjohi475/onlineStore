@@ -7,6 +7,7 @@ import {
   Btn, Card, EmptyState, PageHeader, Pagination, SearchInput, StatCard, StatusPill, api, usePaginated,
 } from "@/components/admin/kit";
 import { useToast } from "@/context/toast";
+import { useLive } from "@/hooks/use-live";
 import { PAYMENT_METHODS, PAYMENT_STATUSES, titleCase } from "@/lib/orders";
 import type { Order } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
@@ -23,6 +24,7 @@ export default function PaymentsAdmin() {
 
   const load = () => api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([]));
   useEffect(() => { load(); }, []);
+  useLive(load);
 
   const list = orders ?? [];
 
