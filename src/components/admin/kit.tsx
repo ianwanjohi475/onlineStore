@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, ChevronDown, Search, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /* ── Page scaffolding ─────────────────────────────────────── */
@@ -51,8 +51,21 @@ export function StatCard({
   icon: React.ComponentType<{ size?: number; className?: string }>;
   spark?: number[];
 }) {
+  // briefly flash a ring when the value changes (real-time feedback)
+  const prev = useRef(value);
+  const [flash, setFlash] = useState(false);
+  useEffect(() => {
+    if (prev.current !== value && prev.current !== "—" && value !== "—") {
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 1000);
+      prev.current = value;
+      return () => clearTimeout(t);
+    }
+    prev.current = value;
+  }, [value]);
+
   return (
-    <Card className="p-5">
+    <Card className={cn("flex min-h-[7.5rem] flex-col p-5 transition-shadow duration-500", flash && "ring-2 ring-brand-500/60")}>
       <div className="flex items-center justify-between">
         <span className="grid size-10 place-items-center rounded-xl bg-brand-500/12 text-brand-600 dark:text-brand-400">
           <Icon size={19} />
@@ -63,10 +76,10 @@ export function StatCard({
           </span>
         )}
       </div>
-      <p className="mt-4 font-display text-3xl font-bold tabular-nums">{value}</p>
-      <div className="mt-1 flex items-center justify-between">
-        <p className="text-sm text-muted">{label}</p>
-        {spark && <Sparkline data={spark} />}
+      <p className="mt-auto pt-4 font-display text-[1.75rem] font-bold leading-none tabular-nums">{value}</p>
+      <div className="mt-2 flex items-end justify-between gap-2">
+        <p className="text-sm font-medium text-muted">{label}</p>
+        {spark && <Sparkline data={spark} className="mb-0.5" />}
       </div>
     </Card>
   );

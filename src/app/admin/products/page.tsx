@@ -8,6 +8,7 @@ import {
 } from "@/components/admin/kit";
 import { ProductImage } from "@/components/product/product-image";
 import { useToast } from "@/context/toast";
+import { useLive } from "@/hooks/use-live";
 import type { Brand, Category, Product } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ export default function ProductsAdmin() {
     api("/api/admin/categories", "GET").then(setCategories).catch(() => {});
     api("/api/admin/brands", "GET").then(setBrands).catch(() => {});
   }, []);
+  useLive(() => { if (!editing) load(); });
 
   const filtered = useMemo(() => {
     let list = (products ?? []).filter((p) => {

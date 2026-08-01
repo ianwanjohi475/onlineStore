@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Card, EmptyState, PageHeader, Pagination, SearchInput, StatusPill, Toggle, api, usePaginated,
 } from "@/components/admin/kit";
+import { useLive } from "@/hooks/use-live";
 import { ORDER_STATUSES, PAYMENT_STATUSES, titleCase } from "@/lib/orders";
 import type { Order } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
@@ -23,7 +24,9 @@ export default function OrdersAdmin() {
   const [asc, setAsc] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
 
-  useEffect(() => { api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([])); }, []);
+  const load = () => api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([]));
+  useEffect(() => { load(); }, []);
+  useLive(load);
 
   const filtered = useMemo(() => {
     let list = (orders ?? []).filter((o) => (showArchived ? true : !o.archived));

@@ -26,6 +26,20 @@ export function useLocalStorage<T>(key: string, initial: T) {
     }
   }, [key, value, hydrated]);
 
+  // keep in sync across browser tabs in real time
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== key || e.newValue == null) return;
+      try {
+        setValue(JSON.parse(e.newValue) as T);
+      } catch {
+        /* ignore malformed */
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [key]);
+
   const update = useCallback(
     (next: T | ((prev: T) => T)) => setValue(next),
     [],

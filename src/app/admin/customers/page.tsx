@@ -7,6 +7,7 @@ import {
   Btn, Card, Drawer, EmptyState, PageHeader, Pagination, SearchInput, StatusPill, api, usePaginated,
 } from "@/components/admin/kit";
 import { useToast } from "@/context/toast";
+import { useLive } from "@/hooks/use-live";
 import type { Order } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 
@@ -23,10 +24,12 @@ export default function CustomersAdmin() {
   const [open, setOpen] = useState<Customer | null>(null);
 
   const loadSuspended = () => api("/api/admin/customers", "GET").then((r) => setSuspended(r.suspended ?? [])).catch(() => {});
-  useEffect(() => {
+  const load = () => {
     api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([]));
     loadSuspended();
-  }, []);
+  };
+  useEffect(() => { load(); }, []);
+  useLive(load);
 
   const customers = useMemo<Customer[]>(() => {
     const map = new Map<string, Customer>();
