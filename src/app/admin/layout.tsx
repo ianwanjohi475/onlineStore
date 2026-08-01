@@ -10,7 +10,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/components/admin/kit";
-import { LiveDot } from "@/components/admin/live-dot";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -111,7 +110,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="font-display text-sm font-semibold">{current?.label ?? "Admin"}</span>
           </div>
           <div className="flex items-center gap-2">
-            <LiveDot />
             <ThemeToggle />
             <Link href="/" className="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:border-brand-500 sm:inline-flex"><ExternalLink size={15} /> View store</Link>
             <div className="relative">
