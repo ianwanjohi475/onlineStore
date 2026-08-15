@@ -162,20 +162,20 @@ async function writeStoreDb(data: StoreData) {
   });
 }
 
-/** Insert one order and decrement stock — a targeted, concurrency-safe write. */
+/** Insert one order and decrement stock — a targeted, concurrency-safe write.
+ *  Uses only basic INSERT/SELECT/UPDATE (no JSON functions) for max DB portability. */
 async function addOrderDb(order: Order) {
   await ensureReady();
   await withTx(async (c) => {
     await c.query(`INSERT INTO orders (id, created_at, data) VALUES ($1, now(), $2)`, [order.id, JSON.stringify(order)]);
     for (const item of order.items) {
-      await c.query(
-        `UPDATE products
-           SET data = jsonb_set(
-             jsonb_set(data, '{stock}', to_jsonb(GREATEST(0, COALESCE((data->>'stock')::int, 0) - $2))),
-             '{inStock}', to_jsonb(GREATEST(0, COALESCE((data->>'stock')::int, 0) - $2) > 0))
-         WHERE slug = $1 AND (data ? 'stock')`,
-        [item.slug, item.quantity],
-      );
+      const rows = (await c.query(`SELECT data FROM products WHERE slug=$1 FOR UPDATE`, [item.slug])).rows as { data: Product }[];
+      const p = rows[0]?.data;
+      if (p && typeof p.stock === "number") {
+        p.stock = Math.max(0, p.stock - item.quantity);
+        if (p.stock === 0) p.inStock = false;
+        await c.query(`UPDATE products SET data=$2 WHERE slug=$1`, [item.slug, JSON.stringify(p)]);
+      }
     }
   });
 }

@@ -44,6 +44,11 @@ export async function POST(req: Request) {
     ],
     notes: [],
   };
-  await addOrder(order);
+  try {
+    await addOrder(order);
+  } catch (e) {
+    console.error("Failed to save order:", e);
+    return NextResponse.json({ error: "Could not save your order. Please try again." }, { status: 500 });
+  }
   return NextResponse.json({ ok: true, number: order.number });
 }

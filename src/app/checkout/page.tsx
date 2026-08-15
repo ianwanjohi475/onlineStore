@@ -29,6 +29,7 @@ export default function CheckoutPage() {
   const [pay, setPay] = useState<"mpesa" | "card" | "cod">("mpesa");
   const [placing, setPlacing] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
   const [orderNo, setOrderNo] = useState("");
   const [customer, setCustomer] = useState({ name: "", email: "", phone: "", address: "", city: "" });
 
@@ -166,13 +167,15 @@ export default function CheckoutPage() {
               <div className="flex items-center gap-2 rounded-xl bg-surface-2 p-3 text-xs text-muted">
                 <Lock size={14} /> Payments are encrypted end-to-end. You can cancel within 1 hour.
               </div>
+              {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-500">{error}</p>}
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
                 <Button
                   className="flex-1"
                   disabled={placing}
-                  onClick={() => {
+                  onClick={async () => {
                     setPlacing(true);
+                    setError("");
                     const payload = {
                       items: cart.lines.map((l) => ({ slug: l.product.slug, name: l.product.name, quantity: l.quantity, price: l.product.price })),
                       subtotal: cart.subtotal,
@@ -182,10 +185,17 @@ export default function CheckoutPage() {
                       payment: pay === "mpesa" ? "M-Pesa" : pay === "card" ? "Card" : "Cash on Delivery",
                       customer,
                     };
-                    fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-                      .then((r) => r.json())
-                      .then((d) => { setOrderNo(d.number || ""); cart.clear(); setDone(true); })
-                      .catch(() => { cart.clear(); setDone(true); });
+                    try {
+                      const res = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                      const d = await res.json().catch(() => ({}));
+                      if (!res.ok) throw new Error(d.error || "Could not place your order.");
+                      setOrderNo(d.number || "");
+                      cart.clear();
+                      setDone(true);
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : "Could not place your order. Please try again.");
+                      setPlacing(false);
+                    }
                   }}
                 >
                   {placing ? <><Loader2 size={18} className="animate-spin" /> Placing…</> : <>Place order · {formatPrice(cart.total)}</>}

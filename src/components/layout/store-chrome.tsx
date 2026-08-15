@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { SiteHeader } from "./site-header";
 import { WhatsAppButton } from "./whatsapp-button";
-import { ScrollProgress } from "./scroll-progress";
 import { LiveRefresh } from "./live-refresh";
 
 /** Renders the storefront chrome everywhere except the /admin area. */
@@ -13,7 +12,6 @@ export function StoreChrome({ children, footer }: { children: React.ReactNode; f
   return (
     <>
       <LiveRefresh />
-      <ScrollProgress />
       <SiteHeader />
       <main className="flex-1">{children}</main>
       {footer}

@@ -87,16 +87,23 @@ export function MarketHero() {
                 </span>
                 <h2 className="font-display text-3xl font-bold leading-tight sm:text-4xl">{slide.title}</h2>
                 <p className="max-w-xs text-sm text-brand-100/80">{slide.copy}</p>
-                <div className="mt-1 flex items-center gap-3">
+                <div className="mt-1 flex items-baseline gap-3">
                   <span className="font-display text-2xl font-bold">{formatPrice(product.price)}</span>
-                  {off > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold">-{off}%</span>}
+                  {product.compareAt && <span className="text-sm text-brand-100/60 line-through">{formatPrice(product.compareAt)}</span>}
                 </div>
-                <Link href={slide.buttonLink || `/product/${slide.slug}`} className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-brand-950 transition-colors hover:bg-brand-400">
+                <Link href={slide.buttonLink || `/product/${slide.slug}`} className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-brand-950 shadow-lg transition-colors hover:bg-brand-400">
                   {slide.buttonText || "Shop now"} <ChevronRight size={16} />
                 </Link>
               </div>
-              <div className="relative hidden sm:block">
-                <ProductImage product={product} priority sizes="400px" className="absolute inset-0" />
+              {/* product on a clean floating card */}
+              <div className="relative hidden items-center justify-center p-6 sm:flex">
+                <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 65% 45%, rgba(255,255,255,0.16), transparent 60%)" }} />
+                <div className="relative aspect-square w-[80%] max-w-[270px]">
+                  {off > 0 && (
+                    <span className="absolute -left-2 -top-2 z-10 rounded-full bg-rose-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">-{off}%</span>
+                  )}
+                  <ProductImage product={product} priority sizes="300px" glow={false} className="absolute inset-0 rounded-2xl bg-white shadow-2xl ring-1 ring-black/5" />
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>

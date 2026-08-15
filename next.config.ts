@@ -6,7 +6,14 @@ const nextConfig: NextConfig = {
   // lockfile in a parent directory (e.g. C:\Users\<you>\package-lock.json).
   outputFileTracingRoot: path.join(__dirname),
   images: {
-    formats: ["image/avif", "image/webp"],
+    // WebP only — AVIF encoding is much slower on first request and was making
+    // images feel sluggish to load. WebP is nearly as small and encodes fast.
+    formats: ["image/webp"],
+    // Fewer generated sizes = less work per image on first load.
+    deviceSizes: [360, 640, 828, 1200, 1920],
+    imageSizes: [64, 96, 160, 256, 384],
+    // Cache optimized images for a month so they're only processed once.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
 };
 
