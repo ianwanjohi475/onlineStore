@@ -42,6 +42,35 @@ const accentByCategory: Record<CategorySlug, string> = {
   "new-arrivals": "#00E676",
 };
 
+/**
+ * Real product photography (cleaned studio-style crops) keyed by slug.
+ * Any product without an entry falls back to the generated studio render.
+ */
+const photoBySlug: Record<string, string> = {
+  spacebuds: "/products/spacebuds.jpg",
+  "spacebuds-neo": "/products/spacebuds-neo.jpg",
+  "spacebuds-lite": "/products/spacebuds-lite.jpg",
+  "open-arc": "/products/open-arc.jpg",
+  "open-circlet-2": "/products/open-circlet-2.jpg",
+  "necklace-5": "/products/necklace-5.jpg",
+  "gaming-headphone": "/products/gaming-headphone.jpg",
+  "boompop-pro": "/products/boompop-pro.jpg",
+  "boompop-lite": "/products/boompop-lite.jpg",
+  "watch-6-lite": "/products/watch-6-lite.jpg",
+  "watch-5": "/products/watch-5.jpg",
+  "watch-lumos-n": "/products/watch-lumos-n.jpg",
+  "watch-nova-am": "/products/watch-nova-am.jpg",
+  "watch-muse": "/products/watch-muse.jpg",
+  "watch-nova-2-lite": "/products/watch-nova-2-lite.jpg",
+  "powerbank-q21": "/products/powerbank-q21.jpg",
+  "poweromni-251": "/products/poweromni-251.jpg",
+  "45w-gan-ultra-fast": "/products/45w-gan-ultra-fast.jpg",
+  "20w-rapid-charger": "/products/20w-rapid-charger.jpg",
+  "18w-car-charger": "/products/18w-car-charger.jpg",
+  "100w-fast-charging-cable": "/products/100w-fast-charging-cable.jpg",
+  "wireless-charger": "/products/wireless-charger.jpg",
+};
+
 function make(seed: Seed): Product {
   const slug = slugify(seed.name);
   const rating = seed.rating ?? 4.6;
@@ -67,7 +96,7 @@ function make(seed: Seed): Product {
     description:
       seed.description ??
       `${seed.name} — ${seed.tagline}. Genuine stock, sold and supported by SIR VERT ENTERPRISE with warranty and fast delivery across Kenya.`,
-    image: seed.image ?? null,
+    image: seed.image ?? photoBySlug[slug] ?? null,
   };
 }
 
@@ -399,6 +428,18 @@ const raw: Seed[] = [
     rating: 4.5,
     features: ["18W fast output", "Dual ports", "12/24V vehicles", "LED locator"],
     specs: { Output: "18W", Ports: "USB-A + USB-C", Vehicle: "12/24V", Protocol: "QC/PD" },
+  },
+  {
+    name: "Wireless Charger",
+    tagline: "15W magnetic · MagSafe-ready",
+    category: "chargers",
+    price: 2500,
+    rating: 4.6,
+    badges: ["new"],
+    features: ["15W fast wireless charge", "Strong magnetic alignment", "Case-friendly charging", "Nine-layer safety protection"],
+    specs: { Output: "15W", Type: "Magnetic Qi", Compatible: "iPhone · Samsung · Tecno · Infinix", Build: "Alloy & glass" },
+    description:
+      "The Oraimo PowerDock snaps onto your phone with strong magnets and tops it up at up to 15W — no cable fumbling. A slim alloy-and-glass pad with nine layers of safety protection, and it charges right through most cases.",
   },
 
   /* ── Cables ───────────────────────────────────────────────── */
