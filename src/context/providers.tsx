@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import type { Category, Product, SiteSettings } from "@/lib/types";
 import { CatalogProvider } from "./catalog";
 import { CartProvider } from "./cart";
+import { CartDrawerProvider } from "./cart-drawer";
 import { RecentlyViewedProvider } from "./recently-viewed";
 import { ToastProvider } from "./toast";
 import { WishlistProvider } from "./wishlist";
@@ -26,7 +27,9 @@ export function Providers({
         <ToastProvider>
           <WishlistProvider>
             <CartProvider catalog={productMap} promos={settings.promos} freeShip={settings.freeShipThreshold} shippingFee={settings.shippingFee}>
-              <RecentlyViewedProvider>{children}</RecentlyViewedProvider>
+              <CartDrawerProvider>
+                <RecentlyViewedProvider>{children}</RecentlyViewedProvider>
+              </CartDrawerProvider>
             </CartProvider>
           </WishlistProvider>
         </ToastProvider>

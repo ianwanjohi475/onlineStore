@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOrders, updateOrder } from "@/lib/store/store";
+import { clearOrders, getOrders, updateOrder } from "@/lib/store/store";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import type { OrderStatus, PaymentStatus } from "@/lib/types";
 
@@ -70,4 +70,11 @@ export async function PUT(req: Request) {
 
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(order);
+}
+
+/** Clear every order — a clean slate for orders and customers. */
+export async function DELETE() {
+  if (!(await isAuthed())) return unauthorized();
+  await clearOrders();
+  return NextResponse.json({ ok: true });
 }

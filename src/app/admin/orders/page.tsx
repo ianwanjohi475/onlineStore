@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Card, EmptyState, PageHeader, Pagination, SearchInput, StatusPill, Toggle, api, usePaginated,
+  Btn, Card, ConfirmDialog, EmptyState, PageHeader, Pagination, SearchInput, StatusPill, Toggle, api, usePaginated,
 } from "@/components/admin/kit";
+import { useToast } from "@/context/toast";
 import { useLive } from "@/hooks/use-live";
 import { ORDER_STATUSES, PAYMENT_STATUSES, titleCase } from "@/lib/orders";
+import { Trash2 } from "lucide-react";
 import type { Order } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 
@@ -16,6 +18,8 @@ type SortKey = "date" | "total" | "number";
 
 export default function OrdersAdmin() {
   const router = useRouter();
+  const toast = useToast();
+  const [confirmClear, setConfirmClear] = useState(false);
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -27,6 +31,12 @@ export default function OrdersAdmin() {
   const load = () => api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([]));
   useEffect(() => { load(); }, []);
   useLive(load);
+
+  const clearAll = async () => {
+    await api("/api/admin/orders", "DELETE").catch(() => {});
+    toast("All orders cleared");
+    load();
+  };
 
   const filtered = useMemo(() => {
     let list = (orders ?? []).filter((o) => (showArchived ? true : !o.archived));
@@ -59,7 +69,8 @@ export default function OrdersAdmin() {
 
   return (
     <div>
-      <PageHeader title="Orders" subtitle={orders ? `${filtered.length} of ${orders.length} orders` : "Loading…"} />
+      <PageHeader title="Orders" subtitle={orders ? `${filtered.length} of ${orders.length} orders` : "Loading…"}
+        actions={orders && orders.length > 0 ? <Btn variant="outline" size="sm" onClick={() => setConfirmClear(true)} className="text-rose-500 hover:border-rose-500"><Trash2 size={15} /> Clear all</Btn> : undefined} />
 
       <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
         <SearchInput value={query} onChange={setQuery} placeholder="Order #, customer or transaction" />
@@ -112,6 +123,15 @@ export default function OrdersAdmin() {
           </div>
         )}
       </Card>
+
+      <ConfirmDialog
+        open={confirmClear}
+        title="Clear all orders?"
+        desc="This permanently deletes every order (and the customers derived from them). Use it to start fresh. This can't be undone."
+        confirmLabel="Clear all orders"
+        onConfirm={clearAll}
+        onClose={() => setConfirmClear(false)}
+      />
     </div>
   );
 }

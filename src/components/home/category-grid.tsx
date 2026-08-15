@@ -12,10 +12,11 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
-import { getCategories } from "@/lib/store/store";
+import { getCategories, getProducts } from "@/lib/store/store";
 
 const icons: Record<string, LucideIcon> = {
   Headphones,
@@ -32,7 +33,8 @@ const icons: Record<string, LucideIcon> = {
 };
 
 export async function CategoryGrid() {
-  const categories = await getCategories();
+  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+  const thumbFor = (slug: string) => products.find((p) => p.category === slug && p.image)?.image ?? null;
   return (
     <section className="container-x py-20">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -47,6 +49,7 @@ export async function CategoryGrid() {
       <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {categories.map((c, i) => {
           const Icon = icons[c.icon] ?? Sparkles;
+          const thumb = thumbFor(c.slug);
           return (
             <Reveal key={c.slug} index={i}>
               <Link
@@ -59,12 +62,18 @@ export async function CategoryGrid() {
                   className="absolute -right-6 -top-6 size-24 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-40"
                   style={{ background: c.gradient[0] }}
                 />
-                <span
-                  className="grid size-12 place-items-center rounded-2xl text-white shadow-lg transition-transform group-hover:scale-110"
-                  style={{ background: `linear-gradient(135deg, ${c.gradient[0]}, ${c.gradient[1]})` }}
-                >
-                  <Icon size={22} />
-                </span>
+                {thumb ? (
+                  <span className="relative size-14 shrink-0 overflow-hidden rounded-2xl border border-border bg-white shadow-lg transition-transform group-hover:scale-110">
+                    <Image src={thumb} alt={c.name} fill sizes="56px" className="object-cover" />
+                  </span>
+                ) : (
+                  <span
+                    className="grid size-12 place-items-center rounded-2xl text-white shadow-lg transition-transform group-hover:scale-110"
+                    style={{ background: `linear-gradient(135deg, ${c.gradient[0]}, ${c.gradient[1]})` }}
+                  >
+                    <Icon size={22} />
+                  </span>
+                )}
                 <div>
                   <p className="font-display font-semibold">{c.name}</p>
                   <p className="text-xs text-muted">{c.tagline}</p>

@@ -268,6 +268,19 @@ export async function addOrder(order: Order) {
   bumpStore("order");
 }
 
+/** Delete every order (and therefore every derived customer). Used for a fresh start. */
+export async function clearOrders() {
+  if (hasDb) {
+    await ensureReady();
+    await q(`DELETE FROM orders`);
+  } else {
+    const store = readFile();
+    store.orders = [];
+    writeFile(store);
+  }
+  bumpStore("order");
+}
+
 /** Apply a change to a single order (status, payment, notes, archive…). */
 export async function updateOrder(id: string, mutate: (o: Order) => Order): Promise<Order | null> {
   let updated: Order | null;

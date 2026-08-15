@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Loader2, ShoppingBag } from "lucide-react";
 import { useRef, useState } from "react";
 import { useCart } from "@/context/cart";
+import { useCartDrawer } from "@/context/cart-drawer";
 import { useToast } from "@/context/toast";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ export function AddToCartButton({
 }) {
   const cart = useCart();
   const toast = useToast();
+  const { openCart } = useCartDrawer();
   const [state, setState] = useState<State>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const iconOnly = variant === "icon";
@@ -45,6 +47,7 @@ export function AddToCartButton({
     timer.current = setTimeout(() => {
       cart.add(product, quantity, color);
       toast(`${product.name} added to cart`);
+      openCart(); // slide out the cart so it feels real
       setState("added");
       timer.current = setTimeout(() => setState("idle"), 1500);
     }, 420);

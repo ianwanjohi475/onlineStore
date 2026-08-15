@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCatalog } from "@/context/catalog";
 import { useCart } from "@/context/cart";
+import { useCartDrawer } from "@/context/cart-drawer";
 import { useWishlist } from "@/context/wishlist";
 import { cn } from "@/lib/utils";
 import { AnnouncementBar } from "./announcement-bar";
@@ -39,7 +40,7 @@ export function SiteHeader() {
   const wishlist = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
+  const { open: cartOpen, setOpen: setCartOpen } = useCartDrawer();
   const [menuOpen, setMenuOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
 

@@ -1,7 +1,7 @@
 import { categories } from "@/lib/data/categories";
 import { products } from "@/lib/data/products";
 import { testimonials } from "@/lib/data/content";
-import type { Brand, Order, OrderEvent, OrderStatus, PaymentStatus, StoreData } from "@/lib/types";
+import type { Brand, Order, StoreData } from "@/lib/types";
 
 const seededProducts = products.map((p, i) => ({
   ...p,
@@ -21,91 +21,8 @@ const brands: Brand[] = [
   { slug: "generic", name: "SIR VERT Select", color: "#7CFF6B" },
 ];
 
-const statuses: OrderStatus[] = [
-  "delivered", "delivered", "shipped", "processing", "pending",
-  "delivered", "cancelled", "out-for-delivery", "confirmed", "packed",
-];
-const buyers = [
-  ["Amina Yusuf", "amina@example.com", "Nairobi"],
-  ["Brian Otieno", "brian@example.com", "Kisumu"],
-  ["Grace Wambui", "grace@example.com", "Nakuru"],
-  ["Daniel Mwangi", "daniel@example.com", "Mombasa"],
-  ["Faith Chebet", "faith@example.com", "Eldoret"],
-  ["Kevin Kamau", "kevin@example.com", "Thika"],
-  ["Mercy Achieng", "mercy@example.com", "Nyeri"],
-  ["Samuel Kiptoo", "samuel@example.com", "Nairobi"],
-  ["Janet Njeri", "janet@example.com", "Nairobi"],
-  ["Peter Omondi", "peter@example.com", "Machakos"],
-];
-
-function labelFor(s: OrderStatus): string {
-  return {
-    pending: "Order placed",
-    confirmed: "Order confirmed",
-    processing: "Processing",
-    packed: "Packed",
-    shipped: "Shipped",
-    "out-for-delivery": "Out for delivery",
-    delivered: "Delivered",
-    cancelled: "Order cancelled",
-    refunded: "Refunded",
-    returned: "Returned",
-  }[s];
-}
-
-/** Map a fulfilment status to a sensible payment status for seeded data. */
-function paymentFor(status: OrderStatus, i: number): PaymentStatus {
-  if (status === "cancelled") return i % 2 === 0 ? "refunded" : "failed";
-  if (status === "pending" || status === "confirmed") return i % 3 === 0 ? "pending" : "paid";
-  return "paid";
-}
-
-const orders: Order[] = buyers.map((b, i) => {
-  const p1 = seededProducts[i % seededProducts.length];
-  const p2 = seededProducts[(i * 3 + 2) % seededProducts.length];
-  const items = [
-    { slug: p1.slug, name: p1.name, quantity: 1 + (i % 2), price: p1.price },
-    ...(i % 2 === 0 ? [{ slug: p2.slug, name: p2.name, quantity: 1, price: p2.price }] : []),
-  ];
-  const subtotal = items.reduce((n, it) => n + it.price * it.quantity, 0);
-  const shipping = subtotal >= 5000 ? 0 : 300;
-  const total = subtotal + shipping;
-  const status = statuses[i];
-  const paymentStatus = paymentFor(status, i);
-  const placed = new Date(2026, 6, 30 - i * 3);
-  const method = i % 3 === 0 ? "Card" : i % 3 === 1 ? "M-Pesa" : "Cash on Delivery";
-
-  // build a timeline that reflects the order's current state
-  const flow: OrderStatus[] = ["pending", "confirmed", "processing", "packed", "shipped", "out-for-delivery", "delivered"];
-  const reached = status === "cancelled" ? (["pending", "confirmed"] as OrderStatus[]) : flow.slice(0, Math.max(1, flow.indexOf(status) + 1));
-  const timeline: OrderEvent[] = reached.map((s, k) => ({
-    at: new Date(placed.getTime() + k * 6 * 3600_000).toISOString(),
-    label: labelFor(s),
-  }));
-  if (status === "cancelled") timeline.push({ at: new Date(placed.getTime() + 12 * 3600_000).toISOString(), label: "Order cancelled" });
-
-  return {
-    id: `SVE-${482910 - i * 137}`,
-    number: `#SVE-${482910 - i * 137}`,
-    date: placed.toISOString(),
-    status,
-    paymentStatus,
-    items,
-    subtotal,
-    shipping,
-    discount: 0,
-    total,
-    payment: method,
-    transactionId:
-      method === "M-Pesa" ? `MPE${7 + i}${(100000 + i * 4321).toString(36).toUpperCase()}`
-      : method === "Card" ? `CARD-${900000 + i * 731}`
-      : `COD-${482910 - i * 137}`,
-    refunded: paymentStatus === "refunded" ? total : 0,
-    customer: { name: b[0], email: b[1], phone: "+2547" + (10000000 + i * 111111), address: `${100 + i} Kimathi St`, city: b[2] },
-    timeline,
-    notes: [],
-  };
-});
+// The store starts with a clean slate — real orders and customers only.
+const orders: Order[] = [];
 
 /** Default store contents — used to seed data/store.json on first run. */
 export const seed: StoreData = {
