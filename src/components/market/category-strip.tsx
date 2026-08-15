@@ -9,8 +9,8 @@ const icons: Record<string, LucideIcon> = {
   Headphones, Watch, BatteryCharging, Zap, Cable, Speaker, Home, Monitor, Camera, Sparkles, Rocket,
 };
 
-export function CategoryStrip() {
-  const categories = getCategories();
+export async function CategoryStrip() {
+  const categories = await getCategories();
   return (
     <section className="container-x py-4">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">

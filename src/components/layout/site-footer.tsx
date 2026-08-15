@@ -75,9 +75,8 @@ const socials: { icon: ComponentType; label: string }[] = [
   { icon: YtIcon, label: "YouTube" },
 ];
 
-export function SiteFooter() {
-  const categories = getCategories();
-  const settings = getSettings();
+export async function SiteFooter() {
+  const [categories, settings] = await Promise.all([getCategories(), getSettings()]);
   return (
     <footer className="mt-20 border-t border-border bg-surface">
       {/* trust strip */}

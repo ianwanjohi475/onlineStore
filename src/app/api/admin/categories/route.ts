@@ -5,14 +5,14 @@ import type { Category } from "@/lib/types";
 
 export async function GET() {
   if (!(await isAuthed())) return unauthorized();
-  return NextResponse.json(readStore().categories);
+  return NextResponse.json((await readStore()).categories);
 }
 
 export async function PUT(req: Request) {
   if (!(await isAuthed())) return unauthorized();
   const body = (await req.json()) as Category[];
-  const store = readStore();
+  const store = (await readStore());
   store.categories = body;
-  writeStore(store);
+  await writeStore(store);
   return NextResponse.json(store.categories);
 }

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # runtime-uploaded product photos
 /public/uploads/
+
+# keep the example env committed
+!.env.example

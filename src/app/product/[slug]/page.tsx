@@ -14,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) return { title: "Product not found" };
   return {
     title: product.name,
@@ -29,11 +29,10 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) notFound();
 
-  const related = getRelated(product);
-  const category = getCategory(product.category);
+  const [related, category] = await Promise.all([getRelated(product), getCategory(product.category)]);
 
   const jsonLd = {
     "@context": "https://schema.org",

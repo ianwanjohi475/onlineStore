@@ -31,8 +31,8 @@ const icons: Record<string, LucideIcon> = {
   Rocket,
 };
 
-export function CategoryGrid() {
-  const categories = getCategories();
+export async function CategoryGrid() {
+  const categories = await getCategories();
   return (
     <section className="container-x py-20">
       <div className="flex flex-wrap items-end justify-between gap-4">

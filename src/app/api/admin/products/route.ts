@@ -6,13 +6,13 @@ import type { Product } from "@/lib/types";
 
 export async function GET() {
   if (!(await isAuthed())) return unauthorized();
-  return NextResponse.json(readStore().products);
+  return NextResponse.json((await readStore()).products);
 }
 
 export async function POST(req: Request) {
   if (!(await isAuthed())) return unauthorized();
   const body = (await req.json()) as Partial<Product>;
-  const store = readStore();
+  const store = (await readStore());
   let slug = slugify(body.name ?? "new-product");
   if (!slug) slug = `product-${Date.now()}`;
   // ensure unique
@@ -40,14 +40,14 @@ export async function POST(req: Request) {
     image: body.image ?? null,
   };
   store.products.unshift(product);
-  writeStore(store);
+  await writeStore(store);
   return NextResponse.json(product);
 }
 
 export async function PUT(req: Request) {
   if (!(await isAuthed())) return unauthorized();
   const body = (await req.json()) as Product;
-  const store = readStore();
+  const store = (await readStore());
   const idx = store.products.findIndex((p) => p.slug === body.slug);
   if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
   store.products[idx] = {
@@ -57,15 +57,15 @@ export async function PUT(req: Request) {
     compareAt: body.compareAt ? Number(body.compareAt) : undefined,
     rating: Number(body.rating) || 0,
   };
-  writeStore(store);
+  await writeStore(store);
   return NextResponse.json(store.products[idx]);
 }
 
 export async function DELETE(req: Request) {
   if (!(await isAuthed())) return unauthorized();
   const slug = new URL(req.url).searchParams.get("slug");
-  const store = readStore();
+  const store = (await readStore());
   store.products = store.products.filter((p) => p.slug !== slug);
-  writeStore(store);
+  await writeStore(store);
   return NextResponse.json({ ok: true });
 }

@@ -7,7 +7,7 @@ import type { CategorySlug } from "@/lib/types";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const category = getCategory(slug);
+  const category = await getCategory(slug);
   if (!category) return { title: "Category not found" };
   return {
     title: category.name,
@@ -17,12 +17,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const category = getCategory(slug);
+  const category = await getCategory(slug);
   if (!category) notFound();
 
   const isNewArrivals = category.slug === "new-arrivals";
-  const list = isNewArrivals ? getNewArrivals() : getByCategory(category.slug as CategorySlug);
-  const all = getProducts();
+  const [list, all] = await Promise.all([
+    isNewArrivals ? getNewArrivals() : getByCategory(category.slug as CategorySlug),
+    getProducts(),
+  ]);
 
   return (
     <>

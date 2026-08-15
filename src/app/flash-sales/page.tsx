@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   description: "Live flash deals at their lowest prices. Limited stock, countdown timers — grab yours before they're gone.",
 };
 
-export default function FlashSalesPage() {
+export default async function FlashSalesPage() {
   const target = Date.now() + 8 * 3600 * 1000;
-  const flashSaleProducts = getFlashSale();
+  const flashSaleProducts = await getFlashSale();
 
   return (
     <>

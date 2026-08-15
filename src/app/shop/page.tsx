@@ -27,7 +27,7 @@ export default async function ShopPage({
         description="Genuine tech, filtered your way. Every product ships fast and carries a warranty."
         crumbs={[{ label: "Shop" }]}
       />
-      <ShopBrowser products={getProducts()} initialSort={initialSort} />
+      <ShopBrowser products={await getProducts()} initialSort={initialSort} />
     </>
   );
 }

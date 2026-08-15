@@ -5,8 +5,8 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getTestimonials } from "@/lib/store/store";
 
-export function Testimonials() {
-  const testimonials = getTestimonials();
+export async function Testimonials() {
+  const testimonials = await getTestimonials();
   if (testimonials.length === 0) return null;
   return (
     <section className="container-x py-20">

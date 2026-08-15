@@ -16,14 +16,15 @@ const spaceGrotesk = Space_Grotesk({
 
 const siteUrl = "https://sirvertenterprise.example";
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
   return {
   metadataBase: new URL(siteUrl),
   title: {
-    default: getSettings().seoTitle,
-    template: `%s · ${getSettings().brandName}`,
+    default: settings.seoTitle,
+    template: `%s · ${settings.brandName}`,
   },
-  description: getSettings().seoDescription,
+  description: settings.seoDescription,
   keywords: [
     "SIR VERT ENTERPRISE",
     "earbuds",
@@ -40,14 +41,14 @@ export function generateMetadata(): Metadata {
   openGraph: {
     type: "website",
     url: siteUrl,
-    title: getSettings().seoTitle,
-    description: getSettings().seoDescription,
+    title: settings.seoTitle,
+    description: settings.seoDescription,
     siteName: "SIR VERT ENTERPRISE",
   },
   twitter: {
     card: "summary_large_image",
-    title: getSettings().seoTitle,
-    description: getSettings().seoDescription,
+    title: settings.seoTitle,
+    description: settings.seoDescription,
   },
   manifest: "/manifest.webmanifest",
   applicationName: "SIR VERT ENTERPRISE",
@@ -83,10 +84,8 @@ const orgJsonLd = {
   description: "Electronics, smart gadgets and networking services — fibre splicing, WiFi installation, router configuration and PC repair. Fast delivery across Kenya.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const products = getProducts();
-  const categories = getCategories();
-  const settings = getSettings();
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const [products, categories, settings] = await Promise.all([getProducts(), getCategories(), getSettings()]);
   return (
     <html
       lang="en"

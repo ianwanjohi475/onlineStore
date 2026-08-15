@@ -44,6 +44,6 @@ export async function POST(req: Request) {
     ],
     notes: [],
   };
-  addOrder(order);
+  await addOrder(order);
   return NextResponse.json({ ok: true, number: order.number });
 }

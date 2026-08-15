@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readStore, writeStore } from "@/lib/store/store";
+import { getOrders, updateOrder } from "@/lib/store/store";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import type { OrderStatus, PaymentStatus } from "@/lib/types";
 
@@ -35,42 +35,39 @@ interface UpdateBody {
 
 export async function GET() {
   if (!(await isAuthed())) return unauthorized();
-  return NextResponse.json(readStore().orders);
+  return NextResponse.json(await getOrders());
 }
 
 export async function PUT(req: Request) {
   if (!(await isAuthed())) return unauthorized();
   const body = (await req.json()) as UpdateBody;
-  const store = readStore();
-  const order = store.orders.find((o) => o.id === body.id);
-  if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
   const now = new Date().toISOString();
-  order.timeline = order.timeline ?? [];
-  order.notes = order.notes ?? [];
 
-  if (body.status && body.status !== order.status) {
-    order.status = body.status;
-    order.timeline.push({ at: now, label: statusLabels[body.status], by: "Admin" });
-  }
+  const order = await updateOrder(body.id, (o) => {
+    o.timeline = o.timeline ?? [];
+    o.notes = o.notes ?? [];
 
-  if (body.paymentStatus && body.paymentStatus !== order.paymentStatus) {
-    order.paymentStatus = body.paymentStatus;
-    if (body.paymentStatus === "refunded") order.refunded = order.total;
-    if (body.paymentStatus === "partially-refunded" && typeof body.refunded === "number") order.refunded = body.refunded;
-    if (body.paymentStatus === "paid") order.refunded = 0;
-    order.timeline.push({ at: now, label: paymentLabels[body.paymentStatus], by: "Admin" });
-  }
+    if (body.status && body.status !== o.status) {
+      o.status = body.status;
+      o.timeline.push({ at: now, label: statusLabels[body.status], by: "Admin" });
+    }
+    if (body.paymentStatus && body.paymentStatus !== o.paymentStatus) {
+      o.paymentStatus = body.paymentStatus;
+      if (body.paymentStatus === "refunded") o.refunded = o.total;
+      if (body.paymentStatus === "partially-refunded" && typeof body.refunded === "number") o.refunded = body.refunded;
+      if (body.paymentStatus === "paid") o.refunded = 0;
+      o.timeline.push({ at: now, label: paymentLabels[body.paymentStatus], by: "Admin" });
+    }
+    if (typeof body.archived === "boolean") {
+      o.archived = body.archived;
+      o.timeline.push({ at: now, label: body.archived ? "Order archived" : "Order restored", by: "Admin" });
+    }
+    if (body.note && body.note.trim()) {
+      o.notes.push({ at: now, text: body.note.trim() });
+    }
+    return o;
+  });
 
-  if (typeof body.archived === "boolean") {
-    order.archived = body.archived;
-    order.timeline.push({ at: now, label: body.archived ? "Order archived" : "Order restored", by: "Admin" });
-  }
-
-  if (body.note && body.note.trim()) {
-    order.notes.push({ at: now, text: body.note.trim() });
-  }
-
-  writeStore(store);
+  if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(order);
 }

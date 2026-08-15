@@ -5,14 +5,14 @@ import type { Testimonial } from "@/lib/types";
 
 export async function GET() {
   if (!(await isAuthed())) return unauthorized();
-  return NextResponse.json(readStore().testimonials);
+  return NextResponse.json((await readStore()).testimonials);
 }
 
 export async function PUT(req: Request) {
   if (!(await isAuthed())) return unauthorized();
   const body = (await req.json()) as Testimonial[];
-  const store = readStore();
+  const store = (await readStore());
   store.testimonials = body;
-  writeStore(store);
+  await writeStore(store);
   return NextResponse.json(store.testimonials);
 }
