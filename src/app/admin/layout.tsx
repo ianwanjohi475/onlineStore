@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BadgePercent, CreditCard, ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Menu,
+  Activity, BadgePercent, CreditCard, ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Menu,
   MessageSquareQuote, Package, Settings as SettingsIcon, ShapesIcon, ShoppingCart,
   Sparkles, Tag, Users, X,
 } from "lucide-react";
@@ -10,6 +10,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/components/admin/kit";
+import { DbBadge } from "@/components/admin/db-badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ const groups = [
   { label: "Store", items: [
     { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
     { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
+    { href: "/admin/status", label: "System status", icon: Activity },
   ] },
 ];
 
@@ -110,6 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="font-display text-sm font-semibold">{current?.label ?? "Admin"}</span>
           </div>
           <div className="flex items-center gap-2">
+            <DbBadge />
             <ThemeToggle />
             <Link href="/" className="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:border-brand-500 sm:inline-flex"><ExternalLink size={15} /> View store</Link>
             <div className="relative">
