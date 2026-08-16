@@ -20,6 +20,14 @@ export function getPool(): Pool {
       ssl: { rejectUnauthorized: true },
       max: 5,
       idleTimeoutMillis: 30_000,
+      // Fail fast when the database is unreachable or disabled, so the store layer
+      // can fall back to the file store instead of hanging the whole page.
+      connectionTimeoutMillis: 6_000,
+      statement_timeout: 10_000,
+    });
+    // A pool 'error' on an idle client would otherwise crash the process.
+    g.__svePgPool.on("error", (err) => {
+      console.warn("[db] idle client error (ignored):", err.message);
     });
   }
   return g.__svePgPool;

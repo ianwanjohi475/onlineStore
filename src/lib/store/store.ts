@@ -215,14 +215,54 @@ async function readStoreDb(): Promise<StoreData> {
   return data;
 }
 
-/* ── Public API (backend-agnostic) ────────────────────────── */
+/* ── Resilient backend selection ──────────────────────────────
+ * A database can go away in production — CockroachDB Basic disables the whole
+ * cluster once it hits its monthly Request Unit limit (SQLSTATE 53300), and a
+ * network blip has the same effect. The site must NOT crash to a white error
+ * page when that happens. So every operation below tries the database first and,
+ * if it errors, transparently falls back to the local file store so the
+ * storefront and admin keep working. A short circuit-breaker stops us hammering
+ * a known-down database on every single request. */
+let dbDownUntil = 0;
+const DB_COOLDOWN_MS = 60_000;
+
+/** True when a DB is configured AND not currently in its cooldown after a failure. */
+function dbActive() {
+  return hasDb && Date.now() >= dbDownUntil;
+}
+
+/** Record a DB failure: open the circuit for a minute and warn once. */
+function markDbDown(e: unknown) {
+  dbDownUntil = Date.now() + DB_COOLDOWN_MS;
+  storeCache = null;
+  const msg = e instanceof Error ? e.message : String(e);
+  console.warn(`[store] Database unavailable — serving from the local file store for ${DB_COOLDOWN_MS / 1000}s. Reason: ${msg}`);
+}
+
+/* ── Public API (backend-agnostic, DB-with-file-fallback) ─── */
 export async function readStore(): Promise<StoreData> {
-  return hasDb ? readStoreDb() : readFile();
+  if (dbActive()) {
+    try {
+      return await readStoreDb();
+    } catch (e) {
+      markDbDown(e);
+    }
+  }
+  return readFile();
 }
 
 export async function writeStore(data: StoreData, scope = "store") {
-  if (hasDb) await writeStoreDb(data);
-  else writeFile(data);
+  if (dbActive()) {
+    try {
+      await writeStoreDb(data);
+      invalidateStoreCache();
+      bumpStore(scope);
+      return;
+    } catch (e) {
+      markDbDown(e);
+    }
+  }
+  writeFile(data);
   invalidateStoreCache();
   bumpStore(scope);
 }
@@ -274,67 +314,98 @@ export async function getOrders() {
   return (await readStore()).orders;
 }
 
+/** Apply an order to the file store: prepend it and decrement stock. */
+function addOrderFile(order: Order) {
+  const store = readFile();
+  store.orders.unshift(order);
+  for (const item of order.items) {
+    const product = store.products.find((p) => p.slug === item.slug);
+    if (product && typeof product.stock === "number") {
+      product.stock = Math.max(0, product.stock - item.quantity);
+      if (product.stock === 0) product.inStock = false;
+    }
+  }
+  writeFile(store);
+}
+
 /** Record a new order and decrement inventory. */
 export async function addOrder(order: Order) {
-  if (hasDb) {
-    await addOrderDb(order);
-  } else {
-    const store = readFile();
-    store.orders.unshift(order);
-    for (const item of order.items) {
-      const product = store.products.find((p) => p.slug === item.slug);
-      if (product && typeof product.stock === "number") {
-        product.stock = Math.max(0, product.stock - item.quantity);
-        if (product.stock === 0) product.inStock = false;
-      }
+  if (dbActive()) {
+    try {
+      await addOrderDb(order);
+      invalidateStoreCache();
+      bumpStore("order");
+      return;
+    } catch (e) {
+      markDbDown(e);
     }
-    writeFile(store);
   }
+  addOrderFile(order);
   invalidateStoreCache();
   bumpStore("order");
 }
 
 /** Delete every order (and therefore every derived customer). Used for a fresh start. */
 export async function clearOrders() {
-  if (hasDb) {
-    await ensureReady();
-    await q(`DELETE FROM orders`);
-  } else {
-    const store = readFile();
-    store.orders = [];
-    writeFile(store);
+  if (dbActive()) {
+    try {
+      await ensureReady();
+      await q(`DELETE FROM orders`);
+      invalidateStoreCache();
+      bumpStore("order");
+      return;
+    } catch (e) {
+      markDbDown(e);
+    }
   }
+  const store = readFile();
+  store.orders = [];
+  writeFile(store);
   invalidateStoreCache();
   bumpStore("order");
 }
 
 /** Delete a single order by id (used by the backend self-test to clean up its probe). */
 export async function deleteOrder(id: string) {
-  if (hasDb) {
-    await ensureReady();
-    await q(`DELETE FROM orders WHERE id=$1`, [id]);
-  } else {
-    const store = readFile();
-    store.orders = store.orders.filter((o) => o.id !== id);
-    writeFile(store);
+  if (dbActive()) {
+    try {
+      await ensureReady();
+      await q(`DELETE FROM orders WHERE id=$1`, [id]);
+      invalidateStoreCache();
+      bumpStore("order");
+      return;
+    } catch (e) {
+      markDbDown(e);
+    }
   }
+  const store = readFile();
+  store.orders = store.orders.filter((o) => o.id !== id);
+  writeFile(store);
   invalidateStoreCache();
   bumpStore("order");
 }
 
 /** Apply a change to a single order (status, payment, notes, archive…). */
 export async function updateOrder(id: string, mutate: (o: Order) => Order): Promise<Order | null> {
-  let updated: Order | null;
-  if (hasDb) {
-    updated = await updateOrderDb(id, mutate);
-  } else {
-    const store = readFile();
-    const idx = store.orders.findIndex((o) => o.id === id);
-    if (idx === -1) return null;
-    updated = mutate(normalizeOrder(store.orders[idx]));
-    store.orders[idx] = updated;
-    writeFile(store);
+  let updated: Order | null = null;
+  if (dbActive()) {
+    try {
+      updated = await updateOrderDb(id, mutate);
+      if (updated) {
+        invalidateStoreCache();
+        bumpStore("order");
+      }
+      return updated;
+    } catch (e) {
+      markDbDown(e);
+    }
   }
+  const store = readFile();
+  const idx = store.orders.findIndex((o) => o.id === id);
+  if (idx === -1) return null;
+  updated = mutate(normalizeOrder(store.orders[idx]));
+  store.orders[idx] = updated;
+  writeFile(store);
   if (updated) {
     invalidateStoreCache();
     bumpStore("order");
