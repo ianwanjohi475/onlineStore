@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ArrowRight, CheckCircle2, Database, HardDrive, Monitor, RefreshCw, ShieldAlert, ShoppingCart,
+  ArrowRight, CheckCircle2, Database, HardDrive, Monitor, PlayCircle, RefreshCw, ShieldAlert, ShoppingCart, XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Btn, Card, PageHeader, api } from "@/components/admin/kit";
@@ -17,15 +17,34 @@ interface Health {
   checkedAt: string;
 }
 
+interface SelfTest {
+  ok: boolean;
+  backend: "database" | "file";
+  steps: { step: string; ok: boolean; detail?: string }[];
+  latencyMs: number;
+  checkedAt: string;
+}
+
 export default function StatusPage() {
   const [h, setH] = useState<Health | null>(null);
   const [loading, setLoading] = useState(false);
+  const [test, setTest] = useState<SelfTest | null>(null);
+  const [testing, setTesting] = useState(false);
 
   const load = () => {
     setLoading(true);
     api("/api/admin/health", "GET").then(setH).catch(() => setH(null)).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
+
+  const runTest = () => {
+    setTesting(true);
+    setTest(null);
+    api("/api/admin/health", "POST")
+      .then(setTest)
+      .catch((e) => setTest({ ok: false, backend: h?.backend ?? "file", steps: [{ step: "Reach the backend", ok: false, detail: e instanceof Error ? e.message : "request failed" }], latencyMs: 0, checkedAt: new Date().toISOString() }))
+      .finally(() => { setTesting(false); load(); });
+  };
 
   const db = h?.backend === "database" && h.connected;
   const file = h?.backend === "file";
@@ -64,6 +83,40 @@ export default function StatusPage() {
             <span className={cn("size-2 rounded-full", db ? "bg-brand-500" : dbError ? "bg-rose-500" : "bg-amber-500")} />
             {db ? `Live · ${h.latencyMs}ms` : dbError ? "Error" : "File mode"}
           </span>
+        )}
+      </Card>
+
+      {/* backend self-test — proves the order pipeline works right now */}
+      <Card className="mb-6 p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-display text-lg font-bold">Backend self-test</h2>
+            <p className="mt-1 text-sm text-muted">Writes a real test order to your {db ? "database" : "file store"}, reads it back, then deletes it — proving orders can be saved end-to-end.</p>
+          </div>
+          <Btn onClick={runTest} disabled={testing} className="shrink-0">
+            {testing ? <><RefreshCw size={16} className="animate-spin" /> Testing…</> : <><PlayCircle size={16} /> Run self-test</>}
+          </Btn>
+        </div>
+
+        {test && (
+          <div className="mt-5">
+            <div className={cn("mb-3 flex items-center gap-2 rounded-xl border p-3 text-sm font-semibold",
+              test.ok ? "border-brand-500/40 bg-brand-500/8 text-brand-600 dark:text-brand-400" : "border-rose-500/40 bg-rose-500/8 text-rose-500")}>
+              {test.ok ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+              {test.ok ? `Orders save correctly — pipeline healthy (${test.latencyMs}ms)` : "Something in the order pipeline failed — see below"}
+            </div>
+            <ol className="space-y-2">
+              {test.steps.map((s, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm">
+                  {s.ok ? <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-brand-600 dark:text-brand-400" /> : <XCircle size={17} className="mt-0.5 shrink-0 text-rose-500" />}
+                  <span>
+                    <span className={s.ok ? "" : "font-semibold text-rose-500"}>{s.step}</span>
+                    {s.detail && <span className="mt-0.5 block rounded-lg bg-surface-2 px-2 py-1 font-mono text-xs text-muted">{s.detail}</span>}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
         )}
       </Card>
 

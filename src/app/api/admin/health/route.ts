@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import { hasDb, getPool, DB_URL } from "@/lib/db";
-import { readStore } from "@/lib/store/store";
+import { addOrder, deleteOrder, getOrders, readStore } from "@/lib/store/store";
+import type { Order } from "@/lib/types";
 
 /**
  * Reports which storage backend is live and whether it's reachable, plus live
@@ -48,6 +49,71 @@ export async function GET() {
     error,
     latencyMs: Date.now() - start,
     counts,
+    checkedAt: new Date().toISOString(),
+  });
+}
+
+/**
+ * Backend self-test: exercises the REAL order pipeline end-to-end —
+ * write a probe order → read it back → delete it — against whichever backend
+ * is live. Returns a step-by-step pass/fail so you can see exactly where (if
+ * anywhere) saving an order breaks on your own machine/database.
+ */
+export async function POST() {
+  if (!(await isAuthed())) return unauthorized();
+  const steps: { step: string; ok: boolean; detail?: string }[] = [];
+  const start = Date.now();
+  const now = new Date().toISOString();
+  const probeId = `TEST-${Date.now()}`;
+  const probe: Order = {
+    id: probeId,
+    number: `#${probeId}`,
+    date: now,
+    status: "pending",
+    paymentStatus: "pending",
+    items: [],
+    subtotal: 0,
+    shipping: 0,
+    discount: 0,
+    total: 0,
+    payment: "self-test",
+    transactionId: probeId,
+    refunded: 0,
+    customer: { name: "Backend self-test", email: "", phone: "", address: "", city: "" },
+    timeline: [{ at: now, label: "Self-test probe" }],
+    notes: [],
+  };
+
+  let wrote = false;
+  try {
+    await addOrder(probe);
+    wrote = true;
+    steps.push({ step: "Write a test order", ok: true });
+  } catch (e) {
+    steps.push({ step: "Write a test order", ok: false, detail: e instanceof Error ? e.message : "write failed" });
+  }
+
+  if (wrote) {
+    try {
+      const found = (await getOrders()).some((o) => o.id === probeId);
+      steps.push({ step: "Read it back", ok: found, detail: found ? undefined : "order was written but not found on read-back" });
+    } catch (e) {
+      steps.push({ step: "Read it back", ok: false, detail: e instanceof Error ? e.message : "read failed" });
+    }
+    try {
+      await deleteOrder(probeId);
+      steps.push({ step: "Clean up the test order", ok: true });
+    } catch (e) {
+      steps.push({ step: "Clean up the test order", ok: false, detail: e instanceof Error ? e.message : "cleanup failed" });
+    }
+  }
+
+  const ok = steps.length > 0 && steps.every((s) => s.ok);
+  return NextResponse.json({
+    ok,
+    backend: hasDb ? "database" : "file",
+    steps,
+    latencyMs: Date.now() - start,
     checkedAt: new Date().toISOString(),
   });
 }

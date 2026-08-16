@@ -281,6 +281,19 @@ export async function clearOrders() {
   bumpStore("order");
 }
 
+/** Delete a single order by id (used by the backend self-test to clean up its probe). */
+export async function deleteOrder(id: string) {
+  if (hasDb) {
+    await ensureReady();
+    await q(`DELETE FROM orders WHERE id=$1`, [id]);
+  } else {
+    const store = readFile();
+    store.orders = store.orders.filter((o) => o.id !== id);
+    writeFile(store);
+  }
+  bumpStore("order");
+}
+
 /** Apply a change to a single order (status, payment, notes, archive…). */
 export async function updateOrder(id: string, mutate: (o: Order) => Order): Promise<Order | null> {
   let updated: Order | null;
