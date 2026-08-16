@@ -51,7 +51,7 @@ const accentByCategory: Record<CategorySlug, string> = {
  * the repo and can be turned back on by flipping this flag, or replaced one by
  * one with proper white-background shots from Admin → Products.
  */
-const USE_SHELF_PHOTOS = false;
+const USE_SHELF_PHOTOS = true;
 
 /** Real product photography keyed by slug (currently off — see USE_SHELF_PHOTOS). */
 const photoBySlug: Record<string, string> = {
