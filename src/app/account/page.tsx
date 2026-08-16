@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, LogOut, MapPin, Package, Settings, User } from "lucide-react";
+import { Heart, LogOut, MapPin, Package, Settings, ShoppingBag, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,6 @@ import { ProductImage } from "@/components/product/product-image";
 import { useWishlist } from "@/context/wishlist";
 import { productMap, products } from "@/lib/data/products";
 import { cn, formatPrice } from "@/lib/utils";
-
-const orders = [
-  { id: "ORA-482910", date: "24 Jul 2026", status: "Delivered", items: ["freepods-4-pro", "ultrabraid-usb-c-100w"], total: 7398 },
-  { id: "ORA-479120", date: "11 Jul 2026", status: "In transit", items: ["watch-meta-ultra"], total: 8999 },
-  { id: "ORA-471003", date: "2 Jul 2026", status: "Delivered", items: ["powercore-27000", "gan-cube-67w"], total: 9298 },
-];
 
 const tabs = [
   { id: "overview", label: "Overview", icon: User },
@@ -30,10 +24,12 @@ export default function AccountPage() {
   return (
     <div className="container-x py-12">
       <div className="flex items-center gap-4">
-        <span className="grid size-16 place-items-center rounded-full bg-brand-500 font-display text-2xl font-bold text-brand-950">JW</span>
+        <span className="grid size-16 place-items-center rounded-full bg-brand-500 font-display text-2xl font-bold text-brand-950">
+          <User size={28} />
+        </span>
         <div>
-          <h1 className="font-display text-2xl font-bold">Hello, Jane 👋</h1>
-          <p className="text-sm text-muted">jane@email.com · Member since 2025</p>
+          <h1 className="font-display text-2xl font-bold">Welcome 👋</h1>
+          <p className="text-sm text-muted">Your SIR VERT ENTERPRISE account</p>
         </div>
       </div>
 
@@ -59,8 +55,8 @@ export default function AccountPage() {
           {tab === "overview" && (
             <div className="grid gap-4 sm:grid-cols-3">
               {[
-                { label: "Total orders", value: orders.length },
-                { label: "In transit", value: orders.filter((o) => o.status === "In transit").length },
+                { label: "Total orders", value: 0 },
+                { label: "In transit", value: 0 },
                 { label: "Saved items", value: wishlist.hydrated ? saved.length : 0 },
               ].map((s) => (
                 <div key={s.label} className="card-surface p-6">
@@ -68,42 +64,20 @@ export default function AccountPage() {
                   <p className="mt-1 text-sm text-muted">{s.label}</p>
                 </div>
               ))}
-              <div className="card-surface p-6 sm:col-span-3">
-                <div className="flex items-center gap-2 text-sm font-semibold"><MapPin size={16} className="text-brand-500" /> Default address</div>
-                <p className="mt-2 text-sm text-muted">Jane Wanjiru · +254 799 239 739<br />Kimathi Street, Nairobi CBD, 00100</p>
+              <div className="card-surface flex flex-col gap-2 p-6 sm:col-span-3">
+                <div className="flex items-center gap-2 text-sm font-semibold"><MapPin size={16} className="text-brand-500" /> Delivery address</div>
+                <p className="text-sm text-muted">No address saved yet. Add one at checkout for faster delivery across Kenya.</p>
+                <Button asChild size="sm" className="mt-1 self-start"><Link href="/shop">Start shopping</Link></Button>
               </div>
             </div>
           )}
 
           {tab === "orders" && (
-            <div className="flex flex-col gap-4">
-              {orders.map((o) => (
-                <div key={o.id} className="card-surface p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">{o.id}</p>
-                      <p className="text-xs text-muted">Placed {o.date}</p>
-                    </div>
-                    <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", o.status === "Delivered" ? "bg-brand-500/15 text-brand-700 dark:text-brand-300" : "bg-amber-400/15 text-amber-600")}>
-                      {o.status}
-                    </span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-2">
-                    {o.items.map((slug) => {
-                      const p = productMap[slug];
-                      return p ? <ProductImage key={slug} product={p} className="size-14 rounded-xl" glow={false} /> : null;
-                    })}
-                    <div className="ml-auto text-right">
-                      <p className="text-xs text-muted">Total</p>
-                      <p className="font-bold">{formatPrice(o.total)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <Button asChild variant="outline" size="sm"><Link href="/track-order">Track</Link></Button>
-                    <Button variant="ghost" size="sm">Buy again</Button>
-                  </div>
-                </div>
-              ))}
+            <div className="card-surface flex flex-col items-center gap-3 p-14 text-center">
+              <ShoppingBag size={30} className="text-muted" />
+              <p className="font-semibold">No orders yet</p>
+              <p className="max-w-sm text-sm text-muted">When you place an order it will appear here so you can track it and reorder in one tap.</p>
+              <Button asChild className="mt-1"><Link href="/shop">Browse products</Link></Button>
             </div>
           )}
 

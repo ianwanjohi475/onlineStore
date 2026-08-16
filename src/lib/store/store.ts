@@ -4,14 +4,13 @@ import path from "node:path";
 import type { CategorySlug, Order, Product, StoreData } from "@/lib/types";
 import { seed } from "./seed";
 import { bumpStore } from "./events";
-import { hasDb, q, withTx } from "@/lib/db";
 
 /**
- * Data layer with two interchangeable backends:
- *   • DATABASE_URL set  → Postgres / CockroachDB (durable, scales, multi-instance)
- *   • DATABASE_URL unset → local data/store.json file (great for quick local dev)
- * Everything the app calls goes through the async getters below, so the rest of
- * the code doesn't care which backend is live.
+ * Data layer for SIR VERT ENTERPRISE.
+ * Everything is persisted to a local JSON file (data/store.json). Simple,
+ * dependable and zero-config — no external database to provision, meter, or
+ * keep alive. The app calls the async getters below so the storefront and admin
+ * always read and write the same source of truth.
  */
 
 /** Backfill fields that older persisted orders may be missing. */
@@ -42,228 +41,54 @@ function assemble(raw: Partial<StoreData>): StoreData {
   };
 }
 
-/* ── File backend ─────────────────────────────────────────── */
+/* ── File store ───────────────────────────────────────────── */
 const DIR = path.join(process.cwd(), "data");
 const FILE = path.join(DIR, "store.json");
+
+/**
+ * Bump this whenever the code-managed catalogue changes (new products, photos,
+ * categories, branding, hero slides…). On the next read, an older saved file is
+ * refreshed to the new catalogue automatically — while the shop's real ORDERS
+ * and customer suspensions are preserved. Admin edits made after a refresh
+ * persist normally (every save re-stamps the current version).
+ */
+const SEED_VERSION = 4;
 
 function ensureFile() {
   if (!fs.existsSync(FILE)) {
     fs.mkdirSync(DIR, { recursive: true });
-    fs.writeFileSync(FILE, JSON.stringify(seed, null, 2));
+    writeFile(seed);
   }
 }
 function readFile(): StoreData {
   ensureFile();
+  let parsed: (StoreData & { seedVersion?: number }) | null = null;
   try {
-    return assemble(JSON.parse(fs.readFileSync(FILE, "utf8")) as StoreData);
+    parsed = JSON.parse(fs.readFileSync(FILE, "utf8")) as StoreData & { seedVersion?: number };
   } catch {
     return seed;
   }
+  if (!parsed) return seed;
+  // Catalogue changed in code → refresh it, but keep real orders + suspensions.
+  if ((parsed.seedVersion ?? 0) < SEED_VERSION) {
+    const refreshed = assemble({ orders: parsed.orders, suspendedCustomers: parsed.suspendedCustomers });
+    writeFile(refreshed);
+    return refreshed;
+  }
+  return assemble(parsed);
 }
 function writeFile(data: StoreData) {
-  ensureFile();
-  fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
+  fs.mkdirSync(DIR, { recursive: true });
+  fs.writeFileSync(FILE, JSON.stringify({ ...data, seedVersion: SEED_VERSION }, null, 2));
 }
 
-/* ── Postgres backend ─────────────────────────────────────── */
-let ready: Promise<void> | null = null;
-
-async function ensureReady() {
-  if (!ready) ready = init();
-  return ready;
-}
-
-async function init() {
-  await q(`CREATE TABLE IF NOT EXISTS products (slug TEXT PRIMARY KEY, category TEXT, position INT DEFAULT 0, data JSONB NOT NULL)`);
-  await q(`CREATE TABLE IF NOT EXISTS categories (slug TEXT PRIMARY KEY, position INT DEFAULT 0, data JSONB NOT NULL)`);
-  await q(`CREATE TABLE IF NOT EXISTS brands (slug TEXT PRIMARY KEY, position INT DEFAULT 0, data JSONB NOT NULL)`);
-  await q(`CREATE TABLE IF NOT EXISTS testimonials (id TEXT PRIMARY KEY, position INT DEFAULT 0, data JSONB NOT NULL)`);
-  await q(`CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, created_at TIMESTAMPTZ DEFAULT now(), data JSONB NOT NULL)`);
-  await q(`CREATE TABLE IF NOT EXISTS settings (id TEXT PRIMARY KEY, data JSONB NOT NULL)`);
-
-  const [{ count }] = await q<{ count: string }>(`SELECT count(*)::int AS count FROM products`);
-  if (Number(count) === 0) await seedDb();
-}
-
-/** Populate an empty database with the default catalogue. */
-async function seedDb() {
-  await withTx(async (c) => {
-    for (let i = 0; i < seed.products.length; i++) {
-      const p = seed.products[i];
-      await c.query(`INSERT INTO products (slug, category, position, data) VALUES ($1,$2,$3,$4) ON CONFLICT (slug) DO NOTHING`, [p.slug, p.category, i, JSON.stringify(p)]);
-    }
-    for (let i = 0; i < seed.categories.length; i++) {
-      const cat = seed.categories[i];
-      await c.query(`INSERT INTO categories (slug, position, data) VALUES ($1,$2,$3) ON CONFLICT (slug) DO NOTHING`, [cat.slug, i, JSON.stringify(cat)]);
-    }
-    for (let i = 0; i < seed.brands.length; i++) {
-      const b = seed.brands[i];
-      await c.query(`INSERT INTO brands (slug, position, data) VALUES ($1,$2,$3) ON CONFLICT (slug) DO NOTHING`, [b.slug, i, JSON.stringify(b)]);
-    }
-    for (let i = 0; i < seed.testimonials.length; i++) {
-      const t = seed.testimonials[i];
-      await c.query(`INSERT INTO testimonials (id, position, data) VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING`, [t.id, i, JSON.stringify(t)]);
-    }
-    for (const o of seed.orders) {
-      await c.query(`INSERT INTO orders (id, created_at, data) VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING`, [o.id, o.date, JSON.stringify(o)]);
-    }
-    await c.query(`INSERT INTO settings (id, data) VALUES ('singleton',$1) ON CONFLICT (id) DO NOTHING`, [
-      JSON.stringify({ settings: seed.settings, suspendedCustomers: seed.suspendedCustomers ?? [] }),
-    ]);
-  });
-}
-
-/**
- * Short-lived read cache. Every storefront page render calls a dozen getters
- * (getProducts, getCategories, getBestSellers…) and each one previously re-read
- * the whole store — ~72 DB queries per homepage. On a metered database (e.g.
- * CockroachDB Basic, billed per Request Unit) that drains the monthly quota fast
- * and the cluster gets disabled. Caching the assembled store for a few seconds
- * collapses a whole render into ONE database read, and any write clears it
- * immediately so the admin still sees changes instantly.
- */
-const READ_TTL_MS = 8_000;
-let storeCache: { data: StoreData; at: number } | null = null;
-
-/** Drop the read cache so the next read hits the backend (called after writes). */
-export function invalidateStoreCache() {
-  storeCache = null;
-}
-
-async function readStoreDbUncached(): Promise<StoreData> {
-  await ensureReady();
-  const [products, categories, brands, testimonials, orders, settingsRows] = await Promise.all([
-    q<{ data: Product }>(`SELECT data FROM products ORDER BY position`),
-    q<{ data: StoreData["categories"][number] }>(`SELECT data FROM categories ORDER BY position`),
-    q<{ data: StoreData["brands"][number] }>(`SELECT data FROM brands ORDER BY position`),
-    q<{ data: StoreData["testimonials"][number] }>(`SELECT data FROM testimonials ORDER BY position`),
-    q<{ data: Order }>(`SELECT data FROM orders ORDER BY data->>'date' DESC`),
-    q<{ data: { settings: StoreData["settings"]; suspendedCustomers: string[] } }>(`SELECT data FROM settings WHERE id='singleton'`),
-  ]);
-  const s = settingsRows[0]?.data;
-  return assemble({
-    products: products.map((r) => r.data),
-    categories: categories.map((r) => r.data),
-    brands: brands.map((r) => r.data),
-    testimonials: testimonials.map((r) => r.data),
-    orders: orders.map((r) => r.data),
-    settings: s?.settings,
-    suspendedCustomers: s?.suspendedCustomers ?? [],
-  });
-}
-
-/** Rewrite the catalogue + settings tables. Orders are managed separately (addOrder/updateOrder). */
-async function writeStoreDb(data: StoreData) {
-  await ensureReady();
-  await withTx(async (c) => {
-    await c.query(`DELETE FROM products`);
-    for (let i = 0; i < data.products.length; i++) {
-      const p = data.products[i];
-      await c.query(`INSERT INTO products (slug, category, position, data) VALUES ($1,$2,$3,$4)`, [p.slug, p.category, i, JSON.stringify(p)]);
-    }
-    await c.query(`DELETE FROM categories`);
-    for (let i = 0; i < data.categories.length; i++) {
-      await c.query(`INSERT INTO categories (slug, position, data) VALUES ($1,$2,$3)`, [data.categories[i].slug, i, JSON.stringify(data.categories[i])]);
-    }
-    await c.query(`DELETE FROM brands`);
-    for (let i = 0; i < data.brands.length; i++) {
-      await c.query(`INSERT INTO brands (slug, position, data) VALUES ($1,$2,$3)`, [data.brands[i].slug, i, JSON.stringify(data.brands[i])]);
-    }
-    await c.query(`DELETE FROM testimonials`);
-    for (let i = 0; i < data.testimonials.length; i++) {
-      await c.query(`INSERT INTO testimonials (id, position, data) VALUES ($1,$2,$3)`, [data.testimonials[i].id, i, JSON.stringify(data.testimonials[i])]);
-    }
-    await c.query(`INSERT INTO settings (id, data) VALUES ('singleton',$1) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`, [
-      JSON.stringify({ settings: data.settings, suspendedCustomers: data.suspendedCustomers ?? [] }),
-    ]);
-  });
-}
-
-/** Insert one order and decrement stock — a targeted, concurrency-safe write.
- *  Uses only basic INSERT/SELECT/UPDATE (no JSON functions) for max DB portability. */
-async function addOrderDb(order: Order) {
-  await ensureReady();
-  await withTx(async (c) => {
-    await c.query(`INSERT INTO orders (id, created_at, data) VALUES ($1, now(), $2)`, [order.id, JSON.stringify(order)]);
-    for (const item of order.items) {
-      const rows = (await c.query(`SELECT data FROM products WHERE slug=$1 FOR UPDATE`, [item.slug])).rows as { data: Product }[];
-      const p = rows[0]?.data;
-      if (p && typeof p.stock === "number") {
-        p.stock = Math.max(0, p.stock - item.quantity);
-        if (p.stock === 0) p.inStock = false;
-        await c.query(`UPDATE products SET data=$2 WHERE slug=$1`, [item.slug, JSON.stringify(p)]);
-      }
-    }
-  });
-}
-
-async function updateOrderDb(id: string, mutate: (o: Order) => Order): Promise<Order | null> {
-  await ensureReady();
-  return withTx(async (c) => {
-    const rows = (await c.query(`SELECT data FROM orders WHERE id=$1 FOR UPDATE`, [id])).rows as { data: Order }[];
-    if (!rows[0]) return null;
-    const updated = mutate(normalizeOrder(rows[0].data));
-    await c.query(`UPDATE orders SET data=$2 WHERE id=$1`, [id, JSON.stringify(updated)]);
-    return updated;
-  });
-}
-
-async function readStoreDb(): Promise<StoreData> {
-  if (storeCache && Date.now() - storeCache.at < READ_TTL_MS) return storeCache.data;
-  const data = await readStoreDbUncached();
-  storeCache = { data, at: Date.now() };
-  return data;
-}
-
-/* ── Resilient backend selection ──────────────────────────────
- * A database can go away in production — CockroachDB Basic disables the whole
- * cluster once it hits its monthly Request Unit limit (SQLSTATE 53300), and a
- * network blip has the same effect. The site must NOT crash to a white error
- * page when that happens. So every operation below tries the database first and,
- * if it errors, transparently falls back to the local file store so the
- * storefront and admin keep working. A short circuit-breaker stops us hammering
- * a known-down database on every single request. */
-let dbDownUntil = 0;
-const DB_COOLDOWN_MS = 60_000;
-
-/** True when a DB is configured AND not currently in its cooldown after a failure. */
-function dbActive() {
-  return hasDb && Date.now() >= dbDownUntil;
-}
-
-/** Record a DB failure: open the circuit for a minute and warn once. */
-function markDbDown(e: unknown) {
-  dbDownUntil = Date.now() + DB_COOLDOWN_MS;
-  storeCache = null;
-  const msg = e instanceof Error ? e.message : String(e);
-  console.warn(`[store] Database unavailable — serving from the local file store for ${DB_COOLDOWN_MS / 1000}s. Reason: ${msg}`);
-}
-
-/* ── Public API (backend-agnostic, DB-with-file-fallback) ─── */
+/* ── Public API ───────────────────────────────────────────── */
 export async function readStore(): Promise<StoreData> {
-  if (dbActive()) {
-    try {
-      return await readStoreDb();
-    } catch (e) {
-      markDbDown(e);
-    }
-  }
   return readFile();
 }
 
 export async function writeStore(data: StoreData, scope = "store") {
-  if (dbActive()) {
-    try {
-      await writeStoreDb(data);
-      invalidateStoreCache();
-      bumpStore(scope);
-      return;
-    } catch (e) {
-      markDbDown(e);
-    }
-  }
   writeFile(data);
-  invalidateStoreCache();
   bumpStore(scope);
 }
 
@@ -314,8 +139,8 @@ export async function getOrders() {
   return (await readStore()).orders;
 }
 
-/** Apply an order to the file store: prepend it and decrement stock. */
-function addOrderFile(order: Order) {
+/** Record a new order and decrement inventory. */
+export async function addOrder(order: Order) {
   const store = readFile();
   store.orders.unshift(order);
   for (const item of order.items) {
@@ -326,90 +151,34 @@ function addOrderFile(order: Order) {
     }
   }
   writeFile(store);
-}
-
-/** Record a new order and decrement inventory. */
-export async function addOrder(order: Order) {
-  if (dbActive()) {
-    try {
-      await addOrderDb(order);
-      invalidateStoreCache();
-      bumpStore("order");
-      return;
-    } catch (e) {
-      markDbDown(e);
-    }
-  }
-  addOrderFile(order);
-  invalidateStoreCache();
   bumpStore("order");
 }
 
 /** Delete every order (and therefore every derived customer). Used for a fresh start. */
 export async function clearOrders() {
-  if (dbActive()) {
-    try {
-      await ensureReady();
-      await q(`DELETE FROM orders`);
-      invalidateStoreCache();
-      bumpStore("order");
-      return;
-    } catch (e) {
-      markDbDown(e);
-    }
-  }
   const store = readFile();
   store.orders = [];
   writeFile(store);
-  invalidateStoreCache();
   bumpStore("order");
 }
 
-/** Delete a single order by id (used by the backend self-test to clean up its probe). */
+/** Delete a single order by id. */
 export async function deleteOrder(id: string) {
-  if (dbActive()) {
-    try {
-      await ensureReady();
-      await q(`DELETE FROM orders WHERE id=$1`, [id]);
-      invalidateStoreCache();
-      bumpStore("order");
-      return;
-    } catch (e) {
-      markDbDown(e);
-    }
-  }
   const store = readFile();
   store.orders = store.orders.filter((o) => o.id !== id);
   writeFile(store);
-  invalidateStoreCache();
   bumpStore("order");
 }
 
 /** Apply a change to a single order (status, payment, notes, archive…). */
 export async function updateOrder(id: string, mutate: (o: Order) => Order): Promise<Order | null> {
-  let updated: Order | null = null;
-  if (dbActive()) {
-    try {
-      updated = await updateOrderDb(id, mutate);
-      if (updated) {
-        invalidateStoreCache();
-        bumpStore("order");
-      }
-      return updated;
-    } catch (e) {
-      markDbDown(e);
-    }
-  }
   const store = readFile();
   const idx = store.orders.findIndex((o) => o.id === id);
   if (idx === -1) return null;
-  updated = mutate(normalizeOrder(store.orders[idx]));
+  const updated = mutate(normalizeOrder(store.orders[idx]));
   store.orders[idx] = updated;
   writeFile(store);
-  if (updated) {
-    invalidateStoreCache();
-    bumpStore("order");
-  }
+  bumpStore("order");
   return updated;
 }
 

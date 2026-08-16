@@ -71,6 +71,22 @@ const photoBySlug: Record<string, string> = {
   "wireless-charger": "/products/wireless-charger.jpg",
 };
 
+/**
+ * Representative photo per category. Any product that doesn't have its own
+ * uploaded photo borrows the closest real product shot from its family, so the
+ * storefront is full of real imagery instead of placeholder renders. Admins can
+ * still upload an exact photo per product from the dashboard at any time.
+ */
+const photoByCategory: Partial<Record<CategorySlug, string>> = {
+  earbuds: "/products/spacebuds.jpg",
+  speakers: "/products/boompop-pro.jpg",
+  smartwatches: "/products/watch-nova-am.jpg",
+  "power-banks": "/products/powerbank-q21.jpg",
+  chargers: "/products/45w-gan-ultra-fast.jpg",
+  cables: "/products/100w-fast-charging-cable.jpg",
+  accessories: "/products/open-arc.jpg",
+};
+
 function make(seed: Seed): Product {
   const slug = slugify(seed.name);
   const rating = seed.rating ?? 4.6;
@@ -96,7 +112,7 @@ function make(seed: Seed): Product {
     description:
       seed.description ??
       `${seed.name} — ${seed.tagline}. Genuine stock, sold and supported by SIR VERT ENTERPRISE with warranty and fast delivery across Kenya.`,
-    image: seed.image ?? photoBySlug[slug] ?? null,
+    image: seed.image ?? photoBySlug[slug] ?? photoByCategory[seed.category] ?? null,
   };
 }
 
