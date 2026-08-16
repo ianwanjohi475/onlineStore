@@ -2,10 +2,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * Brand logo for SIR VERT ENTERPRISE: a custom mark + two-tier wordmark.
- * The mark is a bold "V" (Vert) whose right arm rises into a signal spark —
- * a nod to the electronics + networking business. Pure inline SVG, so it stays
- * razor-sharp at any size and in both light and dark themes.
+ * Brand logo for SIR VERT ENTERPRISE: a premium dark badge with an emerald mark
+ * (a bold "V" for Vert rising into a signal spark — electronics + networking),
+ * paired with a two-tier wordmark. Pure inline SVG, razor-sharp at any size,
+ * theme-aware.
  */
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   return (
@@ -14,7 +14,7 @@ export function Logo({ className, compact = false }: { className?: string; compa
       aria-label="SIR VERT ENTERPRISE — home"
       className={cn("group inline-flex items-center gap-2.5", className)}
     >
-      <LogoMark className="size-9 shrink-0 transition-transform duration-300 ease-out group-hover:scale-105 group-hover:-rotate-3" />
+      <LogoMark className="size-9 shrink-0 transition-transform duration-300 ease-out group-hover:scale-105" />
       {!compact && (
         <span className="flex flex-col leading-none">
           <span className="font-display text-[1.05rem] font-extrabold tracking-tight text-foreground">
@@ -35,25 +35,25 @@ export function LogoMark({ className }: { className?: string }) {
     <svg viewBox="0 0 40 40" fill="none" className={className} role="img" aria-label="SIR VERT ENTERPRISE">
       <defs>
         <linearGradient id="sv-badge" x1="4" y1="2" x2="36" y2="38" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#00E676" />
-          <stop offset="0.55" stopColor="#00C060" />
-          <stop offset="1" stopColor="#00994D" />
+          <stop stopColor="#1B2430" />
+          <stop offset="1" stopColor="#0B1220" />
         </linearGradient>
-        <radialGradient id="sv-sheen" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11 8) rotate(55) scale(26)">
-          <stop stopColor="#FFFFFF" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-        </radialGradient>
+        <linearGradient id="sv-v" x1="10" y1="12" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#22E188" />
+          <stop offset="1" stopColor="#00C060" />
+        </linearGradient>
       </defs>
 
-      {/* rounded badge */}
+      {/* dark rounded badge */}
       <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#sv-badge)" />
-      <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#sv-sheen)" />
-      <rect x="1.5" y="1.5" width="37" height="37" rx="10.5" stroke="#FFFFFF" strokeOpacity="0.22" />
+      <rect x="1.5" y="1.5" width="37" height="37" rx="10.5" stroke="#FFFFFF" strokeOpacity="0.10" />
+      {/* subtle emerald floor glow */}
+      <ellipse cx="20" cy="33" rx="12" ry="3" fill="#00E676" opacity="0.18" />
 
-      {/* the "V" mark — right arm rises higher into a spark */}
+      {/* the "V" mark in emerald — right arm rises into a spark */}
       <path
         d="M10.5 12.5 L19.2 28.5 L27.4 11.8"
-        stroke="#FFFFFF"
+        stroke="url(#sv-v)"
         strokeWidth="4.1"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -61,7 +61,7 @@ export function LogoMark({ className }: { className?: string }) {
       {/* signal spark at the tip of the rising arm */}
       <path
         d="M29 5.6 L30.4 8.7 L33.5 10.1 L30.4 11.5 L29 14.6 L27.6 11.5 L24.5 10.1 L27.6 8.7 Z"
-        fill="#FFFFFF"
+        fill="#22E188"
       />
     </svg>
   );

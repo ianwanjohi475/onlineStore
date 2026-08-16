@@ -7,9 +7,9 @@ export function CtaBanner() {
   return (
     <section className="container-x py-20">
       <Reveal>
-        <div className="relative overflow-hidden rounded-[2.5rem] border border-brand-500/30 bg-gradient-to-br from-brand-950 to-[#04150c] px-6 py-16 text-center text-brand-50 sm:px-16">
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-[#111827] to-[#0b1220] px-6 py-16 text-center text-white sm:px-16">
           <div aria-hidden className="pointer-events-none absolute inset-0">
-            <div className="absolute left-1/2 top-0 size-96 -translate-x-1/2 rounded-full bg-brand-500 opacity-25 blur-[120px]" />
+            <div className="absolute left-1/2 top-0 size-96 -translate-x-1/2 rounded-full bg-brand-500 opacity-20 blur-[120px]" />
           </div>
           <div className="relative mx-auto max-w-2xl">
             <span className="eyebrow justify-center text-brand-400">Powered for life</span>

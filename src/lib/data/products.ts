@@ -28,18 +28,20 @@ type Seed = {
   image?: string | null;
 };
 
+// A varied, premium accent per category so product renders aren't all green —
+// green stays the brand colour, but the catalogue feels colourful, like a real marketplace.
 const accentByCategory: Record<CategorySlug, string> = {
-  earbuds: "#00E676",
-  speakers: "#22F58C",
-  smartwatches: "#34F5C5",
-  "power-banks": "#7CFF6B",
-  chargers: "#4ADE80",
-  cables: "#6EE7B7",
-  "home-appliances": "#38BDF8",
-  computing: "#A78BFA",
-  cameras: "#22D3EE",
-  accessories: "#6EE7B7",
-  "new-arrivals": "#00E676",
+  earbuds: "#22D3EE",       // cyan
+  speakers: "#A78BFA",      // violet
+  smartwatches: "#38BDF8",  // sky
+  "power-banks": "#34D399", // emerald
+  chargers: "#FBBF24",      // amber
+  cables: "#F472B6",        // pink
+  "home-appliances": "#60A5FA", // blue
+  computing: "#818CF8",     // indigo
+  cameras: "#2DD4BF",       // teal
+  accessories: "#FB923C",   // orange
+  "new-arrivals": "#00E676", // brand green
 };
 
 /**
@@ -71,21 +73,6 @@ const photoBySlug: Record<string, string> = {
   "wireless-charger": "/products/wireless-charger.jpg",
 };
 
-/**
- * Representative photo per category. Any product that doesn't have its own
- * uploaded photo borrows the closest real product shot from its family, so the
- * storefront is full of real imagery instead of placeholder renders. Admins can
- * still upload an exact photo per product from the dashboard at any time.
- */
-const photoByCategory: Partial<Record<CategorySlug, string>> = {
-  earbuds: "/products/spacebuds.jpg",
-  speakers: "/products/boompop-pro.jpg",
-  smartwatches: "/products/watch-nova-am.jpg",
-  "power-banks": "/products/powerbank-q21.jpg",
-  chargers: "/products/45w-gan-ultra-fast.jpg",
-  cables: "/products/100w-fast-charging-cable.jpg",
-  accessories: "/products/open-arc.jpg",
-};
 
 function make(seed: Seed): Product {
   const slug = slugify(seed.name);
@@ -112,7 +99,7 @@ function make(seed: Seed): Product {
     description:
       seed.description ??
       `${seed.name} — ${seed.tagline}. Genuine stock, sold and supported by SIR VERT ENTERPRISE with warranty and fast delivery across Kenya.`,
-    image: seed.image ?? photoBySlug[slug] ?? photoByCategory[seed.category] ?? null,
+    image: seed.image ?? photoBySlug[slug] ?? null,
   };
 }
 

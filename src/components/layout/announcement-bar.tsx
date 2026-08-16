@@ -22,7 +22,7 @@ export function AnnouncementBar() {
   const m = messages[Math.min(i, messages.length - 1)];
 
   return (
-    <div className="relative bg-gradient-to-r from-brand-950 via-brand-900 to-brand-950 text-brand-50">
+    <div className="relative bg-neutral-950 text-neutral-100 dark:bg-black">
       <div className="container-x flex h-9 items-center justify-center gap-3 text-xs">
         <Truck size={13} className="shrink-0 text-brand-400" />
         <AnimatePresence mode="wait">
