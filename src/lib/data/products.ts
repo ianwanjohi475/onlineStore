@@ -45,9 +45,15 @@ const accentByCategory: Record<CategorySlug, string> = {
 };
 
 /**
- * Real product photography (cleaned studio-style crops) keyed by slug.
- * Any product without an entry falls back to the generated studio render.
+ * The uploaded product photos are shot on green shop shelves, which makes the
+ * whole storefront look green and less premium. So by default the catalogue
+ * uses the clean studio renders (see ProductArt). The real photos are still in
+ * the repo and can be turned back on by flipping this flag, or replaced one by
+ * one with proper white-background shots from Admin → Products.
  */
+const USE_SHELF_PHOTOS = false;
+
+/** Real product photography keyed by slug (currently off — see USE_SHELF_PHOTOS). */
 const photoBySlug: Record<string, string> = {
   spacebuds: "/products/spacebuds.jpg",
   "spacebuds-neo": "/products/spacebuds-neo.jpg",
@@ -99,7 +105,7 @@ function make(seed: Seed): Product {
     description:
       seed.description ??
       `${seed.name} — ${seed.tagline}. Genuine stock, sold and supported by SIR VERT ENTERPRISE with warranty and fast delivery across Kenya.`,
-    image: seed.image ?? photoBySlug[slug] ?? null,
+    image: seed.image ?? (USE_SHELF_PHOTOS ? photoBySlug[slug] : null) ?? null,
   };
 }
 

@@ -52,7 +52,7 @@ const FILE = path.join(DIR, "store.json");
  * and customer suspensions are preserved. Admin edits made after a refresh
  * persist normally (every save re-stamps the current version).
  */
-const SEED_VERSION = 5;
+const SEED_VERSION = 6;
 
 function ensureFile() {
   if (!fs.existsSync(FILE)) {
