@@ -113,7 +113,24 @@ async function seedDb() {
   });
 }
 
-async function readStoreDb(): Promise<StoreData> {
+/**
+ * Short-lived read cache. Every storefront page render calls a dozen getters
+ * (getProducts, getCategories, getBestSellers…) and each one previously re-read
+ * the whole store — ~72 DB queries per homepage. On a metered database (e.g.
+ * CockroachDB Basic, billed per Request Unit) that drains the monthly quota fast
+ * and the cluster gets disabled. Caching the assembled store for a few seconds
+ * collapses a whole render into ONE database read, and any write clears it
+ * immediately so the admin still sees changes instantly.
+ */
+const READ_TTL_MS = 8_000;
+let storeCache: { data: StoreData; at: number } | null = null;
+
+/** Drop the read cache so the next read hits the backend (called after writes). */
+export function invalidateStoreCache() {
+  storeCache = null;
+}
+
+async function readStoreDbUncached(): Promise<StoreData> {
   await ensureReady();
   const [products, categories, brands, testimonials, orders, settingsRows] = await Promise.all([
     q<{ data: Product }>(`SELECT data FROM products ORDER BY position`),
@@ -191,6 +208,13 @@ async function updateOrderDb(id: string, mutate: (o: Order) => Order): Promise<O
   });
 }
 
+async function readStoreDb(): Promise<StoreData> {
+  if (storeCache && Date.now() - storeCache.at < READ_TTL_MS) return storeCache.data;
+  const data = await readStoreDbUncached();
+  storeCache = { data, at: Date.now() };
+  return data;
+}
+
 /* ── Public API (backend-agnostic) ────────────────────────── */
 export async function readStore(): Promise<StoreData> {
   return hasDb ? readStoreDb() : readFile();
@@ -199,6 +223,7 @@ export async function readStore(): Promise<StoreData> {
 export async function writeStore(data: StoreData, scope = "store") {
   if (hasDb) await writeStoreDb(data);
   else writeFile(data);
+  invalidateStoreCache();
   bumpStore(scope);
 }
 
@@ -265,6 +290,7 @@ export async function addOrder(order: Order) {
     }
     writeFile(store);
   }
+  invalidateStoreCache();
   bumpStore("order");
 }
 
@@ -278,6 +304,7 @@ export async function clearOrders() {
     store.orders = [];
     writeFile(store);
   }
+  invalidateStoreCache();
   bumpStore("order");
 }
 
@@ -291,6 +318,7 @@ export async function deleteOrder(id: string) {
     store.orders = store.orders.filter((o) => o.id !== id);
     writeFile(store);
   }
+  invalidateStoreCache();
   bumpStore("order");
 }
 
@@ -307,7 +335,10 @@ export async function updateOrder(id: string, mutate: (o: Order) => Order): Prom
     store.orders[idx] = updated;
     writeFile(store);
   }
-  if (updated) bumpStore("order");
+  if (updated) {
+    invalidateStoreCache();
+    bumpStore("order");
+  }
   return updated;
 }
 
