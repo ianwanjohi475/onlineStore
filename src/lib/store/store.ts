@@ -52,7 +52,7 @@ const FILE = path.join(DIR, "store.json");
  * and customer suspensions are preserved. Admin edits made after a refresh
  * persist normally (every save re-stamps the current version).
  */
-const SEED_VERSION = 8;
+const SEED_VERSION = 9;
 
 /**
  * In-memory copy of the store. This is the source of truth once loaded, which

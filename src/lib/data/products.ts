@@ -77,6 +77,9 @@ const photoBySlug: Record<string, string> = {
   "18w-car-charger": "/products/18w-car-charger.jpg",
   "100w-fast-charging-cable": "/products/100w-fast-charging-cable.jpg",
   "wireless-charger": "/products/wireless-charger.png",
+  "powernova-qf1": "/products/powernova-qf1.jpg",
+  "watch-5-lite": "/products/watch-5-lite.jpg",
+  "boulevard-car-charger": "/products/boulevard-car-charger.jpg",
 };
 
 
@@ -639,6 +642,49 @@ const raw: Seed[] = [
     specs: { Resolution: "1080p", Vision: "Night IR", Connection: "WiFi", Audio: "Two-way" },
     description:
       "Keep an eye on home or shop from your phone. The IP C30 streams full-HD day or night, sends motion alerts, and lets you talk back through two-way audio.",
+  },
+
+  /* ── Newly added (Sept 2026) ──────────────────────────────── */
+  {
+    name: "PowerNova QF1",
+    tagline: "27,000mAh · 22.5W",
+    category: "power-banks",
+    price: 3500,
+    compareAt: 4200,
+    rating: 4.8,
+    badges: ["bestseller"],
+    soldPercent: 64,
+    brand: "oraimo",
+    features: ["27,000mAh huge capacity", "22.5W super-fast charging", "Charges a phone up to 5.5×", "80% in ~30 mins", "Smart digital % display", "PD3.0 & QC3.0 compatible"],
+    specs: { Capacity: "27,000mAh", Output: "22.5W", Ports: "2× USB-A + USB-C", Display: "Digital %", Model: "OPB-P757D" },
+    description:
+      "The PowerNova QF1 packs a massive 27,000mAh with 22.5W super-fast charging — enough to top up your phone up to 5.5 times. PD3.0 & QC3.0 with a clear digital display.",
+  },
+  {
+    name: "Watch 5 Lite",
+    tagline: "2.01\" HD · full control",
+    category: "smartwatches",
+    price: 3200,
+    rating: 4.7,
+    badges: ["new"],
+    soldPercent: 41,
+    brand: "oraimo",
+    features: ["2.01\" HD full-touch screen", "Up to 7-day usage", "100+ sports modes", "Wireless HD calling", "Heart-rate & sleep tracking"],
+    specs: { Screen: "2.01\" HD", Battery: "Up to 7 days", Calling: "Bluetooth HD", Modes: "100+ sports", Model: "OSW-40N" },
+    description:
+      "A big 2.01\" HD screen with full touch control, wireless HD calling and 100+ sports modes — the Watch 5 Lite keeps you connected and tracked for up to 7 days per charge.",
+  },
+  {
+    name: "Boulevard Car Charger",
+    tagline: "18W · FM transmitter",
+    category: "chargers",
+    price: 1500,
+    rating: 4.6,
+    brand: "oraimo",
+    features: ["18W fast charging", "Bluetooth FM transmitter", "Play music through car speakers", "Dual USB output", "Voltage digital display"],
+    specs: { Power: "18W", Ports: "Dual USB", Bluetooth: "FM transmitter", Display: "Voltage", Model: "OCC-08" },
+    description:
+      "Charge fast and jam to your favourite songs on the road. The Boulevard delivers 18W fast charging with a built-in Bluetooth FM transmitter, dual USB ports and a voltage display.",
   },
 ];
 
