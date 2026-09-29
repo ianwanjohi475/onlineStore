@@ -2,8 +2,9 @@
 
 import { CheckCircle2, Circle, Loader2, MapPin, Package, Search, Truck } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useMyOrders } from "@/hooks/use-my-orders";
 import { formatPrice } from "@/lib/utils";
 
 interface TrackResult {
@@ -41,15 +42,28 @@ export default function TrackOrderPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrackResult | null>(null);
   const [error, setError] = useState("");
+  const myOrders = useMyOrders();
+
+  // Arriving from "Track" elsewhere (e.g. /account) — look it up automatically.
+  useEffect(() => {
+    const n = new URLSearchParams(window.location.search).get("number");
+    if (n) void lookup(n);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const track = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!number.trim()) return;
+    await lookup(number);
+  };
+
+  const lookup = async (value: string) => {
+    if (!value.trim()) return;
+    setNumber(value);
     setLoading(true);
     setError("");
     setResult(null);
     try {
-      const res = await fetch(`/api/track?number=${encodeURIComponent(number.trim())}`);
+      const res = await fetch(`/api/track?number=${encodeURIComponent(value.trim())}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "We couldn't find that order.");
       setResult(data);
@@ -70,9 +84,27 @@ export default function TrackOrderPage() {
           Track your <span className="text-brand-600 dark:text-brand-400">order</span>
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Enter the order number from your confirmation — it looks like <b className="text-foreground">SVE-123456</b>.
+          Orders you place on this device show up below — no need to remember the number.
         </p>
       </div>
+
+      {/* Orders placed on this device — one click to track, nothing to memorise */}
+      {myOrders.hydrated && myOrders.orders.length > 0 && (
+        <div className="card-surface mt-7 p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Your recent orders</p>
+          <div className="flex flex-wrap gap-2">
+            {myOrders.orders.map((o) => (
+              <button
+                key={o.number}
+                onClick={() => lookup(o.number.replace("#", ""))}
+                className="rounded-full border border-border px-3 py-1.5 text-sm font-semibold transition-colors hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400"
+              >
+                {o.number}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form onSubmit={track} className="card-surface mt-7 flex flex-col gap-3 p-4 sm:flex-row">
         <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-surface px-4">

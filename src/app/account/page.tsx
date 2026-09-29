@@ -2,10 +2,11 @@
 
 import { Heart, LogOut, MapPin, Package, Settings, ShoppingBag, User } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductImage } from "@/components/product/product-image";
 import { useWishlist } from "@/context/wishlist";
+import { useMyOrders } from "@/hooks/use-my-orders";
 import { productMap, products } from "@/lib/data/products";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -19,6 +20,30 @@ const tabs = [
 export default function AccountPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("overview");
   const wishlist = useWishlist();
+  const myOrders = useMyOrders();
+  const [statuses, setStatuses] = useState<Record<string, { status: string; total: number; date: string }>>({});
+
+  // Pull the live status of every order remembered on this device.
+  useEffect(() => {
+    if (!myOrders.hydrated || myOrders.orders.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        myOrders.orders.map(async (o) => {
+          try {
+            const res = await fetch(`/api/track?number=${encodeURIComponent(o.number.replace("#", ""))}`);
+            if (!res.ok) return null;
+            const d = await res.json();
+            return [o.number, { status: d.status, total: d.total, date: d.date }] as const;
+          } catch {
+            return null;
+          }
+        }),
+      );
+      if (!cancelled) setStatuses(Object.fromEntries(entries.filter(Boolean) as [string, { status: string; total: number; date: string }][]));
+    })();
+    return () => { cancelled = true; };
+  }, [myOrders.hydrated, myOrders.orders]);
   const saved = wishlist.slugs.map((s) => productMap[s]).filter(Boolean);
 
   return (
@@ -55,8 +80,8 @@ export default function AccountPage() {
           {tab === "overview" && (
             <div className="grid gap-4 sm:grid-cols-3">
               {[
-                { label: "Total orders", value: 0 },
-                { label: "In transit", value: 0 },
+                { label: "Total orders", value: myOrders.hydrated ? myOrders.orders.length : 0 },
+                { label: "In transit", value: Object.values(statuses).filter((s) => !["delivered", "cancelled", "refunded", "returned"].includes(s.status)).length },
                 { label: "Saved items", value: wishlist.hydrated ? saved.length : 0 },
               ].map((s) => (
                 <div key={s.label} className="card-surface p-6">
@@ -73,12 +98,41 @@ export default function AccountPage() {
           )}
 
           {tab === "orders" && (
-            <div className="card-surface flex flex-col items-center gap-3 p-14 text-center">
-              <ShoppingBag size={30} className="text-muted" />
-              <p className="font-semibold">No orders yet</p>
-              <p className="max-w-sm text-sm text-muted">When you place an order it will appear here so you can track it and reorder in one tap.</p>
-              <Button asChild className="mt-1"><Link href="/shop">Browse products</Link></Button>
-            </div>
+            !myOrders.hydrated ? (
+              <div className="card-surface p-6"><div className="h-20 animate-pulse rounded-xl bg-surface-2" /></div>
+            ) : myOrders.orders.length === 0 ? (
+              <div className="card-surface flex flex-col items-center gap-3 p-14 text-center">
+                <ShoppingBag size={30} className="text-muted" />
+                <p className="font-semibold">No orders yet</p>
+                <p className="max-w-sm text-sm text-muted">When you place an order it will appear here so you can track it and reorder in one tap.</p>
+                <Button asChild className="mt-1"><Link href="/shop">Browse products</Link></Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {myOrders.orders.map((o) => {
+                  const live = statuses[o.number];
+                  return (
+                    <div key={o.number} className="card-surface flex flex-wrap items-center justify-between gap-3 p-5">
+                      <div>
+                        <p className="font-semibold">{o.number}</p>
+                        <p className="text-xs text-muted">
+                          Placed {new Date(live?.date ?? o.date).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}
+                          {live ? ` · ${formatPrice(live.total)}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="rounded-full bg-surface-2 px-3 py-1 text-xs font-semibold capitalize text-muted">
+                          {live ? live.status.replace(/-/g, " ") : "Checking…"}
+                        </span>
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/track-order?number=${encodeURIComponent(o.number.replace("#", ""))}`}>Track</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
           )}
 
           {tab === "wishlist" && (

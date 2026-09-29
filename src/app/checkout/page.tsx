@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { OrderSummary } from "@/components/cart/order-summary";
 import { ProductImage } from "@/components/product/product-image";
 import { useCart } from "@/context/cart";
+import { rememberOrder } from "@/hooks/use-my-orders";
 import { cn, formatPrice } from "@/lib/utils";
 
 const steps = ["Details", "Payment", "Review"] as const;
@@ -190,6 +191,7 @@ export default function CheckoutPage() {
                       const d = await res.json().catch(() => ({}));
                       if (!res.ok) throw new Error(d.error || "Could not place your order.");
                       setOrderNo(d.number || "");
+                      rememberOrder(d.number || "");
                       cart.clear();
                       setDone(true);
                     } catch (e) {
