@@ -54,32 +54,58 @@ const FILE = path.join(DIR, "store.json");
  */
 const SEED_VERSION = 7;
 
-function ensureFile() {
-  if (!fs.existsSync(FILE)) {
-    fs.mkdirSync(DIR, { recursive: true });
-    writeFile(seed);
-  }
-}
-function readFile(): StoreData {
-  ensureFile();
-  let parsed: (StoreData & { seedVersion?: number }) | null = null;
-  try {
-    parsed = JSON.parse(fs.readFileSync(FILE, "utf8")) as StoreData & { seedVersion?: number };
-  } catch {
-    return seed;
-  }
-  if (!parsed) return seed;
-  // Catalogue changed in code → refresh it, but keep real orders + suspensions.
+/**
+ * In-memory copy of the store. This is the source of truth once loaded, which
+ * makes the app work on read-only / ephemeral serverless filesystems (e.g.
+ * Vercel, where only /tmp is writable and the deployment bundle is read-only).
+ * We still persist to data/store.json on a best-effort basis: it works locally
+ * and on any writable host, and is silently skipped where the disk is read-only.
+ *
+ * Note: on serverless platforms each instance keeps its own memory, so orders
+ * placed on one instance won't be visible to another and won't survive a cold
+ * start. For durable, shared order history on Vercel, back this with a managed
+ * store (Vercel KV / Postgres / Blob, or Upstash Redis).
+ */
+let mem: StoreData | null = null;
+
+/** Apply the seed-version refresh to a parsed file (keep real orders + suspensions). */
+function refreshed(parsed: StoreData & { seedVersion?: number }): StoreData {
   if ((parsed.seedVersion ?? 0) < SEED_VERSION) {
-    const refreshed = assemble({ orders: parsed.orders, suspendedCustomers: parsed.suspendedCustomers });
-    writeFile(refreshed);
-    return refreshed;
+    return assemble({ orders: parsed.orders, suspendedCustomers: parsed.suspendedCustomers });
   }
   return assemble(parsed);
 }
+
+/** Best-effort disk persistence — never throws on a read-only filesystem. */
+function persist(data: StoreData) {
+  try {
+    fs.mkdirSync(DIR, { recursive: true });
+    fs.writeFileSync(FILE, JSON.stringify({ ...data, seedVersion: SEED_VERSION }, null, 2));
+  } catch {
+    /* read-only FS (e.g. Vercel serverless) — in-memory only */
+  }
+}
+
+function readFile(): StoreData {
+  if (mem) return mem;
+  let data: StoreData;
+  try {
+    if (fs.existsSync(FILE)) {
+      data = refreshed(JSON.parse(fs.readFileSync(FILE, "utf8")) as StoreData & { seedVersion?: number });
+    } else {
+      data = assemble({});
+    }
+  } catch {
+    data = assemble({});
+  }
+  mem = data;
+  persist(data);
+  return mem;
+}
+
 function writeFile(data: StoreData) {
-  fs.mkdirSync(DIR, { recursive: true });
-  fs.writeFileSync(FILE, JSON.stringify({ ...data, seedVersion: SEED_VERSION }, null, 2));
+  mem = data;
+  persist(data);
 }
 
 /* ── Public API ───────────────────────────────────────────── */
