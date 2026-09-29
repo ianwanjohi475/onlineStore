@@ -4,12 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   BadgePercent, CreditCard, ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Menu,
   MessageSquareQuote, Package, Settings as SettingsIcon, ShapesIcon, ShoppingCart,
-  Sparkles, Tag, Users, X,
+  Tag, Users, X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/components/admin/kit";
+import { LogoMark } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const SidebarInner = (
     <>
       <Link href="/admin" className="flex items-center gap-2.5 px-2 py-1" onClick={() => setMobileOpen(false)}>
-        <span className="grid size-9 place-items-center rounded-xl bg-brand-500 text-brand-950"><Sparkles size={18} /></span>
+        <span className="grid size-9 shrink-0 place-items-center text-brand-700 dark:text-brand-200"><LogoMark className="size-9" /></span>
         <div className="leading-tight">
           <p className="font-display text-sm font-bold">SIR VERT</p>
           <p className="text-[0.7rem] text-muted">Commerce admin</p>
