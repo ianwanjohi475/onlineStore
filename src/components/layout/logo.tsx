@@ -13,10 +13,10 @@ export function Logo({ className, compact = false }: { className?: string; compa
       aria-label="SIR VERT ENTERPRISE — home"
       className={cn("group inline-flex items-center gap-2.5", className)}
     >
-      <LogoMark className="size-9 shrink-0 text-brand-600 transition-transform duration-300 ease-out group-hover:scale-105 dark:text-brand-300" />
+      <LogoMark className="size-9 shrink-0 text-brand-700 transition-transform duration-300 ease-out group-hover:scale-105 dark:text-brand-200" />
       {!compact && (
         <span className="flex flex-col leading-none">
-          <span className="font-display text-[1.05rem] font-extrabold tracking-tight text-foreground">
+          <span className="font-display text-[1.05rem] font-extrabold tracking-tight text-brand-700 dark:text-brand-200">
             SIR VERT
           </span>
           <span className="mt-0.5 text-[0.55rem] font-bold uppercase tracking-[0.3em] text-brand-600 dark:text-brand-400">

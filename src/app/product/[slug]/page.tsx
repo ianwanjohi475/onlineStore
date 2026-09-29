@@ -6,7 +6,7 @@ import { ProductDetail } from "@/components/product/product-detail";
 import { RelatedProducts } from "@/components/product/related-products";
 import { RecentlyViewed } from "@/components/product/recently-viewed";
 import { getCategory, getProduct, getRelated } from "@/lib/store/store";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, safeJsonLd } from "@/lib/utils";
 
 export async function generateMetadata({
   params,
@@ -55,7 +55,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <div className="border-b border-border">
         <nav className="container-x flex items-center gap-1.5 py-4 text-xs text-muted">
           <Link href="/" className="hover:text-foreground">Home</Link>

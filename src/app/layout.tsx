@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { safeJsonLd } from "@/lib/utils";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/context/providers";
@@ -95,7 +96,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="flex min-h-full flex-col bg-background text-foreground antialiased">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }}
         />
         <Providers products={products} categories={categories} settings={settings}>
           <StoreChrome footer={<SiteFooter />}>{children}</StoreChrome>

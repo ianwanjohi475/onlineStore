@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ADMIN_COOKIE, ADMIN_TOKEN } from "@/lib/admin/auth";
+import { ADMIN_COOKIE, verifySession } from "@/lib/admin/auth";
 
-export function middleware(req: NextRequest) {
-  const authed = req.cookies.get(ADMIN_COOKIE)?.value === ADMIN_TOKEN;
+export async function middleware(req: NextRequest) {
+  const authed = await verifySession(req.cookies.get(ADMIN_COOKIE)?.value);
   const { pathname } = req.nextUrl;
 
   if (pathname === "/admin/login") {

@@ -37,3 +37,12 @@ export function slugify(input: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
+
+/**
+ * Serialize a value for embedding inside a <script> tag. Escapes "<" so a value
+ * containing "</script>" can never break out of the tag (XSS hardening for the
+ * JSON-LD blocks).
+ */
+export function safeJsonLd(value: unknown) {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
