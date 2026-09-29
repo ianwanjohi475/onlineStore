@@ -5,17 +5,20 @@
 
 /* ── Static design tokens ─────────────────────────────────── */
 @theme {
-  --color-brand-50: #e9fff4;
-  --color-brand-100: #c6ffe3;
-  --color-brand-200: #8ffac8;
-  --color-brand-300: #54f0a8;
-  --color-brand-400: #22e188;
-  --color-brand-500: #00e676;
-  --color-brand-600: #00c060;
-  --color-brand-700: #00994d;
-  --color-brand-800: #0b7a42;
-  --color-brand-900: #0b3d2e;
-  --color-brand-950: #052e1c;
+  /* Refined emerald — deeper and more premium than the old neon green,
+     which read as "too much" across large surfaces. Green stays the brand
+     (SIR VERT), it's just calmer and used as an accent. */
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+  --color-brand-950: #022c22;
 
   --radius-4xl: 2rem;
   --shadow-glow: 0 0 60px -12px color-mix(in oklab, var(--color-brand-500) 55%, transparent);

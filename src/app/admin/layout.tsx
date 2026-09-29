@@ -114,7 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <ThemeToggle />
             <Link href="/" className="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:border-brand-500 sm:inline-flex"><ExternalLink size={15} /> View store</Link>
             <div className="relative">
-              <button onClick={() => setProfileOpen((o) => !o)} aria-label="Account menu" className="grid size-9 place-items-center rounded-full bg-brand-500 text-sm font-bold text-brand-950">A</button>
+              <button onClick={() => setProfileOpen((o) => !o)} aria-label="Account menu" className="grid size-9 place-items-center rounded-full bg-brand-500 text-sm font-bold text-white">A</button>
               <AnimatePresence>
                 {profileOpen && (
                   <>

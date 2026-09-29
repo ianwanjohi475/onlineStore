@@ -29,7 +29,7 @@ export default function AdminLogin() {
     <div className="grid min-h-screen place-items-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <span className="grid size-12 place-items-center rounded-2xl bg-brand-500 text-brand-950">
+          <span className="grid size-12 place-items-center rounded-2xl bg-brand-500 text-white">
             <LayoutDashboard size={24} />
           </span>
           <h1 className="mt-4 font-display text-2xl font-bold">SIR VERT Admin</h1>
@@ -54,7 +54,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 h-11 w-full rounded-full bg-brand-500 font-semibold text-brand-950 transition-colors hover:bg-brand-400 disabled:opacity-60"
+            className="mt-4 h-11 w-full rounded-full bg-brand-500 font-semibold text-white transition-colors hover:bg-brand-400 disabled:opacity-60"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>

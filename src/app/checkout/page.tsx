@@ -70,7 +70,7 @@ export default function CheckoutPage() {
       <div className="mt-6 flex items-center gap-2">
         {steps.map((s, i) => (
           <div key={s} className="flex flex-1 items-center gap-2">
-            <span className={cn("grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold transition-colors", i <= step ? "bg-brand-500 text-brand-950" : "bg-surface-2 text-muted")}>
+            <span className={cn("grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold transition-colors", i <= step ? "bg-brand-500 text-white" : "bg-surface-2 text-muted")}>
               {i < step ? <Check size={16} /> : i + 1}
             </span>
             <span className={cn("text-sm font-semibold", i <= step ? "text-foreground" : "text-muted")}>{s}</span>

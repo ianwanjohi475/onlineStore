@@ -48,7 +48,7 @@ export function Pwa() {
           exit={{ opacity: 0, y: 24 }}
           className="glass fixed bottom-24 left-5 z-[80] flex w-[min(90vw,20rem)] items-center gap-3 rounded-2xl p-3 shadow-card"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-500 text-brand-950">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-500 text-white">
             <Download size={20} />
           </span>
           <div className="flex-1">
@@ -57,7 +57,7 @@ export function Pwa() {
           </div>
           <button
             onClick={install}
-            className="rounded-full bg-brand-500 px-3 py-1.5 text-xs font-bold text-brand-950 transition-colors hover:bg-brand-400"
+            className="rounded-full bg-brand-500 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-brand-400"
           >
             Install
           </button>

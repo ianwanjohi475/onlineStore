@@ -53,7 +53,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <button
             onClick={() => setQuickOpen(true)}
             aria-label="Quick view"
-            className="glass absolute bottom-3 right-3 grid size-9 place-items-center rounded-full text-foreground opacity-0 transition-all duration-300 hover:bg-brand-500 hover:text-brand-950 group-hover:opacity-100"
+            className="glass absolute bottom-3 right-3 grid size-9 place-items-center rounded-full text-foreground opacity-0 transition-all duration-300 hover:bg-brand-500 hover:text-white group-hover:opacity-100"
           >
             <Eye size={16} />
           </button>

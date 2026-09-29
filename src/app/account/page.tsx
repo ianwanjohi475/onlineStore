@@ -24,7 +24,7 @@ export default function AccountPage() {
   return (
     <div className="container-x py-12">
       <div className="flex items-center gap-4">
-        <span className="grid size-16 place-items-center rounded-full bg-brand-500 font-display text-2xl font-bold text-brand-950">
+        <span className="grid size-16 place-items-center rounded-full bg-brand-500 font-display text-2xl font-bold text-white">
           <User size={28} />
         </span>
         <div>

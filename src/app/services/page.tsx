@@ -59,7 +59,7 @@ export default function ServicesPage() {
           {networking.map((s, i) => (
             <Reveal key={s.title} index={i}>
               <div className="card-surface group flex h-full flex-col p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/40 hover:shadow-card">
-                <span className="grid size-12 place-items-center rounded-2xl bg-brand-500/12 text-brand-600 transition-colors group-hover:bg-brand-500 group-hover:text-brand-950 dark:text-brand-400">
+                <span className="grid size-12 place-items-center rounded-2xl bg-brand-500/12 text-brand-600 transition-colors group-hover:bg-brand-500 group-hover:text-white dark:text-brand-400">
                   <s.icon size={22} />
                 </span>
                 <h3 className="mt-5 font-display text-lg font-bold">{s.title}</h3>
@@ -107,7 +107,7 @@ export default function ServicesPage() {
             {process.map((p, i) => (
               <Reveal key={p.title} index={i}>
                 <div className="relative text-center">
-                  <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-500 text-brand-950 shadow-glow"><p.icon size={24} /></span>
+                  <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-500 text-white shadow-glow"><p.icon size={24} /></span>
                   <span className="mt-4 block font-display text-xs font-bold uppercase tracking-widest text-muted">Step {i + 1}</span>
                   <h3 className="mt-1 font-display font-semibold">{p.title}</h3>
                   <p className="mt-2 text-sm text-muted">{p.text}</p>

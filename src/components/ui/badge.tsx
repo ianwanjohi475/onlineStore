@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 const styles: Record<string, string> = {
-  new: "bg-brand-500 text-brand-950",
+  new: "bg-brand-500 text-white",
   bestseller: "bg-foreground text-background",
   sale: "bg-rose-500 text-white",
   limited: "bg-amber-400 text-amber-950",

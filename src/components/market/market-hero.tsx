@@ -41,6 +41,11 @@ export function MarketHero() {
   const features = (product.features ?? []).slice(0, 4);
   const wa = settings.whatsapp ? `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}` : "/contact";
 
+  // Biggest-discount product, shown on the Flash Sale promo card.
+  const deal = Object.values(productMap)
+    .filter((p) => p.compareAt && p.compareAt > p.price)
+    .sort((a, b) => discountPercent(b.compareAt!, b.price) - discountPercent(a.compareAt!, a.price))[0];
+
   return (
     <section className="container-x pt-5">
       <div className="grid gap-4 lg:grid-cols-[230px_1fr] xl:grid-cols-[230px_1fr_270px]">
@@ -89,7 +94,7 @@ export function MarketHero() {
               {/* copy */}
               <div className="relative z-10 flex flex-col justify-center gap-3 p-7 text-white sm:p-8">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-2.5 py-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-brand-950">
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-2.5 py-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-white">
                     <Zap size={11} className="fill-brand-950" /> Now in stock
                   </span>
                   <span className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-brand-300">{slide.eyebrow}</span>
@@ -119,7 +124,7 @@ export function MarketHero() {
                 <div className="mt-1 flex flex-wrap items-center gap-2.5">
                   <Link
                     href={slide.buttonLink || `/product/${slide.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-brand-950 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-brand-400"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-brand-400"
                   >
                     {slide.buttonText || "Shop now"} <ChevronRight size={16} />
                   </Link>
@@ -163,12 +168,19 @@ export function MarketHero() {
         {/* side promo cards */}
         <div className="hidden flex-col gap-4 xl:flex">
           <Link href="/flash-sales" className="group relative flex flex-1 flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 p-5 text-white">
-            <div>
+            <div className="relative z-10">
               <p className="text-xs font-semibold uppercase tracking-wide opacity-80">Flash Sale</p>
               <p className="mt-1 font-display text-2xl font-bold leading-tight">Up to 40% off</p>
+              {deal && <p className="mt-1 text-xs text-white/80">{deal.name} · {formatPrice(deal.price)}</p>}
             </div>
-            <span className="inline-flex w-fit items-center gap-1 text-sm font-semibold">Grab deals <ChevronRight size={15} className="transition-transform group-hover:translate-x-1" /></span>
-            <div aria-hidden className="absolute -right-6 -top-6 size-24 rounded-full bg-white/20 blur-2xl" />
+            {/* deal product image */}
+            {deal && (
+              <div className="pointer-events-none absolute bottom-3 right-3 size-24 overflow-hidden rounded-xl bg-white/95 shadow-lg ring-1 ring-black/5 transition-transform duration-300 group-hover:scale-105">
+                <ProductImage product={deal} sizes="96px" glow={false} className="size-full" />
+              </div>
+            )}
+            <span className="relative z-10 inline-flex w-fit items-center gap-1 text-sm font-semibold">Grab deals <ChevronRight size={15} className="transition-transform group-hover:translate-x-1" /></span>
+            <div aria-hidden className="absolute -left-8 -top-8 size-28 rounded-full bg-white/20 blur-2xl" />
           </Link>
           <Link href="/services" className="group flex flex-1 flex-col justify-between rounded-2xl border border-border bg-surface p-5">
             <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400">

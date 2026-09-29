@@ -58,7 +58,7 @@ export function Collections() {
                   <h3 className="font-display text-2xl font-bold">{c.title}</h3>
                   <p className="mt-1 text-sm text-white/80">{c.copy}</p>
                 </div>
-                <span className="grid size-11 place-items-center rounded-full bg-white/20 backdrop-blur transition-transform group-hover:scale-110 group-hover:bg-white group-hover:text-brand-950">
+                <span className="grid size-11 place-items-center rounded-full bg-white/20 backdrop-blur transition-transform group-hover:scale-110 group-hover:bg-white group-hover:text-white">
                   <ArrowUpRight size={20} />
                 </span>
               </div>

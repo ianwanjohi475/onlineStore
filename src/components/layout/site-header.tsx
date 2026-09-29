@@ -28,7 +28,7 @@ const navLinks = [
 function CountBadge({ count }: { count: number }) {
   if (!count) return null;
   return (
-    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-brand-500 px-1 text-[0.6rem] font-bold text-brand-950 tabular-nums">
+    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-brand-500 px-1 text-[0.6rem] font-bold text-white tabular-nums">
       {count > 9 ? "9+" : count}
     </span>
   );
@@ -70,7 +70,7 @@ export function SiteHeader() {
             >
               <Search size={17} />
               <span className="flex-1 text-left">Search products, brands and categories…</span>
-              <span className="rounded-full bg-brand-500 px-3.5 py-1.5 text-xs font-bold text-brand-950">Search</span>
+              <span className="rounded-full bg-brand-500 px-3.5 py-1.5 text-xs font-bold text-white">Search</span>
             </button>
 
             <div className="flex-1 lg:hidden" />

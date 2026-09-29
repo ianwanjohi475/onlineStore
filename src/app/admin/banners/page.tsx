@@ -139,7 +139,7 @@ function BannerEditor({ slide, products, onSave, onClose }: { slide: HeroSlide; 
             <span className="text-[0.65rem] opacity-80">{f.eyebrow}</span>
             <span className="font-display text-lg font-bold leading-tight">{f.title}</span>
             <span className="text-[0.7rem] opacity-80">{f.copy}</span>
-            <span className="mt-1 w-fit rounded-full bg-brand-500 px-2.5 py-1 text-[0.65rem] font-bold text-brand-950">{f.buttonText}</span>
+            <span className="mt-1 w-fit rounded-full bg-brand-500 px-2.5 py-1 text-[0.65rem] font-bold text-white">{f.buttonText}</span>
           </div>
           {product && <ProductImage product={product} glow={false} className="!bg-transparent" sizes="150px" />}
           {f.overlay > 0 && <div className="absolute inset-0 bg-black" style={{ opacity: f.overlay / 100 }} />}
