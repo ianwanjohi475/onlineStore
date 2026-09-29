@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
     imageSizes: [64, 96, 160, 256, 384],
     // Cache optimized images for a month so they're only processed once.
     minimumCacheTTL: 60 * 60 * 24 * 30,
+    // Allow admin-uploaded images served from Vercel Blob.
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+    ],
   },
 };
 

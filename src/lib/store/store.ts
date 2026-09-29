@@ -1,16 +1,20 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
+import { list, put } from "@vercel/blob";
 import type { CategorySlug, Order, Product, StoreData } from "@/lib/types";
 import { seed } from "./seed";
 import { bumpStore } from "./events";
 
 /**
- * Data layer for SIR VERT ENTERPRISE.
- * Everything is persisted to a local JSON file (data/store.json). Simple,
- * dependable and zero-config — no external database to provision, meter, or
- * keep alive. The app calls the async getters below so the storefront and admin
- * always read and write the same source of truth.
+ * Data layer for SIR VERT ENTERPRISE, with two persistence backends:
+ *   • Vercel Blob  → durable, shared across every serverless instance
+ *                    (active when BLOB_READ_WRITE_TOKEN is set — Vercel sets it
+ *                    automatically once a Blob store is connected to the project).
+ *   • Local file   → data/store.json for local dev and any host with a writable
+ *                    disk. Best-effort, silently skipped on read-only filesystems.
+ * Either way the app talks to the async getters below, so the storefront and
+ * admin always read and write the same source of truth.
  */
 
 /** Backfill fields that older persisted orders may be missing. */
@@ -41,80 +45,110 @@ function assemble(raw: Partial<StoreData>): StoreData {
   };
 }
 
-/* ── File store ───────────────────────────────────────────── */
-const DIR = path.join(process.cwd(), "data");
-const FILE = path.join(DIR, "store.json");
-
 /**
  * Bump this whenever the code-managed catalogue changes (new products, photos,
- * categories, branding, hero slides…). On the next read, an older saved file is
+ * categories, branding, hero slides…). On the next read, older saved data is
  * refreshed to the new catalogue automatically — while the shop's real ORDERS
  * and customer suspensions are preserved. Admin edits made after a refresh
  * persist normally (every save re-stamps the current version).
  */
 const SEED_VERSION = 9;
 
-/**
- * In-memory copy of the store. This is the source of truth once loaded, which
- * makes the app work on read-only / ephemeral serverless filesystems (e.g.
- * Vercel, where only /tmp is writable and the deployment bundle is read-only).
- * We still persist to data/store.json on a best-effort basis: it works locally
- * and on any writable host, and is silently skipped where the disk is read-only.
- *
- * Note: on serverless platforms each instance keeps its own memory, so orders
- * placed on one instance won't be visible to another and won't survive a cold
- * start. For durable, shared order history on Vercel, back this with a managed
- * store (Vercel KV / Postgres / Blob, or Upstash Redis).
- */
-let mem: StoreData | null = null;
+type Persisted = StoreData & { seedVersion?: number };
 
-/** Apply the seed-version refresh to a parsed file (keep real orders + suspensions). */
-function refreshed(parsed: StoreData & { seedVersion?: number }): StoreData {
+/** Apply the seed-version refresh to parsed data (keep real orders + suspensions). */
+function refreshed(parsed: Persisted): StoreData {
   if ((parsed.seedVersion ?? 0) < SEED_VERSION) {
     return assemble({ orders: parsed.orders, suspendedCustomers: parsed.suspendedCustomers });
   }
   return assemble(parsed);
 }
 
-/** Best-effort disk persistence — never throws on a read-only filesystem. */
-function persist(data: StoreData) {
+/* ── Blob backend (durable, shared) ───────────────────────── */
+const BLOB_ON = !!process.env.BLOB_READ_WRITE_TOKEN;
+const BLOB_KEY = "store/store.json";
+
+async function loadFromBlob(): Promise<StoreData | null> {
+  try {
+    const { blobs } = await list({ prefix: BLOB_KEY, limit: 1 });
+    const blob = blobs.find((b) => b.pathname === BLOB_KEY);
+    if (!blob) return null;
+    const res = await fetch(blob.url, { cache: "no-store" });
+    if (!res.ok) return null;
+    return refreshed((await res.json()) as Persisted);
+  } catch {
+    return null;
+  }
+}
+
+async function saveToBlob(data: StoreData) {
+  try {
+    await put(BLOB_KEY, JSON.stringify({ ...data, seedVersion: SEED_VERSION }), {
+      access: "public",
+      contentType: "application/json",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      cacheControlMaxAge: 0,
+    });
+  } catch (e) {
+    console.warn("[store] Blob save failed:", e instanceof Error ? e.message : e);
+  }
+}
+
+/* ── File backend (local dev / writable hosts) ────────────── */
+const DIR = path.join(process.cwd(), "data");
+const FILE = path.join(DIR, "store.json");
+
+function loadFromFile(): StoreData {
+  try {
+    if (fs.existsSync(FILE)) {
+      return refreshed(JSON.parse(fs.readFileSync(FILE, "utf8")) as Persisted);
+    }
+  } catch {
+    /* corrupt / unreadable — fall through to seed */
+  }
+  return assemble({});
+}
+
+function saveToFile(data: StoreData) {
   try {
     fs.mkdirSync(DIR, { recursive: true });
     fs.writeFileSync(FILE, JSON.stringify({ ...data, seedVersion: SEED_VERSION }, null, 2));
   } catch {
-    /* read-only FS (e.g. Vercel serverless) — in-memory only */
+    /* read-only FS (e.g. Vercel serverless) — ignore */
   }
 }
 
-function readFile(): StoreData {
-  if (mem) return mem;
-  let data: StoreData;
-  try {
-    if (fs.existsSync(FILE)) {
-      data = refreshed(JSON.parse(fs.readFileSync(FILE, "utf8")) as StoreData & { seedVersion?: number });
-    } else {
-      data = assemble({});
-    }
-  } catch {
-    data = assemble({});
-  }
+/* ── Load / commit with a short shared cache ──────────────── */
+let mem: StoreData | null = null;
+let memAt = 0;
+const CACHE_MS = 3000; // one render shares a single load; writes always read fresh
+
+/** Current store. `fresh` bypasses the cache (used before every mutation so we
+ *  never overwrite an order another instance just wrote). */
+async function currentStore(fresh = false): Promise<StoreData> {
+  if (!fresh && mem && Date.now() - memAt < CACHE_MS) return mem;
+  const data = (BLOB_ON ? await loadFromBlob() : null) ?? loadFromFile();
   mem = data;
-  persist(data);
-  return mem;
+  memAt = Date.now();
+  return data;
 }
 
-function writeFile(data: StoreData) {
+/** Persist a mutated store to the active backend and refresh the cache. */
+async function commit(data: StoreData) {
   mem = data;
-  persist(data);
+  memAt = Date.now();
+  if (BLOB_ON) await saveToBlob(data);
+  else saveToFile(data);
 }
 
 /* ── Public API ───────────────────────────────────────────── */
 export async function readStore(): Promise<StoreData> {
-  return readFile();
+  return currentStore();
 }
 
 export async function writeStore(data: StoreData, scope = "store") {
-  writeFile(data);
+  await commit(data);
   bumpStore(scope);
 }
 
@@ -167,7 +201,7 @@ export async function getOrders() {
 
 /** Record a new order and decrement inventory. */
 export async function addOrder(order: Order) {
-  const store = readFile();
+  const store = await currentStore(true);
   store.orders.unshift(order);
   for (const item of order.items) {
     const product = store.products.find((p) => p.slug === item.slug);
@@ -176,34 +210,34 @@ export async function addOrder(order: Order) {
       if (product.stock === 0) product.inStock = false;
     }
   }
-  writeFile(store);
+  await commit(store);
   bumpStore("order");
 }
 
 /** Delete every order (and therefore every derived customer). Used for a fresh start. */
 export async function clearOrders() {
-  const store = readFile();
+  const store = await currentStore(true);
   store.orders = [];
-  writeFile(store);
+  await commit(store);
   bumpStore("order");
 }
 
 /** Delete a single order by id. */
 export async function deleteOrder(id: string) {
-  const store = readFile();
+  const store = await currentStore(true);
   store.orders = store.orders.filter((o) => o.id !== id);
-  writeFile(store);
+  await commit(store);
   bumpStore("order");
 }
 
 /** Apply a change to a single order (status, payment, notes, archive…). */
 export async function updateOrder(id: string, mutate: (o: Order) => Order): Promise<Order | null> {
-  const store = readFile();
+  const store = await currentStore(true);
   const idx = store.orders.findIndex((o) => o.id === id);
   if (idx === -1) return null;
   const updated = mutate(normalizeOrder(store.orders[idx]));
   store.orders[idx] = updated;
-  writeFile(store);
+  await commit(store);
   bumpStore("order");
   return updated;
 }
