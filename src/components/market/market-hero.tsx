@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BatteryCharging, Cable, Camera, ChevronRight, Headphones, Home, Monitor, Rocket, Speaker, Sparkles,
-  Truck, Watch, Zap, type LucideIcon,
+  BatteryCharging, Cable, Camera, Check, ChevronRight, Headphones, Home, Monitor, MessageCircle,
+  Rocket, Speaker, Sparkles, Truck, Watch, Zap, type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -30,7 +30,7 @@ export function MarketHero() {
 
   useEffect(() => {
     if (paused || slides.length === 0) return;
-    const id = setInterval(() => setI((n) => (n + 1) % slides.length), 5000);
+    const id = setInterval(() => setI((n) => (n + 1) % slides.length), 5500);
     return () => clearInterval(id);
   }, [paused, slides.length]);
 
@@ -38,6 +38,8 @@ export function MarketHero() {
   const slide = slides[Math.min(i, slides.length - 1)];
   const product = productMap[slide.slug];
   const off = product.compareAt ? discountPercent(product.compareAt, product.price) : 0;
+  const features = (product.features ?? []).slice(0, 4);
+  const wa = settings.whatsapp ? `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}` : "/contact";
 
   return (
     <section className="container-x pt-5">
@@ -65,7 +67,7 @@ export function MarketHero() {
           </nav>
         </aside>
 
-        {/* banner carousel */}
+        {/* banner poster carousel */}
         <div
           className="relative overflow-hidden rounded-2xl border border-border"
           onMouseEnter={() => setPaused(true)}
@@ -78,34 +80,68 @@ export function MarketHero() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="grid h-full min-h-[330px] grid-cols-1 sm:grid-cols-2"
-              style={{ background: `linear-gradient(120deg, ${slide.from}, ${slide.to})` }}
+              className="relative grid h-full min-h-[380px] grid-cols-1 sm:grid-cols-[1.15fr_1fr]"
+              style={{ background: `linear-gradient(125deg, ${slide.from}, ${slide.to})` }}
             >
+              {/* decorative glow */}
+              <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 78% 42%, rgba(0,230,118,0.18), transparent 55%)" }} />
+
               {/* copy */}
-              <div className="relative z-10 flex flex-col justify-center gap-3 p-8 text-white">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand-950">
-                  <Zap size={12} className="fill-brand-950" /> {slide.eyebrow}
-                </span>
-                <h2 className="font-display text-3xl font-bold leading-tight sm:text-4xl lg:text-[2.6rem]">{slide.title}</h2>
-                <p className="max-w-xs text-sm text-white/70">{slide.copy}</p>
+              <div className="relative z-10 flex flex-col justify-center gap-3 p-7 text-white sm:p-8">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-2.5 py-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-brand-950">
+                    <Zap size={11} className="fill-brand-950" /> Now in stock
+                  </span>
+                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-brand-300">{slide.eyebrow}</span>
+                </div>
+
+                <h2 className="font-display text-2xl font-extrabold leading-[1.05] sm:text-3xl lg:text-[2.4rem]">
+                  {slide.headline ?? slide.title}
+                </h2>
+                <p className="max-w-sm text-sm text-white/70">{slide.copy}</p>
+
+                {features.length > 0 && (
+                  <ul className="mt-1 grid max-w-md grid-cols-1 gap-x-5 gap-y-1.5 sm:grid-cols-2">
+                    {features.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-[0.82rem] text-white/85">
+                        <Check size={14} className="shrink-0 text-brand-400" strokeWidth={3} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
                 <div className="mt-1 flex items-center gap-3">
-                  <span className="font-display text-3xl font-bold">{formatPrice(product.price)}</span>
+                  <span className="font-display text-3xl font-extrabold">{formatPrice(product.price)}</span>
                   {product.compareAt && <span className="text-sm text-white/50 line-through">{formatPrice(product.compareAt)}</span>}
                   {off > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">-{off}%</span>}
                 </div>
-                <Link
-                  href={slide.buttonLink || `/product/${slide.slug}`}
-                  className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-brand-950 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-brand-400"
-                >
-                  {slide.buttonText || "Shop now"} <ChevronRight size={16} />
-                </Link>
+
+                <div className="mt-1 flex flex-wrap items-center gap-2.5">
+                  <Link
+                    href={slide.buttonLink || `/product/${slide.slug}`}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-brand-950 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-brand-400"
+                  >
+                    {slide.buttonText || "Shop now"} <ChevronRight size={16} />
+                  </Link>
+                  <a
+                    href={wa}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white/60"
+                  >
+                    <MessageCircle size={16} /> WhatsApp
+                  </a>
+                </div>
+                <p className="text-[0.68rem] font-medium uppercase tracking-wider text-white/45">Genuine product · 1-year warranty · SIR VERT ENTERPRISE</p>
               </div>
 
-              {/* product on a clean floating card with a spotlight glow */}
+              {/* product spotlight */}
               <div className="relative hidden items-center justify-center p-6 sm:flex">
-                <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 62% 48%, rgba(0,230,118,0.22), transparent 62%)" }} />
-                <div className="relative aspect-square w-[82%] max-w-[280px]">
-                  <ProductImage product={product} priority sizes="300px" glow={false} className="absolute inset-0 rounded-2xl bg-white shadow-2xl ring-1 ring-black/5" />
+                <div className="relative aspect-square w-[86%] max-w-[300px]">
+                  {off > 0 && (
+                    <span className="absolute -left-1 top-2 z-10 rounded-full bg-rose-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">-{off}%</span>
+                  )}
+                  <ProductImage product={product} priority sizes="320px" glow={false} className="absolute inset-0 rounded-2xl bg-white shadow-2xl ring-1 ring-black/5" />
                 </div>
               </div>
             </motion.div>

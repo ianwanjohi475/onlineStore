@@ -64,6 +64,7 @@ export interface HeroSlide {
   eyebrow: string;
   title: string;
   subtitle?: string;
+  headline?: string;
   copy: string;
   buttonText: string;
   buttonLink: string;

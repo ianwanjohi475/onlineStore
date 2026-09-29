@@ -67,7 +67,7 @@ const photoBySlug: Record<string, string> = {
   "watch-6-lite": "/products/watch-6-lite.jpg",
   "watch-5": "/products/watch-5.jpg",
   "watch-lumos-n": "/products/watch-lumos-n.jpg",
-  "watch-nova-am": "/products/watch-nova-am.jpg",
+  "watch-nova-am": "/products/watch-nova-am.png",
   "watch-muse": "/products/watch-muse.jpg",
   "watch-nova-2-lite": "/products/watch-nova-2-lite.jpg",
   "powerbank-q21": "/products/powerbank-q21.jpg",
@@ -76,7 +76,7 @@ const photoBySlug: Record<string, string> = {
   "20w-rapid-charger": "/products/20w-rapid-charger.jpg",
   "18w-car-charger": "/products/18w-car-charger.jpg",
   "100w-fast-charging-cable": "/products/100w-fast-charging-cable.jpg",
-  "wireless-charger": "/products/wireless-charger.jpg",
+  "wireless-charger": "/products/wireless-charger.png",
 };
 
 
