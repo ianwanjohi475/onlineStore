@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOrders } from "@/lib/store/store";
+import { findOrderByNumber } from "@/lib/store/store";
 
 /** Public order lookup for the Track Order page. Returns only what a shopper
  *  needs to follow their delivery — no other customer data. */
@@ -8,11 +8,7 @@ export async function GET(req: Request) {
   if (!raw) return NextResponse.json({ error: "Enter your order number." }, { status: 400 });
   const needle = raw.replace(/^#/, "");
 
-  const orders = await getOrders();
-  const order = orders.find((o) => {
-    const num = o.number.toUpperCase().replace(/^#/, "");
-    return num === needle || o.id.toUpperCase() === needle;
-  });
+  const order = await findOrderByNumber(needle);
 
   if (!order) {
     return NextResponse.json({ error: "We couldn't find an order with that number. Double-check it and try again." }, { status: 404 });

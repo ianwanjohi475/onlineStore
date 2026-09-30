@@ -2,6 +2,8 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { list, put } from "@vercel/blob";
+import type { InStatement } from "@libsql/client";
+import { TURSO_ON, db, ensureSchema } from "@/lib/db/turso";
 import type { CategorySlug, Order, Product, StoreData } from "@/lib/types";
 import { seed } from "./seed";
 import { bumpStore } from "./events";
@@ -119,6 +121,97 @@ function saveToFile(data: StoreData) {
   }
 }
 
+/* ── Turso backend (real tables, durable + concurrency-safe) ─ */
+
+/** Read the whole catalogue + orders back out of the tables. */
+async function loadFromTurso(): Promise<StoreData | null> {
+  try {
+    await ensureSchema();
+    const c = db();
+    const [products, categories, brands, testimonials, orders, settings, suspended, meta] = await Promise.all([
+      c.execute("SELECT data FROM products ORDER BY position"),
+      c.execute("SELECT data FROM categories ORDER BY position"),
+      c.execute("SELECT data FROM brands ORDER BY position"),
+      c.execute("SELECT data FROM testimonials ORDER BY position"),
+      c.execute("SELECT data FROM orders ORDER BY created_at DESC"),
+      c.execute("SELECT data FROM settings WHERE id = 'singleton'"),
+      c.execute("SELECT email FROM suspended_customers"),
+      c.execute("SELECT value FROM meta WHERE key = 'seedVersion'"),
+    ]);
+
+    const seedVersion = Number(meta.rows[0]?.value ?? 0);
+    // Empty database, or the code-managed catalogue moved on → (re)seed it.
+    if (products.rows.length === 0 || seedVersion < SEED_VERSION) {
+      const keepOrders = orders.rows.map((r) => JSON.parse(String(r.data)) as Order);
+      const fresh = assemble({ orders: keepOrders, suspendedCustomers: suspended.rows.map((r) => String(r.email)) });
+      await seedTurso(fresh);
+      return fresh;
+    }
+
+    const parse = <T>(rows: { data: unknown }[]) => rows.map((r) => JSON.parse(String(r.data)) as T);
+    return assemble({
+      products: parse<Product>(products.rows as unknown as { data: unknown }[]),
+      categories: parse<StoreData["categories"][number]>(categories.rows as unknown as { data: unknown }[]),
+      brands: parse<StoreData["brands"][number]>(brands.rows as unknown as { data: unknown }[]),
+      testimonials: parse<StoreData["testimonials"][number]>(testimonials.rows as unknown as { data: unknown }[]),
+      orders: parse<Order>(orders.rows as unknown as { data: unknown }[]),
+      settings: settings.rows[0] ? (JSON.parse(String(settings.rows[0].data)) as StoreData["settings"]) : undefined,
+      suspendedCustomers: suspended.rows.map((r) => String(r.email)),
+    });
+  } catch (e) {
+    console.warn("[store] Turso read failed:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+/** Write the code-managed catalogue + settings into the tables (keeps orders). */
+async function seedTurso(data: StoreData) {
+  const c = db();
+  const stmts: InStatement[] = [
+    { sql: "DELETE FROM products", args: [] },
+    { sql: "DELETE FROM categories", args: [] },
+    { sql: "DELETE FROM brands", args: [] },
+    { sql: "DELETE FROM testimonials", args: [] },
+  ];
+  data.products.forEach((p, i) =>
+    stmts.push({
+      sql: "INSERT INTO products (slug, category, position, stock, in_stock, data) VALUES (?,?,?,?,?,?)",
+      args: [p.slug, p.category, i, p.stock ?? null, p.inStock === false ? 0 : 1, JSON.stringify(p)],
+    }),
+  );
+  data.categories.forEach((x, i) => stmts.push({ sql: "INSERT INTO categories (slug, position, data) VALUES (?,?,?)", args: [x.slug, i, JSON.stringify(x)] }));
+  data.brands.forEach((x, i) => stmts.push({ sql: "INSERT INTO brands (slug, position, data) VALUES (?,?,?)", args: [x.slug, i, JSON.stringify(x)] }));
+  data.testimonials.forEach((x, i) => stmts.push({ sql: "INSERT INTO testimonials (id, position, data) VALUES (?,?,?)", args: [x.id, i, JSON.stringify(x)] }));
+  stmts.push({ sql: "INSERT INTO settings (id, data) VALUES ('singleton', ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data", args: [JSON.stringify(data.settings)] });
+  stmts.push({ sql: "INSERT INTO meta (key, value) VALUES ('seedVersion', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", args: [String(SEED_VERSION)] });
+  await c.batch(stmts, "write");
+}
+
+/** Insert ONE order and decrement its stock — no whole-store rewrite, so two
+ *  shoppers checking out at the same moment can't overwrite each other. */
+async function addOrderTurso(order: Order) {
+  await ensureSchema();
+  const stmts: InStatement[] = [
+    {
+      sql: `INSERT INTO orders (id, number, created_at, status, payment_status, total, customer_email, customer_phone, archived, data)
+            VALUES (?,?,?,?,?,?,?,?,0,?)`,
+      args: [order.id, order.number, order.date, order.status, order.paymentStatus, order.total, order.customer.email ?? "", order.customer.phone ?? "", JSON.stringify(order)],
+    },
+  ];
+  for (const item of order.items) {
+    stmts.push({
+      sql: `UPDATE products
+            SET stock = MAX(0, COALESCE(stock, 0) - ?),
+                in_stock = CASE WHEN COALESCE(stock, 0) - ? <= 0 THEN 0 ELSE 1 END,
+                data = json_set(json_set(data, '$.stock', MAX(0, COALESCE(stock,0) - ?)),
+                                '$.inStock', json(CASE WHEN COALESCE(stock,0) - ? <= 0 THEN 'false' ELSE 'true' END))
+            WHERE slug = ? AND stock IS NOT NULL`,
+      args: [item.quantity, item.quantity, item.quantity, item.quantity, item.slug],
+    });
+  }
+  await db().batch(stmts, "write");
+}
+
 /* ── Load / commit with a short shared cache ──────────────── */
 let mem: StoreData | null = null;
 let memAt = 0;
@@ -128,7 +221,10 @@ const CACHE_MS = 3000; // one render shares a single load; writes always read fr
  *  never overwrite an order another instance just wrote). */
 async function currentStore(fresh = false): Promise<StoreData> {
   if (!fresh && mem && Date.now() - memAt < CACHE_MS) return mem;
-  const data = (BLOB_ON ? await loadFromBlob() : null) ?? loadFromFile();
+  const data =
+    (TURSO_ON ? await loadFromTurso() : null) ??
+    (BLOB_ON ? await loadFromBlob() : null) ??
+    loadFromFile();
   mem = data;
   memAt = Date.now();
   return data;
@@ -138,7 +234,8 @@ async function currentStore(fresh = false): Promise<StoreData> {
 async function commit(data: StoreData) {
   mem = data;
   memAt = Date.now();
-  if (BLOB_ON) await saveToBlob(data);
+  if (TURSO_ON) await seedTurso(data);
+  else if (BLOB_ON) await saveToBlob(data);
   else saveToFile(data);
 }
 
@@ -201,6 +298,12 @@ export async function getOrders() {
 
 /** Record a new order and decrement inventory. */
 export async function addOrder(order: Order) {
+  if (TURSO_ON) {
+    await addOrderTurso(order);
+    mem = null; // force a fresh read next time
+    bumpStore("order");
+    return;
+  }
   const store = await currentStore(true);
   store.orders.unshift(order);
   for (const item of order.items) {
@@ -216,6 +319,13 @@ export async function addOrder(order: Order) {
 
 /** Delete every order (and therefore every derived customer). Used for a fresh start. */
 export async function clearOrders() {
+  if (TURSO_ON) {
+    await ensureSchema();
+    await db().execute("DELETE FROM orders");
+    mem = null;
+    bumpStore("order");
+    return;
+  }
   const store = await currentStore(true);
   store.orders = [];
   await commit(store);
@@ -224,6 +334,13 @@ export async function clearOrders() {
 
 /** Delete a single order by id. */
 export async function deleteOrder(id: string) {
+  if (TURSO_ON) {
+    await ensureSchema();
+    await db().execute({ sql: "DELETE FROM orders WHERE id = ?", args: [id] });
+    mem = null;
+    bumpStore("order");
+    return;
+  }
   const store = await currentStore(true);
   store.orders = store.orders.filter((o) => o.id !== id);
   await commit(store);
@@ -232,6 +349,19 @@ export async function deleteOrder(id: string) {
 
 /** Apply a change to a single order (status, payment, notes, archive…). */
 export async function updateOrder(id: string, mutate: (o: Order) => Order): Promise<Order | null> {
+  if (TURSO_ON) {
+    await ensureSchema();
+    const res = await db().execute({ sql: "SELECT data FROM orders WHERE id = ?", args: [id] });
+    if (!res.rows[0]) return null;
+    const updated = mutate(normalizeOrder(JSON.parse(String(res.rows[0].data)) as Order));
+    await db().execute({
+      sql: `UPDATE orders SET status = ?, payment_status = ?, total = ?, archived = ?, data = ? WHERE id = ?`,
+      args: [updated.status, updated.paymentStatus, updated.total, updated.archived ? 1 : 0, JSON.stringify(updated), id],
+    });
+    mem = null;
+    bumpStore("order");
+    return updated;
+  }
   const store = await currentStore(true);
   const idx = store.orders.findIndex((o) => o.id === id);
   if (idx === -1) return null;
@@ -240,6 +370,42 @@ export async function updateOrder(id: string, mutate: (o: Order) => Order): Prom
   await commit(store);
   bumpStore("order");
   return updated;
+}
+
+/** Look up a single order by its number — an indexed query, used by tracking. */
+export async function findOrderByNumber(needle: string): Promise<Order | null> {
+  const bare = needle.trim().toUpperCase().replace(/^#/, "");
+  if (!bare) return null;
+  if (TURSO_ON) {
+    await ensureSchema();
+    const res = await db().execute({
+      sql: `SELECT data FROM orders WHERE UPPER(REPLACE(number,'#','')) = ? OR UPPER(id) = ? LIMIT 1`,
+      args: [bare, bare],
+    });
+    return res.rows[0] ? normalizeOrder(JSON.parse(String(res.rows[0].data)) as Order) : null;
+  }
+  const orders = await getOrders();
+  return orders.find((o) => o.number.toUpperCase().replace(/^#/, "") === bare || o.id.toUpperCase() === bare) ?? null;
+}
+
+/** All orders for a phone or email — lets shoppers find orders across devices. */
+export async function findOrdersByContact(contact: string): Promise<Order[]> {
+  const v = contact.trim().toLowerCase();
+  if (!v) return [];
+  if (TURSO_ON) {
+    await ensureSchema();
+    const res = await db().execute({
+      sql: `SELECT data FROM orders
+            WHERE LOWER(customer_email) = ? OR REPLACE(REPLACE(customer_phone,' ',''),'+','') = ?
+            ORDER BY created_at DESC LIMIT 50`,
+      args: [v, v.replace(/[\s+]/g, "")],
+    });
+    return res.rows.map((r) => normalizeOrder(JSON.parse(String(r.data)) as Order));
+  }
+  const digits = v.replace(/[\s+]/g, "");
+  return (await getOrders()).filter(
+    (o) => o.customer.email?.toLowerCase() === v || (o.customer.phone ?? "").replace(/[\s+]/g, "") === digits,
+  );
 }
 
 /** Only active slides currently within their optional schedule window. */
