@@ -38,6 +38,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
+  const [active, setActive] = useState(-1);
 
   useEffect(() => {
     if (!open) return;
@@ -59,6 +60,15 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   const result = useMemo(() => searchProducts(query, products, categories, 60), [query, products, categories]);
   const catName = Object.fromEntries(categories.map((c) => [c.slug, c.name]));
 
+  const shown = result.products.slice(0, 7);
+  useEffect(() => setActive(-1), [query]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!shown.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => (i + 1) % shown.length); }
+    if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => (i <= 0 ? shown.length - 1 : i - 1)); }
+  };
+
   const goAll = (q = query) => {
     const v = q.trim();
     if (!v) return;
@@ -79,10 +89,22 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
             transition={{ duration: 0.15 }}
             className="relative z-10 h-fit w-full max-w-4xl overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
           >
-            <form onSubmit={(e) => { e.preventDefault(); goAll(); }} className="flex items-center gap-3 border-b border-border px-4">
+            <form
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // Enter: open the highlighted product, otherwise show all results
+                if (active >= 0 && shown[active]) {
+                  saveRecent(query.trim());
+                  onClose();
+                  router.push(`/product/${shown[active].slug}`);
+                } else goAll();
+              }} className="flex items-center gap-3 border-b border-border px-4">
               <Search size={18} className="shrink-0 text-muted" />
               <input
                 autoFocus
+                onKeyDown={onKeyDown}
+                aria-activedescendant={active >= 0 ? `search-opt-${active}` : undefined}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search products, brands and categories…"
@@ -115,12 +137,14 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                   ) : (
                     <>
                       <p className="px-2 pb-1 pt-2 text-xs font-bold uppercase tracking-wider text-muted">Products</p>
-                      {result.products.slice(0, 7).map((p) => (
+                      {shown.map((p, i) => (
                         <Link
                           key={p.slug}
+                          id={`search-opt-${i}`}
+                          onMouseEnter={() => setActive(i)}
                           href={`/product/${p.slug}`}
                           onClick={() => { saveRecent(query.trim()); onClose(); }}
-                          className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-surface-2"
+                          className={`flex items-center gap-3 rounded-xl p-2 transition-colors ${i === active ? "bg-brand-50 dark:bg-white/5" : "hover:bg-surface-2"}`}
                         >
                           <ProductImage product={p} className="size-12 shrink-0 rounded-lg border border-border" sizes="48px" />
                           <div className="min-w-0 flex-1">
@@ -145,7 +169,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                       <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted"><Clock size={13} /> Recent searches</p>
                       <div className="flex flex-wrap gap-2">
                         {recent.map((t) => (
-                          <button key={t} onClick={() => setQuery(t)} className="rounded-lg bg-surface-2 px-3 py-1.5 text-sm hover:text-brand-600">{t}</button>
+                          <button key={t} type="button" onClick={() => goAll(t)} className="rounded-lg bg-surface-2 px-3 py-1.5 text-sm hover:text-brand-600">{t}</button>
                         ))}
                       </div>
                     </div>
@@ -155,7 +179,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                     <p className="mb-2 text-sm font-bold">Most searched</p>
                     <div className="flex flex-wrap gap-2">
                       {trending.map((t, i) => (
-                        <button key={t} onClick={() => setQuery(t)} className="inline-flex items-center gap-1.5 rounded-lg bg-surface-2 px-3 py-2 text-sm transition-colors hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-white/5">
+                        <button key={t} type="button" onClick={() => goAll(t)} className="inline-flex items-center gap-1.5 rounded-lg bg-surface-2 px-3 py-2 text-sm transition-colors hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-white/5">
                           {i < 3 && <Flame size={15} className="fill-orange-500 text-orange-500" />} {t}
                         </button>
                       ))}

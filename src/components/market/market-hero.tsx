@@ -118,7 +118,7 @@ export function MarketHero() {
               <button onClick={next} aria-label="Next banner" className="absolute right-2 top-1/2 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-white/80 text-[#111] opacity-0 shadow-md backdrop-blur transition-opacity group-hover/poster:opacity-100 sm:grid">
                 <ChevronRight size={20} />
               </button>
-              <div className="absolute bottom-7 right-4 z-10 flex gap-1.5 sm:bottom-10 sm:left-1/2 sm:right-auto sm:-translate-x-1/2">
+              <div className="absolute bottom-7 right-4 z-10 flex gap-1.5 rounded-full bg-white/60 px-2 py-1 backdrop-blur sm:bottom-9">
                 {slides.map((s, n) => (
                   <button
                     key={s.id}

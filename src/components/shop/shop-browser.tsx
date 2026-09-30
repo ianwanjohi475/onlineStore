@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { LayoutGrid, Rows3, Search, SlidersHorizontal, Star, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
 import { useCatalog } from "@/context/catalog";
@@ -35,17 +36,6 @@ export function ShopBrowser({
   const { categories } = useCatalog();
   const [active, setActive] = useState<CategorySlug | "all">(initialCategory ?? "all");
   const [sort, setSort] = useState<Sort>(initialSort);
-  // /shop is prerendered; pick up ?sort= and ?q= from the URL on the client
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const s = params.get("sort");
-    if (s && sorts.some((x) => x.value === s)) setSort(s as Sort);
-    const q = params.get("q");
-    if (q) {
-      setQuery(q.slice(0, 80));
-      if (!s) setSort("relevance");
-    }
-  }, []);
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
   const [minRating, setMinRating] = useState(0);
   const [onlySale, setOnlySale] = useState(false);
@@ -168,6 +158,15 @@ export function ShopBrowser({
 
   return (
     <div className="container-x grid gap-8 py-10 lg:grid-cols-[15rem_1fr]">
+      <Suspense fallback={null}>
+        <UrlSync
+          onChange={(q, srt) => {
+            setQuery(q);
+            if (srt && sorts.some((x) => x.value === srt)) setSort(srt as Sort);
+            else if (q) setSort("relevance");
+          }}
+        />
+      </Suspense>
       {/* desktop sidebar */}
       <aside className="hidden lg:block">
         <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
@@ -300,4 +299,17 @@ function Chip({ children, onClear }: { children: React.ReactNode; onClear: () =>
       </button>
     </span>
   );
+}
+
+/** Keeps the shop in sync with ?q= / ?sort= — also when a new search is made
+ *  while already on this page (the page itself is prerendered). */
+function UrlSync({ onChange }: { onChange: (q: string, sort: string | null) => void }) {
+  const params = useSearchParams();
+  const q = (params.get("q") ?? "").slice(0, 80);
+  const sort = params.get("sort");
+  useEffect(() => {
+    if (q || sort) onChange(q, sort);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, sort]);
+  return null;
 }
