@@ -57,7 +57,7 @@ export function MarketHero() {
                   href={`/categories/${c.slug}`}
                   className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-white/5"
                 >
-                  <CategoryIcon slug={c.slug} className="size-5" />
+                  <CategoryIcon slug={c.slug} size={18} />
                   <span className="flex-1 font-medium">{c.name}</span>
                   <ChevronRight size={14} className="text-muted opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>

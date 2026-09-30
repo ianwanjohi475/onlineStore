@@ -1,4 +1,5 @@
-import { Send, ShieldCheck, Truck } from "lucide-react";
+import { Globe, Mail, MapPin, Phone, Send, ShieldCheck, Truck } from "lucide-react";
+import { formatPhone } from "@/lib/utils";
 import Link from "next/link";
 import type { ComponentType } from "react";
 import { NewsletterForm } from "@/components/home/newsletter-form";
@@ -68,15 +69,18 @@ function YtIcon() {
   );
 }
 
-const socials: { icon: ComponentType; label: string }[] = [
-  { icon: IgIcon, label: "Instagram" },
-  { icon: XIcon, label: "X" },
-  { icon: FbIcon, label: "Facebook" },
-  { icon: YtIcon, label: "YouTube" },
-];
+const socialIcons: Record<string, ComponentType> = {
+  instagram: IgIcon,
+  x: XIcon,
+  twitter: XIcon,
+  facebook: FbIcon,
+  youtube: YtIcon,
+};
 
 export async function SiteFooter() {
   const [categories, settings] = await Promise.all([getCategories(), getSettings()]);
+  // only real links set in Admin → Settings → Footer
+  const socials = (settings.socials ?? []).filter((s) => /^https?:\/\//i.test(s.href));
   return (
     <footer className="mt-20 bg-navy text-white">
       {/* trust strip */}
@@ -104,18 +108,30 @@ export async function SiteFooter() {
         <div>
           <Logo onDark />
           <p className="mt-4 max-w-xs text-sm text-white/60">{settings.footerBlurb}</p>
-          <div className="mt-5 flex gap-2">
-            {socials.map((s) => (
-              <a
-                key={s.label}
-                href="#"
-                aria-label={s.label}
-                className="grid size-9 place-items-center rounded-full border border-white/15 text-white/70 transition-colors hover:border-cta hover:text-cta"
-              >
-                <s.icon />
-              </a>
-            ))}
-          </div>
+          <ul className="mt-4 flex flex-col gap-1.5 text-sm text-white/70">
+            {settings.whatsapp && <li className="flex items-center gap-2"><Phone size={14} /> {formatPhone(settings.whatsapp)}</li>}
+            {settings.supportEmail && <li className="flex items-center gap-2"><Mail size={14} /> <a href={`mailto:${settings.supportEmail}`} className="hover:text-white hover:underline">{settings.supportEmail}</a></li>}
+            {settings.address && <li className="flex items-center gap-2"><MapPin size={14} /> {settings.address}</li>}
+          </ul>
+          {socials.length > 0 && (
+            <div className="mt-5 flex gap-2">
+              {socials.map((s) => {
+                const Icon = socialIcons[s.label.trim().toLowerCase()] ?? Globe;
+                return (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="grid size-9 place-items-center rounded-full border border-white/15 text-white/70 transition-colors hover:border-white hover:text-white"
+                  >
+                    <Icon />
+                  </a>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {columns.map((col) => (
@@ -147,7 +163,7 @@ export async function SiteFooter() {
 
       <div className="border-t border-white/10 bg-[#0d1320]">
         <div className="container-x flex flex-col items-center justify-between gap-3 py-6 text-xs text-white/55 md:flex-row">
-          <p>© {new Date().getFullYear()} SIR VERT ENTERPRISE. All rights reserved. · +254 799 239 739</p>
+          <p>© {new Date().getFullYear()} {settings.brandName || "SIR VERT ENTERPRISE"}. All rights reserved.</p>
           <nav className="flex flex-wrap justify-center gap-4">
             {categories.slice(0, 5).map((c) => (
               <Link key={c.slug} href={`/categories/${c.slug}`} className="hover:text-white">

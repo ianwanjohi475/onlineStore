@@ -7,7 +7,6 @@ import { flashSaleProducts } from "@/lib/data/products";
 
 export function FlashSale() {
   // 8 hours from render — deals reset each session for the demo
-  const target = Date.now() + 8 * 3600 * 1000;
 
   return (
     <section className="relative overflow-hidden py-20">
@@ -26,7 +25,7 @@ export function FlashSale() {
           </div>
           <div className="flex flex-col items-center gap-3 md:items-end">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted">Ends in</span>
-            <Countdown target={target} />
+            <Countdown />
           </div>
         </div>
 

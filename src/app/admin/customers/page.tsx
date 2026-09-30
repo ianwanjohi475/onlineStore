@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, MapPin, Phone, Users } from "lucide-react";
+import { Copy, KeyRound, Mail, MapPin, MessageCircle, Phone, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -63,6 +63,7 @@ export default function CustomersAdmin() {
   return (
     <div>
       <PageHeader title="Customers" subtitle={orders ? `${customers.length} customers` : "Loading…"} />
+      <ResetLinkCard />
       <Card className="mb-4 p-3"><SearchInput value={query} onChange={setQuery} placeholder="Search name or email" /></Card>
 
       <Card>
@@ -163,5 +164,55 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="font-display text-lg font-bold tabular-nums">{value}</p>
       <p className="text-xs text-muted">{label}</p>
     </div>
+  );
+}
+
+/** Help a customer who forgot their password: create a one-time link (valid 30
+ *  minutes) and send it to them on WhatsApp or copy it. */
+function ResetLinkCard() {
+  const toast = useToast();
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ link: string; name: string; phone: string } | null>(null);
+  const [error, setError] = useState("");
+
+  const wa = result
+    ? `https://wa.me/${result.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${result.name.split(" ")[0]}, here is your SIR VERT password reset link (valid 30 minutes): ${result.link}`)}`
+    : "";
+
+  return (
+    <Card className="mb-4 p-4">
+      <p className="flex items-center gap-2 text-sm font-semibold"><KeyRound size={16} className="text-brand-500" /> Customer forgot their password?</p>
+      <p className="mt-0.5 text-xs text-muted">Create a one-time reset link (valid 30 minutes) and send it to them.</p>
+      <form
+        className="mt-3 flex flex-col gap-2 sm:flex-row"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError("");
+          setResult(null);
+          try {
+            setResult(await api("/api/admin/customers/reset-link", "POST", { email }));
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Could not create a link.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="customer@gmail.com" className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500" />
+        <Btn type="submit" disabled={busy}>{busy ? "Creating…" : "Create reset link"}</Btn>
+      </form>
+      {error && <p className="mt-2 text-sm text-rose-500">{error}</p>}
+      {result && (
+        <div className="mt-3 flex flex-col gap-2 rounded-lg bg-surface-2 p-3 text-sm">
+          <p className="break-all text-xs text-muted">{result.link}</p>
+          <div className="flex flex-wrap gap-2">
+            <Btn size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(result.link); toast("Link copied"); }}><Copy size={14} /> Copy link</Btn>
+            {result.phone && <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#25D366] px-3 text-sm font-semibold text-white"><MessageCircle size={14} /> Send on WhatsApp</a>}
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }

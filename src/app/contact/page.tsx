@@ -5,20 +5,24 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { Accordion } from "@/components/ui/accordion";
 import { ContactForm } from "@/components/contact/contact-form";
 import { faqs } from "@/lib/data/content";
+import { getSettings } from "@/lib/store/store";
+import { formatPhone } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Contact & support",
   description: "Get help from SIR VERT ENTERPRISE — WhatsApp, phone or email. When you call, we answer.",
 };
 
-const channels = [
-  { icon: MessageCircle, label: "WhatsApp", value: "+254 799 239 739", sub: "Fastest — replies in minutes" },
-  { icon: Phone, label: "Call us", value: "+254 799 239 739", sub: "Mon–Sat, 8am–8pm" },
-  { icon: Mail, label: "Email", value: "sales@sirvertenterprise.co.ke", sub: "We reply within a few hours" },
-  { icon: MapPin, label: "Visit", value: "Nairobi CBD", sub: "Pickup & walk-in support" },
-];
-
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getSettings();
+  const phone = formatPhone(settings.whatsapp);
+  const digits = settings.whatsapp.replace(/\D/g, "");
+  const channels = [
+    { icon: MessageCircle, label: "WhatsApp", value: phone, sub: "Fastest — replies in minutes", href: digits ? `https://wa.me/${digits}` : undefined },
+    { icon: Phone, label: "Call us", value: phone, sub: "Mon–Sat, 8am–8pm", href: digits ? `tel:+${digits}` : undefined },
+    { icon: Mail, label: "Email", value: settings.supportEmail, sub: "We reply within a few hours", href: settings.supportEmail ? `mailto:${settings.supportEmail}` : undefined },
+    { icon: MapPin, label: "Visit", value: settings.address, sub: "Pickup & walk-in support", href: undefined },
+  ].filter((c) => c.value);
   return (
     <>
       <PageHero
@@ -32,7 +36,7 @@ export default function ContactPage() {
       <section className="container-x grid gap-10 py-14 lg:grid-cols-[1fr_1.2fr]">
         <div className="flex flex-col gap-4">
           {channels.map((c) => (
-            <div key={c.label} className="card-surface flex items-center gap-4 p-5">
+            <a key={c.label} href={c.href} target={c.href?.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="card-surface flex items-center gap-4 p-5 transition-colors hover:border-brand-500/40">
               <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-500/12 text-brand-600 dark:text-brand-400">
                 <c.icon size={22} />
               </span>
@@ -41,7 +45,7 @@ export default function ContactPage() {
                 <p className="font-semibold">{c.value}</p>
                 <p className="text-xs text-muted">{c.sub}</p>
               </div>
-            </div>
+            </a>
           ))}
           <div className="card-surface flex items-center gap-3 p-5 text-sm text-muted">
             <Clock size={18} className="text-brand-500" /> Average first response: under 10 minutes on WhatsApp.

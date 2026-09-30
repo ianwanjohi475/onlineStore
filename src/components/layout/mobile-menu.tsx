@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Heart, MessageCircle, Package, Store, User, X } from "lucide-react";
 import Link from "next/link";
-import { CategoryIcon } from "@/components/ui/category-icon";
+import { CategoryBadge } from "@/components/ui/category-icon";
 import { useCatalog } from "@/context/catalog";
 import { Portal, useScrollLock } from "@/hooks/use-overlay";
 import { Logo } from "./logo";
@@ -81,9 +81,7 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
                       onClick={onClose}
                       className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm font-medium transition-colors hover:bg-surface-2"
                     >
-                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-2">
-                        <CategoryIcon slug={c.slug} className="size-6" />
-                      </span>
+                      <CategoryBadge slug={c.slug} className="size-9 rounded-lg" size={18} />
                       <span className="flex-1">{c.name}</span>
                       <ChevronRight size={15} className="text-muted" />
                     </Link>

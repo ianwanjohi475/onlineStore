@@ -308,6 +308,9 @@ export async function api(path: string, method: string, body?: unknown) {
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
+  if (res.status === 401 && typeof window !== "undefined" && !path.startsWith("/api/admin/login")) {
+    window.location.href = "/admin/login?reason=expired";
+  }
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Request failed");
   return res.json();
 }

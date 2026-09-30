@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { list, put } from "@vercel/blob";
@@ -20,6 +20,9 @@ export interface UserRecord {
   passwordHash: string;
   createdAt: string;
   sessionVersion: number;
+  /** fallback storage only (Turso uses the password_resets table) */
+  resetHash?: string;
+  resetExpires?: number;
 }
 
 export type PublicUser = Pick<UserRecord, "id" | "email" | "name" | "phone" | "createdAt">;
@@ -165,4 +168,54 @@ export async function currentUser(): Promise<UserRecord | null> {
   const user = await findUserById(token.userId);
   if (!user || user.sessionVersion !== token.version) return null;
   return user;
+}
+
+/* ── Password reset tokens ─────────────────────────────────── */
+const RESET_TTL_MS = 30 * 60 * 1000;
+const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
+
+/** Create a one-time reset token (valid 30 min). Only its hash is stored. */
+export async function createResetToken(userId: string): Promise<string> {
+  const token = randomBytes(32).toString("base64url");
+  const hash = sha256(token);
+  const expires = Date.now() + RESET_TTL_MS;
+  if (TURSO_ON) {
+    await ensureSchema();
+    await db().batch(
+      [
+        { sql: "DELETE FROM password_resets WHERE user_id = ? OR expires_at < ?", args: [userId, Date.now()] },
+        { sql: "INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES (?,?,?)", args: [hash, userId, expires] },
+      ],
+      "write",
+    );
+    return token;
+  }
+  const all = await loadAll();
+  await saveAll(all.map((u) => (u.id === userId ? { ...u, resetHash: hash, resetExpires: expires } : u)));
+  return token;
+}
+
+/** Use a reset token: sets the new password, signs out every device, and
+ *  burns the token. Returns the updated user, or null if invalid/expired. */
+export async function consumeResetToken(token: string, passwordHash: string): Promise<UserRecord | null> {
+  if (!token || token.length > 200) return null;
+  const hash = sha256(token);
+  let userId: string | null = null;
+  if (TURSO_ON) {
+    await ensureSchema();
+    const res = await db().execute({ sql: "SELECT user_id, expires_at FROM password_resets WHERE token_hash = ?", args: [hash] });
+    const row = res.rows[0];
+    if (!row || Number(row.expires_at) < Date.now()) return null;
+    userId = String(row.user_id);
+    await db().execute({ sql: "DELETE FROM password_resets WHERE user_id = ?", args: [userId] });
+  } else {
+    const all = await loadAll();
+    const u = all.find((x) => x.resetHash === hash);
+    if (!u || !u.resetExpires || u.resetExpires < Date.now()) return null;
+    userId = u.id;
+    await saveAll(all.map((x) => (x.id === u.id ? { ...x, resetHash: undefined, resetExpires: undefined } : x)));
+  }
+  const user = await findUserById(userId);
+  if (!user) return null;
+  return updateUser(user.id, { passwordHash, sessionVersion: user.sessionVersion + 1 });
 }

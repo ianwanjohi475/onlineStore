@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { ProductDetail } from "@/components/product/product-detail";
 import { RelatedProducts } from "@/components/product/related-products";
 import { RecentlyViewed } from "@/components/product/recently-viewed";
-import { getCategory, getProduct, getProducts, getRelated } from "@/lib/store/store";
+import { getCategory, getComplementary, getProduct, getProducts, getRelated } from "@/lib/store/store";
 import { formatPrice, safeJsonLd } from "@/lib/utils";
 
 /** Prebuild every product page at deploy time so it's served instantly from the CDN. */
@@ -37,14 +37,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const [related, category] = await Promise.all([getRelated(product), getCategory(product.category)]);
+  const [related, goesWith, category] = await Promise.all([getRelated(product), getComplementary(product), getCategory(product.category)]);
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.description,
-    brand: { "@type": "Brand", name: "Oraimo" },
+    brand: { "@type": "Brand", name: product.brand || "SIR VERT ENTERPRISE" },
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: product.rating,
@@ -74,7 +74,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </div>
 
       <ProductDetail product={product} />
-      <RelatedProducts products={related} />
+      <RelatedProducts products={related} eyebrow="Recommended" title="Similar" accent="products" />
+      <RelatedProducts products={goesWith} eyebrow="Complete your setup" title="Goes well" accent="with this" />
       <RecentlyViewed exclude={product.slug} />
     </>
   );

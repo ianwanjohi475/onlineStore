@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Heart, KeyRound, Loader2, LogOut, Package, ShieldCheck, User } from "lucide-react";
+import { Eye, EyeOff, Heart, KeyRound, Loader2, LogOut, Package, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { OrderCard } from "@/components/orders/order-card";
@@ -28,13 +28,15 @@ export default function AccountPage() {
 /* ── Sign in / Create account ───────────────────────────────── */
 function AuthForms() {
   const { signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("mode") === "signup") setMode("signup");
+    const m = new URLSearchParams(window.location.search).get("mode");
+    if (m === "signup" || m === "forgot") setMode(m);
   }, []);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,9 +44,15 @@ function AuthForms() {
     const f = new FormData(e.currentTarget);
     setBusy(true);
     setError("");
+    setNotice("");
     try {
-      if (mode === "signin") await signIn(String(f.get("email")), String(f.get("password")));
-      else await signUp({ name: String(f.get("name")), email: String(f.get("email")), phone: String(f.get("phone") ?? ""), password: String(f.get("password")) });
+      if (mode === "forgot") {
+        const res = await fetch("/api/auth/forgot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: String(f.get("email")) }) });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(d.error || "Something went wrong.");
+        setNotice(d.message);
+      } else if (mode === "signin") await signIn(String(f.get("email")), String(f.get("password")));
+      else await signUp({ name: String(f.get("name")), email: String(f.get("email")), phone: "", password: String(f.get("password")) });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -56,38 +64,48 @@ function AuthForms() {
     <div className="container-x flex justify-center py-10 sm:py-16">
       <div className="w-full max-w-md">
         <h1 className="text-center font-display text-2xl font-bold sm:text-3xl">
-          {mode === "signin" ? "Sign in to your account" : "Create your account"}
+          {mode === "signin" ? "Sign in to your account" : mode === "signup" ? "Create your account" : "Forgot your password?"}
         </h1>
         <p className="mt-2 text-center text-sm text-muted">
-          {mode === "signin" ? "Track orders, save your details and check out faster." : "It takes 30 seconds. Your orders follow you on every device."}
+          {mode === "signin"
+            ? "Track orders, save your details and check out faster."
+            : mode === "signup"
+              ? "It takes 30 seconds. Your orders follow you on every device."
+              : "Enter your account email and we'll send you a link to set a new password."}
         </p>
 
         {/* tabs */}
-        <div className="mt-6 grid grid-cols-2 rounded-full bg-surface-2 p-1 text-sm font-semibold">
+        {mode !== "forgot" && <div className="mt-6 grid grid-cols-2 rounded-full bg-surface-2 p-1 text-sm font-semibold">
           {(["signin", "signup"] as const).map((m) => (
             <button
               key={m}
               type="button"
-              onClick={() => { setMode(m); setError(""); }}
+              onClick={() => { setMode(m); setError(""); setNotice(""); }}
               className={cn("rounded-full py-2 transition-colors", mode === m ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground")}
             >
               {m === "signin" ? "Sign in" : "Create account"}
             </button>
           ))}
-        </div>
+        </div>}
 
         <form onSubmit={submit} className="mt-5 flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 sm:p-6">
           {mode === "signup" && (
             <Input name="name" label="Full name" autoComplete="name" required minLength={2} maxLength={80} placeholder="Jane Wanjiru" />
           )}
-          <Input name="email" type="email" label="Email" autoComplete="email" required maxLength={254} placeholder="you@email.com" />
-          {mode === "signup" && (
-            <Input name="phone" type="tel" label="Phone (for delivery)" autoComplete="tel" maxLength={20} placeholder="+254 7…" />
-          )}
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium">Password</span>
+          <Input name="email" type="email" label="Email" autoComplete="email" required maxLength={254} placeholder="name@gmail.com" />
+          {mode !== "forgot" && (
+          <div className="flex flex-col gap-1.5 text-sm">
+            <span className="flex items-center justify-between font-medium">
+              <label htmlFor="account-password">Password</label>
+              {mode === "signin" && (
+                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} className="text-xs font-semibold text-brand-600 hover:underline">
+                  Forgot password?
+                </button>
+              )}
+            </span>
             <span className="flex h-11 items-center rounded-xl border border-border bg-surface pr-1 focus-within:border-brand-500">
               <input
+                id="account-password"
                 name="password"
                 type={show ? "text" : "password"}
                 required
@@ -101,18 +119,22 @@ function AuthForms() {
                 {show ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
             </span>
-          </label>
+          </div>
+          )}
 
+          {notice && <p role="status" className="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">{notice}</p>}
           {error && <p role="alert" className="rounded-xl bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">{error}</p>}
 
           <button type="submit" disabled={busy} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-cta font-bold text-white transition-colors hover:bg-cta-600 disabled:opacity-60">
             {busy && <Loader2 size={18} className="animate-spin" />}
-            {mode === "signin" ? "Sign in" : "Create account"}
+            {mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
           </button>
 
-          <p className="flex items-center justify-center gap-1.5 text-xs text-muted">
-            <ShieldCheck size={14} className="text-emerald-600" /> Passwords are encrypted — we never see or store them in plain text.
-          </p>
+          {mode === "forgot" && (
+            <button type="button" onClick={() => { setMode("signin"); setError(""); setNotice(""); }} className="text-sm font-semibold text-brand-600 hover:underline">
+              ← Back to sign in
+            </button>
+          )}
         </form>
 
         <p className="mt-5 text-center text-sm text-muted">

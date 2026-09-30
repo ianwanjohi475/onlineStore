@@ -3,67 +3,60 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-function parts(ms: number) {
-  const clamp = Math.max(0, ms);
-  return {
-    days: Math.floor(clamp / 86_400_000),
-    hours: Math.floor((clamp / 3_600_000) % 24),
-    minutes: Math.floor((clamp / 60_000) % 60),
-    seconds: Math.floor((clamp / 1000) % 60),
-  };
+/** Next midnight in Nairobi (UTC+3) — flash deals reset daily. */
+function nextNairobiMidnight(now = Date.now()) {
+  const EAT = 3 * 3_600_000;
+  const local = now + EAT;
+  return local - (local % 86_400_000) + 86_400_000 - EAT;
 }
 
-/** Counts down to `target` (ms epoch). SSR-safe: renders zeros until mounted. */
+/**
+ * Compact deal timer: "07h : 59m : 42s". Counts to `target`, or to the next
+ * Nairobi midnight when no target is given. Renders dashes until mounted so
+ * server and browser HTML match.
+ */
 export function Countdown({
   target,
   className,
-  compact = false,
+  tone = "dark",
 }: {
-  target: number;
+  target?: number;
   className?: string;
+  /** kept for backwards compatibility */
   compact?: boolean;
+  tone?: "dark" | "light";
 }) {
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    const tick = () => setRemaining(target - Date.now());
+    const tick = () => setRemaining(Math.max(0, (target ?? nextNairobiMidnight()) - Date.now()));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [target]);
 
-  const p = parts(remaining ?? 0);
-  const units: [string, number][] = [
-    ["Days", p.days],
-    ["Hrs", p.hours],
-    ["Min", p.minutes],
-    ["Sec", p.seconds],
+  const s = remaining === null ? null : Math.floor(remaining / 1000);
+  const units: [string, number | null][] = [
+    ["h", s === null ? null : Math.floor(s / 3600)],
+    ["m", s === null ? null : Math.floor((s % 3600) / 60)],
+    ["s", s === null ? null : s % 60],
   ];
 
   return (
-    <div className={cn("flex items-center gap-2", className)} suppressHydrationWarning>
-      {units.map(([label, val], i) => (
-        <div key={label} className="flex items-center gap-2">
-          <div
+    <div className={cn("inline-flex items-center gap-1", className)} aria-label="Time left" role="timer">
+      {units.map(([label, v], i) => (
+        <span key={label} className="inline-flex items-center gap-1">
+          <span
             className={cn(
-              "flex flex-col items-center rounded-xl bg-foreground/90 px-2.5 py-1.5 text-background",
-              compact ? "min-w-[2.75rem]" : "min-w-[3.25rem]",
+              "inline-flex min-w-[2.35rem] items-baseline justify-center rounded-md px-1.5 py-1 font-display text-sm font-bold tabular-nums leading-none",
+              tone === "dark" ? "bg-[#1b1d22] text-white" : "bg-white text-[#1b1d22]",
             )}
           >
-            <span
-              className={cn(
-                "font-display font-bold tabular-nums leading-none",
-                compact ? "text-lg" : "text-2xl",
-              )}
-            >
-              {String(val).padStart(2, "0")}
-            </span>
-            <span className="mt-0.5 text-[0.55rem] font-semibold uppercase tracking-wider opacity-70">
-              {label}
-            </span>
-          </div>
-          {i < units.length - 1 && <span className="font-bold text-brand-500">:</span>}
-        </div>
+            {v === null ? "--" : String(v).padStart(2, "0")}
+            <span className="ml-0.5 text-[0.6rem] font-semibold opacity-70">{label}</span>
+          </span>
+          {i < units.length - 1 && <span className="text-xs font-bold text-muted">:</span>}
+        </span>
       ))}
     </div>
   );

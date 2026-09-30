@@ -46,3 +46,10 @@ export function slugify(input: string) {
 export function safeJsonLd(value: unknown) {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
+
+/** "254799239739" → "+254 799 239 739" (falls back to the raw value). */
+export function formatPhone(digits: string) {
+  const d = (digits ?? "").replace(/\D/g, "");
+  const m = d.match(/^(254)(\d{3})(\d{3})(\d{3})$/);
+  return m ? `+${m[1]} ${m[2]} ${m[3]} ${m[4]}` : d ? `+${d}` : "";
+}

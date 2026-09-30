@@ -1,33 +1,30 @@
 /**
- * Admin authentication.
+ * Admin sessions.
  *
- * The session cookie is an HMAC-signed, expiring token — NOT a static string —
- * so it can't be guessed or forged without the server secret. The secret is
- * ADMIN_SESSION_SECRET (or ADMIN_PASSWORD) from the environment; set a strong
- * ADMIN_PASSWORD in production. Everything here uses Web Crypto so it runs in
- * both the Edge middleware and Node route handlers.
+ * The cookie holds "issuedAt.expiresAt.version.signature" (HMAC-SHA256), so it
+ * can't be guessed or forged without the server secret. Sessions end after
+ * 15 minutes without activity (sliding expiry) and never last more than 12
+ * hours. `version` changes whenever the admin password changes, which signs
+ * out every other device. Uses Web Crypto so it runs in the proxy and in
+ * route handlers alike.
  */
 
 export const ADMIN_COOKIE = "sv_admin";
+export const IDLE_MS = 15 * 60 * 1000;
+export const MAX_SESSION_MS = 12 * 60 * 60 * 1000;
 
-/** On the live site (Vercel) the admin stays LOCKED until ADMIN_PASSWORD is set:
- *  the fallback secret/password below are public (they're in the source code),
- *  so using them in production would let anyone forge an admin login. */
-const HOSTED = process.env.VERCEL === "1";
-export const ADMIN_CONFIGURED = !!process.env.ADMIN_PASSWORD;
-const ADMIN_LOCKED = HOSTED && !ADMIN_CONFIGURED;
-
+// Never a value from the public source code on the live site: a configured
+// secret, else a server-only platform token/ID.
 const SESSION_SECRET =
   process.env.ADMIN_SESSION_SECRET ||
+  process.env.AUTH_SECRET ||
   process.env.ADMIN_PASSWORD ||
-  "sirvert-dev-secret-change-me";
-
-/** True when the admin is disabled because no password has been configured. */
-export function adminLocked() {
-  return ADMIN_LOCKED;
-}
+  process.env.TURSO_AUTH_TOKEN ||
+  process.env.BLOB_READ_WRITE_TOKEN ||
+  (process.env.VERCEL_PROJECT_ID ? `vercel:${process.env.VERCEL_PROJECT_ID}:${process.env.VERCEL_GIT_REPO_ID ?? ""}` : "sirvert-local-dev-only");
 
 const encoder = new TextEncoder();
+let keyPromise: Promise<CryptoKey> | null = null;
 
 function toBase64Url(bytes: Uint8Array): string {
   let bin = "";
@@ -36,7 +33,7 @@ function toBase64Url(bytes: Uint8Array): string {
 }
 
 /** Length-safe, constant-time string comparison (mitigates timing attacks). */
-function constantTimeEqual(a: string, b: string): boolean {
+export function constantTimeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let result = 0;
   for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -44,38 +41,46 @@ function constantTimeEqual(a: string, b: string): boolean {
 }
 
 async function sign(payload: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(SESSION_SECRET),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  keyPromise ??= crypto.subtle.importKey("raw", encoder.encode(`admin:${SESSION_SECRET}`), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", await keyPromise, encoder.encode(payload));
   return toBase64Url(new Uint8Array(sig));
 }
 
-/** Create a signed session token that expires after `ttlMs`. */
-export async function createSession(ttlMs = 7 * 24 * 60 * 60 * 1000): Promise<string> {
-  const exp = String(Date.now() + ttlMs);
-  return `${exp}.${await sign(exp)}`;
+/** New session token (or a refreshed one keeping the original `issuedAt`). */
+export async function createSession(version: string, issuedAt = Date.now()): Promise<string> {
+  const payload = `${issuedAt}.${Date.now() + IDLE_MS}.${version}`;
+  return `${payload}.${await sign(payload)}`;
 }
 
-/** Verify a session token: correct signature AND not expired. */
+export interface AdminSession {
+  issuedAt: number;
+  expiresAt: number;
+  version: string;
+}
+
+/** Signature valid, not idle-expired, within the absolute limit. */
+export async function readSession(token?: string | null): Promise<AdminSession | null> {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 4) return null;
+  const [iat, exp, version, sig] = parts;
+  if (!constantTimeEqual(sig, await sign(`${iat}.${exp}.${version}`))) return null;
+  const issuedAt = Number(iat);
+  const expiresAt = Number(exp);
+  const now = Date.now();
+  if (!Number.isFinite(expiresAt) || expiresAt <= now) return null;
+  if (!Number.isFinite(issuedAt) || now - issuedAt > MAX_SESSION_MS) return null;
+  return { issuedAt, expiresAt, version };
+}
+
 export async function verifySession(token?: string | null): Promise<boolean> {
-  if (ADMIN_LOCKED || !token) return false;
-  const dot = token.indexOf(".");
-  if (dot <= 0) return false;
-  const exp = token.slice(0, dot);
-  const sig = token.slice(dot + 1);
-  if (!constantTimeEqual(sig, await sign(exp))) return false;
-  const expMs = Number(exp);
-  return Number.isFinite(expMs) && expMs > Date.now();
+  return (await readSession(token)) !== null;
 }
 
-/** Constant-time password check against ADMIN_PASSWORD (default "admin123"). */
-export function checkPassword(pw: string): boolean {
-  if (ADMIN_LOCKED) return false;
-  const expected = process.env.ADMIN_PASSWORD || "admin123";
-  return constantTimeEqual(String(pw ?? ""), expected);
-}
+export const adminCookieOptions = {
+  httpOnly: true,
+  sameSite: "strict" as const,
+  path: "/",
+  secure: process.env.VERCEL === "1" || (process.env.NODE_ENV === "production" && process.env.COOKIE_INSECURE !== "1"),
+  maxAge: MAX_SESSION_MS / 1000,
+};

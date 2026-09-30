@@ -10,6 +10,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/components/admin/kit";
+import { IdleGuard } from "@/components/admin/idle-guard";
 import { LogoMark } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -47,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const logout = async () => {
     await api("/api/admin/login", "DELETE").catch(() => {});
-    router.push("/admin/login");
+    router.push("/admin/login?reason=signed-out");
   };
 
   const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
@@ -78,7 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ))}
       </nav>
       <div className="mt-4 flex flex-col gap-0.5 border-t border-border pt-3">
-        <Link href="/" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-surface-2"><ExternalLink size={17} /> View store</Link>
+        <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-surface-2"><ExternalLink size={17} /> View store</a>
         <button onClick={logout} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-surface-2"><LogOut size={17} /> Sign out</button>
       </div>
     </>
@@ -112,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href="/" className="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:border-brand-500 sm:inline-flex"><ExternalLink size={15} /> View store</Link>
+            <a href="/" target="_blank" rel="noopener noreferrer" className="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:border-brand-500 sm:inline-flex"><ExternalLink size={15} /> View store</a>
             <div className="relative">
               <button onClick={() => setProfileOpen((o) => !o)} aria-label="Account menu" className="grid size-9 place-items-center rounded-full bg-brand-500 text-sm font-bold text-white">A</button>
               <AnimatePresence>
@@ -122,9 +123,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-surface shadow-card">
                       <div className="border-b border-border px-4 py-3">
                         <p className="text-sm font-semibold">Administrator</p>
-                        <p className="text-xs text-muted">Signed in</p>
+                        <p className="text-xs text-muted">Auto sign-out after 15 min idle</p>
                       </div>
-                      <Link href="/" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-surface-2"><ExternalLink size={15} /> View store</Link>
+                      <a href="/" target="_blank" rel="noopener noreferrer" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-surface-2"><ExternalLink size={15} /> View store</a>
                       <button onClick={logout} className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-rose-500 hover:bg-surface-2"><LogOut size={15} /> Sign out</button>
                     </motion.div>
                   </>
@@ -133,7 +134,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 p-5 sm:p-8">{children}</main>
+        <IdleGuard />
+        <main className="mx-auto w-full max-w-6xl flex-1 p-4 sm:p-8">{children}</main>
       </div>
     </div>
   );

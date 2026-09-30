@@ -68,6 +68,11 @@ const SCHEMA = [
      session_version INTEGER NOT NULL DEFAULT 1
    )`,
   `CREATE INDEX IF NOT EXISTS idx_orders_user ON orders (json_extract(data, '$.userId'))`,
+  `CREATE TABLE IF NOT EXISTS password_resets (
+     token_hash TEXT PRIMARY KEY,
+     user_id TEXT NOT NULL,
+     expires_at INTEGER NOT NULL
+   )`,
 ];
 
 /** Create tables/indexes once per process. Safe to call on every request. */

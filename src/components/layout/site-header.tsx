@@ -16,7 +16,7 @@ import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
 import { SearchCommand } from "./search-command";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { CategoryIcon } from "@/components/ui/category-icon";
+import { CategoryBadge } from "@/components/ui/category-icon";
 
 const navLinks = [
   { href: "/shop", label: "Shop" },
@@ -124,9 +124,7 @@ export function SiteHeader() {
                       <div className="card-surface grid grid-cols-2 gap-2 p-3 text-foreground shadow-card">
                         {categories.map((c) => (
                           <Link key={c.slug} href={`/categories/${c.slug}`} className="group flex items-center gap-3 rounded-2xl p-3 transition-colors hover:bg-surface-2">
-                            <span className="grid size-11 shrink-0 place-items-center rounded-xl" style={{ background: `color-mix(in oklab, ${c.gradient[0]} 16%, transparent)` }}>
-                              <CategoryIcon slug={c.slug} className="size-7" />
-                            </span>
+                            <CategoryBadge slug={c.slug} className="size-11 rounded-xl" size={20} />
                             <span>
                               <span className="block text-sm font-semibold group-hover:text-brand-600 dark:group-hover:text-brand-400">{c.name}</span>
                               <span className="block text-xs text-muted">{c.tagline}</span>

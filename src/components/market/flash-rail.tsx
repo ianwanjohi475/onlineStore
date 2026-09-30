@@ -7,7 +7,6 @@ import { CompactProductCard } from "@/components/product/compact-product-card";
 import type { Product } from "@/lib/types";
 
 export function FlashRail({ products }: { products: Product[] }) {
-  const target = Date.now() + 8 * 3600 * 1000;
   if (products.length === 0) return null;
 
   return (
@@ -26,7 +25,7 @@ export function FlashRail({ products }: { products: Product[] }) {
           <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end sm:gap-4">
             <div className="flex items-center gap-2">
               <span className="hidden text-xs font-semibold text-muted sm:inline">Ends in</span>
-              <Countdown target={target} compact />
+              <Countdown />
             </div>
             <Link href="/flash-sales" className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-semibold text-rose-500 hover:underline">
               See all <ChevronRight size={15} />

@@ -7,10 +7,12 @@ import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
 import { useCatalog } from "@/context/catalog";
 import type { CategorySlug, Product } from "@/lib/types";
+import { searchProducts } from "@/lib/search";
 import { cn, formatPrice } from "@/lib/utils";
 
-type Sort = "popular" | "price-asc" | "price-desc" | "rating" | "new";
+type Sort = "relevance" | "popular" | "price-asc" | "price-desc" | "rating" | "new";
 const sorts: { value: Sort; label: string }[] = [
+  { value: "relevance", label: "Best match" },
   { value: "popular", label: "Most popular" },
   { value: "price-asc", label: "Price: low to high" },
   { value: "price-desc", label: "Price: high to low" },
@@ -28,15 +30,21 @@ export function ShopBrowser({
 }: {
   products: Product[];
   initialCategory?: CategorySlug;
-  initialSort?: Sort;
+  initialSort?: Exclude<Sort, "relevance">;
 }) {
   const { categories } = useCatalog();
   const [active, setActive] = useState<CategorySlug | "all">(initialCategory ?? "all");
   const [sort, setSort] = useState<Sort>(initialSort);
-  // /shop is prerendered; pick up ?sort= from the URL on the client
+  // /shop is prerendered; pick up ?sort= and ?q= from the URL on the client
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get("sort");
-    if (q && sorts.some((x) => x.value === q)) setSort(q as Sort);
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get("sort");
+    if (s && sorts.some((x) => x.value === s)) setSort(s as Sort);
+    const q = params.get("q");
+    if (q) {
+      setQuery(q.slice(0, 80));
+      if (!s) setSort("relevance");
+    }
   }, []);
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
   const [minRating, setMinRating] = useState(0);
@@ -58,11 +66,11 @@ export function ShopBrowser({
     if (active !== "all") list = list.filter((p) => p.category === active);
     if (onlySale) list = list.filter((p) => p.compareAt);
     if (inStockOnly) list = list.filter((p) => p.inStock);
-    if (query.trim()) {
-      const q = query.trim().toLowerCase();
-      list = list.filter((p) => p.name.toLowerCase().includes(q) || p.tagline.toLowerCase().includes(q));
-    }
-    const by: Record<Sort, (a: Product, b: Product) => number> = {
+    // relevance-ranked search (synonyms, typos, categories) — see lib/search.ts
+    const ranked = query.trim() ? searchProducts(query, list, categories, 500).products : null;
+    if (ranked) list = ranked;
+    if (sort === "relevance") return ranked ?? list;
+    const by: Record<Exclude<Sort, "relevance">, (a: Product, b: Product) => number> = {
       "price-asc": (a, b) => a.price - b.price,
       "price-desc": (a, b) => b.price - a.price,
       rating: (a, b) => b.rating - a.rating,
@@ -70,7 +78,7 @@ export function ShopBrowser({
       popular: (a, b) => (b.soldPercent ?? 0) - (a.soldPercent ?? 0),
     };
     return [...list].sort(by[sort]);
-  }, [products, active, sort, maxPrice, minRating, onlySale, inStockOnly, query]);
+  }, [products, active, sort, maxPrice, minRating, onlySale, inStockOnly, query, categories]);
 
   // filters change → start from the first page again (instant, no fake loading)
   useEffect(() => {

@@ -106,6 +106,8 @@ section("Admin login: brute force + CSRF");
   ok("repeated wrong passwords are blocked (429)", last === 429, last);
   const x = await req("/api/admin/login", { method: "POST", body: { password: ADMIN_PASSWORD }, origin: "https://evil.example" });
   ok("cross-site admin login blocked (403)", x.status === 403, x.status);
+  const w = await req("/api/admin/login", { method: "POST", body: { password: "definitely-wrong" } });
+  ok("wrong admin password gives a plain, generic message", w.status === 401 && !/ADMIN_PASSWORD|Vercel|environment/i.test(w.text), w.text);
 }
 
 let admin = null;
@@ -116,6 +118,12 @@ if (ADMIN_PASSWORD) {
   const c = r.setCookie.find((x) => x.startsWith("sv_admin=")) || "";
   ok("admin cookie is HttpOnly", /httponly/i.test(c));
   ok("admin cookie is SameSite", /samesite=lax|samesite=strict/i.test(c));
+  const sess = await req("/api/admin/session", { cookie: admin });
+  ok("admin session expires after ≤15 min idle", sess.json?.expiresAt - Date.now() <= 15 * 60 * 1000 + 5000, sess.json?.expiresAt);
+  const parts = admin.split("=")[1].split(".");
+  const stretched = `sv_admin=${parts[0]}.${Date.now() + 864e5}.${parts[2]}.${parts[3]}`;
+  const st = await req("/api/admin/orders", { cookie: stretched });
+  ok("can't extend an admin session by editing its expiry", st.status === 401, st.status);
 }
 
 section("Customer sign-up validation");
@@ -263,6 +271,30 @@ section("Password change signs out other devices");
   ok("new password works", relog.status === 200, relog.status);
 }
 
+section("Forgot / reset password");
+{
+  const known = await req("/api/auth/forgot", { method: "POST", body: { email: emailB } });
+  const unknown = await req("/api/auth/forgot", { method: "POST", body: { email: `nobody-${rnd}@test.local` } });
+  ok("same answer for known and unknown emails (no account probing)", known.status === 200 && unknown.status === 200 && known.json?.message === unknown.json?.message);
+  const bogus = await req("/api/auth/reset", { method: "POST", body: { token: "not-a-real-token", password: "An0ther-pass!" } });
+  ok("fake reset token rejected", bogus.status === 400, bogus.status);
+  const noAdmin = await req("/api/admin/customers/reset-link", { method: "POST", body: { email: emailB } });
+  ok("reset links can only be created by admin (401)", noAdmin.status === 401, noAdmin.status);
+  if (admin) {
+    const link = await req("/api/admin/customers/reset-link", { method: "POST", cookie: admin, body: { email: emailB } });
+    const token = link.json?.link ? new URL(link.json.link).searchParams.get("token") : null;
+    ok("admin can create a one-time reset link", !!token, link.status);
+    const r1 = await req("/api/auth/reset", { method: "POST", body: { token, password: "Reset-Pass-123" } });
+    ok("reset link sets the new password", r1.status === 200, r1.status);
+    const r2 = await req("/api/auth/reset", { method: "POST", body: { token, password: "Reset-Pass-456" } });
+    ok("reset link works only once", r2.status === 400, r2.status);
+    const oldBob = await req("/api/auth/me", { cookie: bob });
+    ok("reset signs out old sessions", oldBob.json?.user === null);
+    const li = await req("/api/auth/login", { method: "POST", body: { email: emailB, password: "Reset-Pass-123" } });
+    ok("can sign in with the reset password", li.status === 200, li.status);
+  }
+}
+
 section("Uploads");
 {
   const fd = new FormData();
@@ -285,6 +317,23 @@ section("Misc");
   ok("empty/garbage body handled (no 500)", junk.status < 500, junk.status);
   const big = await req("/api/auth/signup", { method: "POST", body: { name: "x".repeat(100000), email: `big-${rnd}@test.local`, password: goodPw } });
   ok("oversized input is truncated, not stored whole", big.status >= 400 || (big.json?.user?.name?.length ?? 0) <= 80, big.status);
+}
+
+section("Admin password change");
+if (admin) {
+  const other = cookieFrom(await req("/api/admin/login", { method: "POST", body: { password: ADMIN_PASSWORD } }), "sv_admin");
+  const weak = await req("/api/admin/security", { method: "PUT", cookie: admin, body: { currentPassword: ADMIN_PASSWORD, newPassword: "short" } });
+  ok("weak admin password refused", weak.status === 400, weak.status);
+  const wrong = await req("/api/admin/security", { method: "PUT", cookie: admin, body: { currentPassword: "nope", newPassword: "Str0ng-Admin-Pass" } });
+  ok("admin password change needs the current password", wrong.status === 400, wrong.status);
+  const ch = await req("/api/admin/security", { method: "PUT", cookie: admin, body: { currentPassword: ADMIN_PASSWORD, newPassword: "Str0ng-Admin-Pass" } });
+  ok("admin password changed", ch.status === 200, ch.status);
+  const stale = await req("/api/admin/orders", { cookie: other });
+  ok("other admin sessions signed out after the change", stale.status === 401, stale.status);
+  const oldPw = await req("/api/admin/login", { method: "POST", body: { password: ADMIN_PASSWORD } });
+  ok("old admin password no longer works", oldPw.status === 401, oldPw.status);
+  const newPw = await req("/api/admin/login", { method: "POST", body: { password: "Str0ng-Admin-Pass" } });
+  ok("new admin password works", newPw.status === 200, newPw.status);
 }
 
 if (DB) {

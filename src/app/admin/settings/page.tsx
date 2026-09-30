@@ -6,7 +6,7 @@ import { Btn, Card, Field, PageHeader, TextArea, api } from "@/components/admin/
 import { useToast } from "@/context/toast";
 import type { Announcement, SiteSettings } from "@/lib/types";
 
-const tabs = ["Store", "SEO", "Shipping", "Footer", "Announcements"] as const;
+const tabs = ["Store", "SEO", "Shipping", "Footer", "Announcements", "Security"] as const;
 
 export default function SettingsAdmin() {
   const toast = useToast();
@@ -15,15 +15,29 @@ export default function SettingsAdmin() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { api("/api/admin/settings", "GET").then(setS).catch(() => {}); }, []);
+  // deep link, e.g. /admin/settings?tab=Security
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t && (tabs as readonly string[]).includes(t)) setTab(t as (typeof tabs)[number]);
+  }, []);
   if (!s) return <div className="h-40 animate-pulse rounded-2xl bg-surface-2" />;
 
   const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) => setS({ ...s, [k]: v });
   const setAnns = (announcements: Announcement[]) => setS({ ...s, announcements });
-  const save = async () => { setSaving(true); try { await api("/api/admin/settings", "PUT", s); toast("Settings saved"); } catch { toast("Could not save", "info"); } setSaving(false); };
+  const save = async () => {
+    setSaving(true);
+    try {
+      setS(await api("/api/admin/settings", "PUT", s));
+      toast("Settings saved — live on the store");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not save", "info");
+    }
+    setSaving(false);
+  };
 
   return (
     <div>
-      <PageHeader title="Settings" subtitle="Store-wide configuration" actions={<Btn disabled={saving} onClick={save}>{saving ? "Saving…" : "Save changes"}</Btn>} />
+      <PageHeader title="Settings" subtitle="Store-wide configuration" actions={tab === "Security" ? undefined : <Btn disabled={saving} onClick={save}>{saving ? "Saving…" : "Save changes"}</Btn>} />
 
       <div className="mb-5 flex gap-1 overflow-x-auto border-b border-border">
         {tabs.map((t) => (
@@ -90,6 +104,58 @@ export default function SettingsAdmin() {
           ))}
         </Card>
       )}
+
+      {tab === "Security" && <SecurityTab />}
     </div>
+  );
+}
+
+function SecurityTab() {
+  const toast = useToast();
+  const [source, setSource] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => { api("/api/admin/security", "GET").then((d) => setSource(d.source)).catch(() => {}); }, []);
+
+  return (
+    <Card className="p-6">
+      <h2 className="font-display text-lg font-bold">Admin password</h2>
+      <p className="mt-1 text-sm text-muted">
+        {source === "default"
+          ? "You're using the default password. Choose your own — it's stored encrypted and signs out every other admin session."
+          : "Change the password used to sign in to this admin. Other signed-in devices will be signed out."}
+      </p>
+      <form
+        className="mt-5 grid max-w-xl gap-4 sm:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const f = new FormData(form);
+          if (f.get("newPassword") !== f.get("confirm")) return setError("The new passwords don't match.");
+          setBusy(true);
+          setError("");
+          try {
+            await api("/api/admin/security", "PUT", { currentPassword: f.get("currentPassword"), newPassword: f.get("newPassword") });
+            form.reset();
+            setSource("custom");
+            toast("Admin password changed");
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Could not change the password.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <Field label="Current password" name="currentPassword" type="password" required autoComplete="current-password" className="sm:col-span-2" />
+        <Field label="New password" name="newPassword" type="password" required minLength={8} autoComplete="new-password" hint="8+ characters with a letter and a number" />
+        <Field label="Confirm new password" name="confirm" type="password" required minLength={8} autoComplete="new-password" />
+        {error && <p className="text-sm text-rose-500 sm:col-span-2">{error}</p>}
+        <div className="sm:col-span-2"><Btn type="submit" disabled={busy}>{busy ? "Saving…" : "Update password"}</Btn></div>
+      </form>
+      <div className="mt-6 rounded-xl bg-surface-2 p-4 text-sm text-muted">
+        <p className="font-semibold text-foreground">Session security</p>
+        <p className="mt-1">Admins are signed out automatically after 15 minutes without activity, and after 12 hours at most.</p>
+      </div>
+    </Card>
   );
 }

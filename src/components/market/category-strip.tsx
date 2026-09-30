@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CategoryIcon } from "@/components/ui/category-icon";
+import { CategoryBadge } from "@/components/ui/category-icon";
 import { getCategories } from "@/lib/store/store";
 
 export async function CategoryStrip() {
@@ -19,12 +19,7 @@ export async function CategoryStrip() {
               href={`/categories/${c.slug}`}
               className="group flex flex-col items-center gap-2 rounded-xl p-2 text-center transition-colors hover:bg-brand-50 dark:hover:bg-white/5"
             >
-              <span
-                className="grid size-14 place-items-center rounded-full transition-transform duration-200 group-hover:scale-110 sm:size-16"
-                style={{ background: `color-mix(in oklab, ${c.gradient[0]} 16%, transparent)` }}
-              >
-                <CategoryIcon slug={c.slug} className="size-8 sm:size-9" />
-              </span>
+              <CategoryBadge slug={c.slug} className="size-14 transition-transform duration-200 group-hover:scale-110 sm:size-16" size={26} />
               <span className="text-[11px] font-medium leading-tight sm:text-xs">{c.name}</span>
             </Link>
           ))}

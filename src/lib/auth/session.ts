@@ -1,5 +1,5 @@
 import "server-only";
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 /**
@@ -10,16 +10,16 @@ import { cookies } from "next/headers";
 export const USER_COOKIE = "sv_session";
 const TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-// Never fall back to a value that's in the public source code: use a configured
-// secret, else a server-only token, else a random per-server key (sessions then
-// just need a fresh sign-in after a redeploy — safe, never forgeable).
+// Never a value from the public source code on the live site: a configured
+// secret, else a server-only token / platform project ID (stable across all
+// server instances, unknown to outsiders).
 const SECRET =
   process.env.AUTH_SECRET ||
   process.env.ADMIN_SESSION_SECRET ||
   process.env.ADMIN_PASSWORD ||
   process.env.TURSO_AUTH_TOKEN ||
   process.env.BLOB_READ_WRITE_TOKEN ||
-  (process.env.VERCEL === "1" ? randomBytes(32).toString("hex") : "sirvert-local-dev-only");
+  (process.env.VERCEL_PROJECT_ID ? `vercel:${process.env.VERCEL_PROJECT_ID}:${process.env.VERCEL_GIT_REPO_ID ?? ""}` : "sirvert-local-dev-only");
 
 function sign(payload: string) {
   return createHmac("sha256", `customer:${SECRET}`).update(payload).digest("base64url");

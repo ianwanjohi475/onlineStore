@@ -7,6 +7,7 @@ import type { InStatement } from "@libsql/client";
 import { TURSO_ON, db, ensureSchema } from "@/lib/db/turso";
 import type { CategorySlug, Order, Product, StoreData } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+import { complementaryProducts, similarProducts } from "@/lib/search";
 import { seed } from "./seed";
 import { bumpStore } from "./events";
 
@@ -63,7 +64,8 @@ type Persisted = StoreData & { seedVersion?: number };
 /** Apply the seed-version refresh to parsed data (keep real orders + suspensions). */
 function refreshed(parsed: Persisted): StoreData {
   if ((parsed.seedVersion ?? 0) < SEED_VERSION) {
-    return assemble({ orders: parsed.orders, suspendedCustomers: parsed.suspendedCustomers });
+    // keep the shop's real data: orders, suspensions and the admin's settings
+    return assemble({ orders: parsed.orders, suspendedCustomers: parsed.suspendedCustomers, settings: parsed.settings });
   }
   return assemble(parsed);
 }
@@ -159,7 +161,8 @@ async function loadFromTurso(): Promise<StoreData | null> {
     // Empty database, or the code-managed catalogue moved on → (re)seed it.
     if (products.rows.length === 0 || seedVersion < SEED_VERSION) {
       const keepOrders = orders.rows.map((r) => JSON.parse(String(r.data)) as Order);
-      const fresh = assemble({ orders: keepOrders, suspendedCustomers: suspended.rows.map((r) => String(r.email)) });
+      const keepSettings = settings.rows[0] ? (JSON.parse(String(settings.rows[0].data)) as StoreData["settings"]) : undefined;
+      const fresh = assemble({ orders: keepOrders, suspendedCustomers: suspended.rows.map((r) => String(r.email)), settings: keepSettings });
       await seedTurso(fresh);
       return fresh;
     }
@@ -304,12 +307,11 @@ export async function getNewArrivals() {
 export async function getFlashSale() {
   return (await readStore()).products.filter((p) => p.compareAt);
 }
-export async function getRelated(product: Product, limit = 4): Promise<Product[]> {
-  const all = (await readStore()).products;
-  return all
-    .filter((p) => p.category === product.category && p.slug !== product.slug)
-    .concat(all.filter((p) => p.category !== product.category && p.slug !== product.slug))
-    .slice(0, limit);
+export async function getRelated(product: Product, limit = 8): Promise<Product[]> {
+  return similarProducts(product, (await readStore()).products, limit);
+}
+export async function getComplementary(product: Product, limit = 4): Promise<Product[]> {
+  return complementaryProducts(product, (await readStore()).products, limit);
 }
 export async function getTestimonials() {
   return (await readStore()).testimonials;
