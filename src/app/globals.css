@@ -5,20 +5,19 @@
 
 /* ── Static design tokens ─────────────────────────────────── */
 @theme {
-  /* Refined emerald — deeper and more premium than the old neon green,
-     which read as "too much" across large surfaces. Green stays the brand
-     (SIR VERT), it's just calmer and used as an accent. */
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-200: #a7f3d0;
-  --color-brand-300: #6ee7b7;
-  --color-brand-400: #34d399;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --color-brand-800: #065f46;
-  --color-brand-900: #064e3b;
-  --color-brand-950: #022c22;
+  /* Deep, premium brand green — richer than the old minty emerald so buttons
+     and accents feel confident rather than loud. Still green (SIR VERT). */
+  --color-brand-50: #edfaf4;
+  --color-brand-100: #d2f3e3;
+  --color-brand-200: #a6e6c9;
+  --color-brand-300: #6ed2a8;
+  --color-brand-400: #34b884;
+  --color-brand-500: #0a8a5f;
+  --color-brand-600: #087550;
+  --color-brand-700: #075e41;
+  --color-brand-800: #064b35;
+  --color-brand-900: #053d2c;
+  --color-brand-950: #03241a;
 
   --radius-4xl: 2rem;
   --shadow-glow: 0 0 60px -12px color-mix(in oklab, var(--color-brand-500) 55%, transparent);
@@ -32,24 +31,27 @@
 }
 
 /* ── Semantic tokens that flip per theme ──────────────────── */
+/* True neutral greys. The old ones were green-tinted (#f7f9f8, #5b6b63…),
+   which made the whole site — background, borders, body text — read green.
+   Green is now reserved for the brand accent only. */
 :root {
-  --background: #f7f9f8;
+  --background: #f6f7f9;
   --surface: #ffffff;
-  --surface-2: #eef2f0;
-  --foreground: #0a140f;
-  --muted: #5b6b63;
-  --border: #e2e8e4;
-  --ring: #00c060;
+  --surface-2: #f0f2f5;
+  --foreground: #0f1419;
+  --muted: #5d6673;
+  --border: #e3e6eb;
+  --ring: #0a8a5f;
 }
 
 .dark {
-  --background: #050a08;
-  --surface: #0b120e;
-  --surface-2: #121a15;
-  --foreground: #eaf2ed;
-  --muted: #8ca79a;
-  --border: #1c271f;
-  --ring: #00e676;
+  --background: #0b0d10;
+  --surface: #13161a;
+  --surface-2: #1a1e23;
+  --foreground: #eceef1;
+  --muted: #949ca8;
+  --border: #252a31;
+  --ring: #34c38f;
 }
 
 /* Map semantic tokens to Tailwind color utilities (resolved at runtime) */
@@ -95,6 +97,13 @@
 
   html {
     scroll-behavior: smooth;
+    /* Stop any stray decorative element from creating sideways scroll on phones.
+       `clip` (unlike `hidden`) doesn't create a scroll container, so the sticky
+       header keeps working. */
+    overflow-x: clip;
+  }
+  body {
+    overflow-x: clip;
   }
   body {
     background: var(--background);

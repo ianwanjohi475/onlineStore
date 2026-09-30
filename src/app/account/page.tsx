@@ -58,7 +58,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[15rem_1fr]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[15rem_1fr] [&>*]:min-w-0">
         <aside>
           <nav className="flex gap-1 overflow-x-auto lg:flex-col">
             {tabs.map((t) => (

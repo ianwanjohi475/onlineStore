@@ -111,7 +111,7 @@ export function Btn({
   ...props
 }: { variant?: "primary" | "outline" | "ghost" | "danger"; size?: "sm" | "md" } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const v = {
-    primary: "bg-brand-500 text-white hover:bg-brand-400",
+    primary: "bg-brand-500 text-white hover:bg-brand-600",
     outline: "border border-border hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400",
     ghost: "hover:bg-surface-2 text-muted hover:text-foreground",
     danger: "bg-rose-500 text-white hover:bg-rose-600",

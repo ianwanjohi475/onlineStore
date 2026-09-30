@@ -124,7 +124,7 @@ export function MarketHero() {
                 <div className="mt-1 flex flex-wrap items-center gap-2.5">
                   <Link
                     href={slide.buttonLink || `/product/${slide.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-brand-400"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-brand-600"
                   >
                     {slide.buttonText || "Shop now"} <ChevronRight size={16} />
                   </Link>
@@ -183,11 +183,13 @@ export function MarketHero() {
             <div aria-hidden className="absolute -left-8 -top-8 size-28 rounded-full bg-white/20 blur-2xl" />
           </Link>
           <Link href="/services" className="group flex flex-1 flex-col justify-between rounded-2xl border border-border bg-surface p-5">
-            <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
-              <Truck size={20} />
-              <p className="text-sm font-bold">Networking services</p>
+            <div>
+              <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
+                <Truck size={20} />
+                <p className="text-sm font-bold">Networking services</p>
+              </div>
+              <p className="mt-1.5 text-xs text-muted">Fibre splicing, WiFi, router setup & PC repair.</p>
             </div>
-            <p className="mt-1 text-xs text-muted">Fibre splicing, WiFi, router setup & PC repair.</p>
             <span className="mt-2 inline-flex w-fit items-center gap-1 text-sm font-semibold text-brand-600 dark:text-brand-400">
               Book now <ChevronRight size={15} className="transition-transform group-hover:translate-x-1" />
             </span>

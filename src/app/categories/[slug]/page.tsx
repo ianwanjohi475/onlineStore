@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageHero } from "@/components/ui/page-hero";
 import { ShopBrowser } from "@/components/shop/shop-browser";
-import { getByCategory, getCategory, getNewArrivals, getProducts } from "@/lib/store/store";
+import { getByCategory, getCategories, getCategory, getNewArrivals, getProducts } from "@/lib/store/store";
 import type { CategorySlug } from "@/lib/types";
+
+/** Prebuild every categorie page at deploy time so it's served instantly from the CDN. */
+export async function generateStaticParams() {
+  return (await getCategories()).map((x) => ({ slug: x.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

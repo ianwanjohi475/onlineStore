@@ -12,13 +12,13 @@ export function ServiceStrip() {
     <section className="container-x py-4">
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-4">
         {items.map((it) => (
-          <div key={it.title} className="flex items-center gap-3 bg-surface p-4">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-500/12 text-brand-600 dark:text-brand-400">
+          <div key={it.title} className="flex items-center gap-2.5 bg-surface p-3 sm:gap-3 sm:p-4">
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl sm:size-10 bg-brand-500/12 text-brand-600 dark:text-brand-400">
               <it.icon size={20} />
             </span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{it.title}</p>
-              <p className="truncate text-xs text-muted">{it.text}</p>
+              <p className="text-[13px] font-semibold leading-tight sm:text-sm">{it.title}</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-muted sm:text-xs">{it.text}</p>
             </div>
           </div>
         ))}

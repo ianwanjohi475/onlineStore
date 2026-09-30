@@ -64,8 +64,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// Render on demand so admin edits to the store reflect immediately.
-export const dynamic = "force-dynamic";
+// Serve pages from Vercel's CDN cache and refresh them in the background at most
+// once a minute. Admin edits and new orders call revalidatePath() so the site
+// updates straight away — no need to rebuild every page for every visitor.
+export const revalidate = 60;
 
 export const viewport: Viewport = {
   themeColor: [

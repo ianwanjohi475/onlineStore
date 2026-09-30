@@ -55,7 +55,7 @@ export function SiteHeader() {
     <>
       <div className="sticky top-0 z-50">
         <AnnouncementBar />
-        <header className={cn("border-b border-border transition-all duration-300", scrolled ? "glass shadow-card" : "bg-background")}>
+        <header className={cn("border-b border-border transition-all duration-300", scrolled ? "bg-surface/95 shadow-card backdrop-blur-md" : "bg-background")}>
           {/* main row: logo · search · actions */}
           <div className="container-x flex h-16 items-center gap-3">
             <button onClick={() => setMenuOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full hover:bg-surface-2 lg:hidden">

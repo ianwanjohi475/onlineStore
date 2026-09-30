@@ -43,7 +43,7 @@ export function CompactProductCard({ product, showSold = false }: { product: Pro
         <Link href={`/product/${product.slug}`} className="line-clamp-2 text-sm leading-snug transition-colors hover:text-brand-600 dark:hover:text-brand-400">
           {product.name}
         </Link>
-        <div className="mt-1.5 flex items-baseline gap-1.5">
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
           <span className="font-bold">{formatPrice(product.price)}</span>
           {product.compareAt && <span className="text-xs text-muted line-through">{formatPrice(product.compareAt)}</span>}
         </div>

@@ -5,6 +5,7 @@ import { list, put } from "@vercel/blob";
 import type { InStatement } from "@libsql/client";
 import { TURSO_ON, db, ensureSchema } from "@/lib/db/turso";
 import type { CategorySlug, Order, Product, StoreData } from "@/lib/types";
+import { revalidatePath } from "next/cache";
 import { seed } from "./seed";
 import { bumpStore } from "./events";
 
@@ -239,6 +240,17 @@ async function commit(data: StoreData) {
   else saveToFile(data);
 }
 
+/** Mark every cached page stale so the next visit shows fresh data (admin edits,
+ *  new orders, stock changes). Only valid inside a request (Route Handler) —
+ *  silently skipped during build-time seeding. */
+function refreshSite() {
+  try {
+    revalidatePath("/", "layout");
+  } catch {
+    /* not in a request context (e.g. static build) */
+  }
+}
+
 /* ── Public API ───────────────────────────────────────────── */
 export async function readStore(): Promise<StoreData> {
   return currentStore();
@@ -247,6 +259,7 @@ export async function readStore(): Promise<StoreData> {
 export async function writeStore(data: StoreData, scope = "store") {
   await commit(data);
   bumpStore(scope);
+  refreshSite();
 }
 
 export async function getProducts(): Promise<Product[]> {
@@ -302,6 +315,7 @@ export async function addOrder(order: Order) {
     await addOrderTurso(order);
     mem = null; // force a fresh read next time
     bumpStore("order");
+    refreshSite();
     return;
   }
   const store = await currentStore(true);
@@ -315,6 +329,7 @@ export async function addOrder(order: Order) {
   }
   await commit(store);
   bumpStore("order");
+  refreshSite();
 }
 
 /** Delete every order (and therefore every derived customer). Used for a fresh start. */
@@ -324,12 +339,14 @@ export async function clearOrders() {
     await db().execute("DELETE FROM orders");
     mem = null;
     bumpStore("order");
+    refreshSite();
     return;
   }
   const store = await currentStore(true);
   store.orders = [];
   await commit(store);
   bumpStore("order");
+  refreshSite();
 }
 
 /** Delete a single order by id. */
@@ -339,12 +356,14 @@ export async function deleteOrder(id: string) {
     await db().execute({ sql: "DELETE FROM orders WHERE id = ?", args: [id] });
     mem = null;
     bumpStore("order");
+    refreshSite();
     return;
   }
   const store = await currentStore(true);
   store.orders = store.orders.filter((o) => o.id !== id);
   await commit(store);
   bumpStore("order");
+  refreshSite();
 }
 
 /** Apply a change to a single order (status, payment, notes, archive…). */
@@ -360,6 +379,7 @@ export async function updateOrder(id: string, mutate: (o: Order) => Order): Prom
     });
     mem = null;
     bumpStore("order");
+    refreshSite();
     return updated;
   }
   const store = await currentStore(true);
@@ -369,6 +389,7 @@ export async function updateOrder(id: string, mutate: (o: Order) => Order): Prom
   store.orders[idx] = updated;
   await commit(store);
   bumpStore("order");
+  refreshSite();
   return updated;
 }
 

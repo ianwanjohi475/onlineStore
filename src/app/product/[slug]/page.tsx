@@ -5,8 +5,13 @@ import { ChevronRight } from "lucide-react";
 import { ProductDetail } from "@/components/product/product-detail";
 import { RelatedProducts } from "@/components/product/related-products";
 import { RecentlyViewed } from "@/components/product/recently-viewed";
-import { getCategory, getProduct, getRelated } from "@/lib/store/store";
+import { getCategory, getProduct, getProducts, getRelated } from "@/lib/store/store";
 import { formatPrice, safeJsonLd } from "@/lib/utils";
+
+/** Prebuild every product page at deploy time so it's served instantly from the CDN. */
+export async function generateStaticParams() {
+  return (await getProducts()).map((x) => ({ slug: x.slug }));
+}
 
 export async function generateMetadata({
   params,

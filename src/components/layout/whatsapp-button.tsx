@@ -18,7 +18,7 @@ export function WhatsAppButton() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-5 left-5 z-[80] flex flex-col items-start gap-3">
+    <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-[80] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
       <AnimatePresence>
         {open && (
           <motion.div
@@ -57,12 +57,9 @@ export function WhatsAppButton() {
         transition={{ type: "spring", stiffness: 400, damping: 20 }}
         onClick={() => setOpen((o) => !o)}
         aria-label="WhatsApp support"
-        className="relative grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-105"
+        className="relative grid size-12 place-items-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 transition-transform hover:scale-105 sm:size-14"
       >
-        {!open && (
-          <span className="absolute inset-0 animate-ping rounded-full bg-[#25D366] opacity-40" aria-hidden />
-        )}
-        {open ? <X size={24} /> : <MessageCircle size={26} />}
+        {open ? <X size={22} /> : <MessageCircle size={24} />}
       </motion.button>
     </div>
   );

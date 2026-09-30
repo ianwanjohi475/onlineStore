@@ -64,7 +64,7 @@ export function AddToCartButton({
       aria-live="polite"
       data-state={state}
       className={cn(
-        "group/atc relative inline-flex select-none items-center justify-center overflow-hidden rounded-full font-semibold",
+        "group/atc relative inline-flex select-none items-center justify-center overflow-hidden whitespace-nowrap rounded-full font-semibold",
         "transition-[transform,box-shadow,background-color,color] duration-200 ease-out",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "active:scale-[0.96] disabled:cursor-not-allowed",
@@ -73,7 +73,7 @@ export function AddToCartButton({
           ? "bg-surface-2 text-muted"
           : state === "added"
             ? "bg-brand-600 text-white shadow-[0_8px_24px_-8px_var(--color-brand-600)]"
-            : "bg-brand-500 text-white shadow-[0_6px_18px_-8px_var(--color-brand-500)] hover:-translate-y-0.5 hover:bg-brand-400 hover:shadow-[0_14px_30px_-10px_var(--color-brand-500)]",
+            : "bg-brand-500 text-white shadow-[0_6px_18px_-8px_var(--color-brand-500)] hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-[0_14px_30px_-10px_var(--color-brand-500)]",
         className,
       )}
     >

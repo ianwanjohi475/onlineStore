@@ -67,9 +67,9 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           </Link>
           <Rating value={product.rating} count={product.reviewCount} className="mt-2" size={13} />
 
-          <div className="mt-2 flex items-end gap-2">
-            <span className="font-display text-xl font-bold">{formatPrice(product.price)}</span>
-            {product.compareAt && <span className="pb-0.5 text-sm text-muted line-through">{formatPrice(product.compareAt)}</span>}
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span className="font-display text-lg font-bold sm:text-xl">{formatPrice(product.price)}</span>
+            {product.compareAt && <span className="text-xs text-muted line-through sm:text-sm">{formatPrice(product.compareAt)}</span>}
           </div>
 
           <AddToCartButton product={product} variant="full" className="mt-3" />

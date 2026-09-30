@@ -23,12 +23,12 @@ export function FlashRail({ products }: { products: Product[] }) {
               <p className="text-xs text-muted">Lowest prices — while stocks last</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end sm:gap-4">
             <div className="flex items-center gap-2">
               <span className="hidden text-xs font-semibold text-muted sm:inline">Ends in</span>
               <Countdown target={target} compact />
             </div>
-            <Link href="/flash-sales" className="inline-flex items-center gap-1 text-sm font-semibold text-rose-500 hover:underline">
+            <Link href="/flash-sales" className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-semibold text-rose-500 hover:underline">
               See all <ChevronRight size={15} />
             </Link>
           </div>
