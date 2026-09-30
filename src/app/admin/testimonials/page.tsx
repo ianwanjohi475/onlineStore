@@ -16,7 +16,7 @@ export default function TestimonialsAdmin() {
 
   const update = (i: number, patch: Partial<Testimonial>) => setItems(items.map((t, j) => (j === i ? { ...t, ...patch } : t)));
   const save = async () => { setSaving(true); try { await api("/api/admin/testimonials", "PUT", items); toast("Testimonials saved"); } catch { toast("Could not save", "info"); } setSaving(false); };
-  const add = () => setItems([...items, { id: `t-${Date.now()}`, author: "New customer", role: "Verified buyer", rating: 5, quote: "", accent: "#FFB703", avatar: "/people/a1.jpg" }]);
+  const add = () => setItems([...items, { id: `t-${Date.now()}`, author: "New customer", role: "Verified buyer", rating: 5, quote: "", accent: "#FFB703" }]);
 
   return (
     <div>
@@ -33,9 +33,8 @@ export default function TestimonialsAdmin() {
               <Field label="Author" value={t.author} onChange={(e) => update(i, { author: e.target.value })} />
               <Field label="Role" value={t.role} onChange={(e) => update(i, { role: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3">
               <Select label="Rating" value={t.rating} onChange={(e) => update(i, { rating: Number(e.target.value) })}>{[5, 4, 3, 2, 1].map((r) => <option key={r} value={r}>{r} stars</option>)}</Select>
-              <Select label="Avatar" value={t.avatar} onChange={(e) => update(i, { avatar: e.target.value })}>{["/people/a1.jpg", "/people/a2.jpg", "/people/a3.jpg", "/people/a4.jpg", "/people/a5.jpg", "/people/a6.jpg"].map((a) => <option key={a} value={a}>{a.split("/").pop()}</option>)}</Select>
             </div>
           </Card>
         ))}

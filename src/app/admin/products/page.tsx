@@ -1,12 +1,14 @@
 "use client";
 
-import { ImageOff, Loader2, Package, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { ImageOff, Loader2, Package, Pencil, Plus, Trash2, Upload, Video } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Btn, Card, ConfirmDialog, Drawer, EmptyState, Field, PageHeader, Pagination,
   SearchInput, Select, StatusPill, TextArea, Toggle, api, usePaginated,
 } from "@/components/admin/kit";
 import { ProductImage } from "@/components/product/product-image";
+import { uploadMedia } from "@/components/admin/upload";
+import { isSafeMediaUrl, parseVideo } from "@/lib/media";
 import { useToast } from "@/context/toast";
 import { useLive } from "@/hooks/use-live";
 import type { Brand, Category, Product } from "@/lib/types";
@@ -158,6 +160,7 @@ function ProductEditor({ product, categories, brands, onClose, onSaved }: { prod
       footer={<div className="flex gap-3"><Btn variant="outline" className="flex-1" onClick={onClose}>Cancel</Btn><Btn className="flex-1" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save"}</Btn></div>}>
       <div className="flex flex-col gap-4">
         <ImageUploader preview={preview} value={f.image ?? null} onChange={(url) => set("image", url)} />
+        <MoreMedia images={f.images ?? []} video={f.video ?? ""} onImages={(v) => set("images", v)} onVideo={(v) => set("video", v || null)} />
         <Field label="Product name" value={f.name ?? ""} onChange={(e) => set("name", e.target.value)} />
         <Field label="Tagline" value={f.tagline ?? ""} onChange={(e) => set("tagline", e.target.value)} />
         <div className="grid grid-cols-2 gap-4">
@@ -238,6 +241,94 @@ function ImageUploader({ preview, value, onChange }: { preview: Product; value: 
       </div>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) upload(file); e.target.value = ""; }} />
       <Field label="Or paste an image URL" value={value ?? ""} onChange={(e) => onChange(e.target.value || null)} placeholder="https://…  or  /uploads/photo.jpg" />
+    </div>
+  );
+}
+
+/** Extra gallery photos + an optional product video. */
+function MoreMedia({ images, video, onImages, onVideo }: { images: string[]; video: string; onImages: (v: string[]) => void; onVideo: (v: string) => void }) {
+  const toast = useToast();
+  const photosRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [url, setUrl] = useState("");
+  const parsed = video ? parseVideo(video) : null;
+
+  const addPhotos = async (files: FileList) => {
+    const added: string[] = [];
+    for (const file of Array.from(files).slice(0, 12)) {
+      if (!file.type.startsWith("image/")) continue;
+      setBusy(`Uploading ${file.name}…`);
+      try { added.push(await uploadMedia(file)); } catch (e) { toast(e instanceof Error ? e.message : "Upload failed", "info"); }
+    }
+    setBusy(null);
+    if (added.length) { onImages([...images, ...added].slice(0, 12)); toast(`${added.length} photo${added.length > 1 ? "s" : ""} added`); }
+  };
+
+  const addVideo = async (file: File) => {
+    if (!file.type.startsWith("video/")) { toast("Please choose an MP4 or WebM video", "info"); return; }
+    setBusy("Uploading video… 0%");
+    try {
+      onVideo(await uploadMedia(file, (p: number) => setBusy(`Uploading video… ${p}%`)));
+      toast("Video uploaded");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Upload failed", "info");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const move = (i: number, d: -1 | 1) => {
+    const j = i + d;
+    if (j < 0 || j >= images.length) return;
+    const next = [...images];
+    [next[i], next[j]] = [next[j], next[i]];
+    onImages(next);
+  };
+
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border p-3">
+      <div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">More photos <span className="text-xs text-muted">({images.length}/12)</span></span>
+          <Btn type="button" size="sm" variant="outline" disabled={!!busy || images.length >= 12} onClick={() => photosRef.current?.click()}><Upload size={14} /> Add photos</Btn>
+        </div>
+        {images.length > 0 && (
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {images.map((src, i) => (
+              <div key={src} className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt={`Photo ${i + 2}`} className="size-full object-contain" />
+                <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/50 p-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button type="button" onClick={() => move(i, -1)} aria-label="Move left" className="px-1 text-xs text-white">◀</button>
+                  <button type="button" onClick={() => onImages(images.filter((_, j) => j !== i))} aria-label="Remove photo" className="px-1 text-xs text-white">✕</button>
+                  <button type="button" onClick={() => move(i, 1)} aria-label="Move right" className="px-1 text-xs text-white">▶</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-2 flex gap-2">
+          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="…or paste a photo URL (https://…)" className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-brand-500" />
+          <Btn type="button" size="sm" variant="outline" onClick={() => { if (isSafeMediaUrl(url)) { onImages([...images, url].slice(0, 12)); setUrl(""); } else toast("Use an https:// link", "info"); }}>Add</Btn>
+        </div>
+        <input ref={photosRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files?.length) addPhotos(e.target.files); e.target.value = ""; }} />
+      </div>
+
+      <div className="border-t border-border pt-3">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-sm font-medium"><Video size={15} /> Product video</span>
+          <Btn type="button" size="sm" variant="outline" disabled={!!busy} onClick={() => videoRef.current?.click()}><Upload size={14} /> Upload video</Btn>
+        </div>
+        <Field label="YouTube / Vimeo link or video file URL" value={video} onChange={(e) => onVideo(e.target.value)} placeholder="https://youtu.be/…" className="mt-2" />
+        {video && (
+          <p className={`mt-1 text-xs ${parsed ? "text-emerald-600" : "text-rose-500"}`}>
+            {parsed ? `✓ ${parsed.kind === "file" ? "Video file" : parsed.kind === "youtube" ? "YouTube video" : "Vimeo video"} — shows in the product gallery` : "This link isn't a supported video (YouTube, Vimeo, .mp4 or .webm)"}
+          </p>
+        )}
+        <input ref={videoRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) addVideo(file); e.target.value = ""; }} />
+      </div>
+      {busy && <p className="flex items-center gap-2 text-xs text-muted"><Loader2 size={13} className="animate-spin" /> {busy}</p>}
     </div>
   );
 }

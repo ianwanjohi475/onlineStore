@@ -7,11 +7,14 @@ import { useEffect, useState } from "react";
 import { ProductImage } from "@/components/product/product-image";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { useCatalog } from "@/context/catalog";
-import { discountPercent, formatPrice } from "@/lib/utils";
+import { cn, discountPercent, formatPrice } from "@/lib/utils";
+import { CategoryFlyout } from "./category-flyout";
 import { PosterSlide } from "./poster-slide";
 
 export function MarketHero() {
-  const { productMap, categories, settings } = useCatalog();
+  const { productMap, categories, settings, products: allProducts } = useCatalog();
+  const [hoverCat, setHoverCat] = useState<string | null>(null);
+  const hoveredCategory = categories.find((c) => c.slug === hoverCat);
   const now = Date.now();
   const slides = settings.heroSlides.filter(
     (s) =>
@@ -44,26 +47,39 @@ export function MarketHero() {
   return (
     <section className="container-x pt-5">
       <div className="grid gap-4 lg:grid-cols-[230px_1fr] xl:grid-cols-[230px_1fr_270px]">
-        {/* category sidebar */}
-        <aside className="hidden overflow-hidden rounded-2xl border border-border bg-surface lg:block">
+        {/* category sidebar — hover a category to preview its products */}
+        <aside
+          className="relative hidden rounded-2xl border border-border bg-surface lg:block"
+          onMouseLeave={() => setHoverCat(null)}
+        >
           <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-bold">
             <LayoutGrid size={15} className="text-brand-500" /> Categories
           </div>
           <nav className="p-1.5">
-            {categories.map((c) => {
-              return (
-                <Link
-                  key={c.slug}
-                  href={`/categories/${c.slug}`}
-                  className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-white/5"
-                >
-                  <CategoryIcon slug={c.slug} size={18} />
-                  <span className="flex-1 font-medium">{c.name}</span>
-                  <ChevronRight size={14} className="text-muted opacity-0 transition-opacity group-hover:opacity-100" />
-                </Link>
-              );
-            })}
+            {categories.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/categories/${c.slug}`}
+                onMouseEnter={() => setHoverCat(c.slug)}
+                onFocus={() => setHoverCat(c.slug)}
+                className={cn(
+                  "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                  hoverCat === c.slug ? "bg-brand-50 text-brand-700 dark:bg-white/5 dark:text-brand-300" : "hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-white/5",
+                )}
+              >
+                <CategoryIcon slug={c.slug} size={20} />
+                <span className="flex-1 font-medium">{c.name}</span>
+                <ChevronRight size={14} className={cn("text-muted transition-opacity", hoverCat === c.slug ? "opacity-100" : "opacity-0 group-hover:opacity-100")} />
+              </Link>
+            ))}
           </nav>
+
+          {/* product preview panel, laid over the banner */}
+          {hoveredCategory && (
+            <div className="absolute left-[calc(100%+0.5rem)] top-0 z-30 h-full w-[min(56rem,calc(100vw-230px-6rem))] overflow-hidden rounded-2xl border border-border shadow-2xl">
+              <CategoryFlyout category={hoveredCategory} products={allProducts} onNavigate={() => setHoverCat(null)} />
+            </div>
+          )}
         </aside>
 
         {/* banner poster carousel */}

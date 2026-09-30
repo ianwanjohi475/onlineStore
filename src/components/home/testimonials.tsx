@@ -1,5 +1,5 @@
 import { Quote } from "lucide-react";
-import Image from "next/image";
+import { AvatarIcon } from "@/components/ui/avatar-icon";
 import { Rating } from "@/components/ui/rating";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -25,9 +25,7 @@ export async function Testimonials() {
               <blockquote className="flex-1 text-sm leading-relaxed">{t.quote}</blockquote>
               <Rating value={t.rating} className="mt-4" />
               <figcaption className="mt-4 flex items-center gap-3 border-t border-border pt-4">
-                <span className="relative size-10 shrink-0 overflow-hidden rounded-full">
-                  <Image src={t.avatar} alt={t.author} fill sizes="40px" className="object-cover" />
-                </span>
+                <AvatarIcon name={t.author} className="size-10" />
                 <div>
                   <p className="text-sm font-semibold">{t.author}</p>
                   <p className="text-xs text-muted">{t.role}</p>

@@ -16,7 +16,8 @@ import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
 import { SearchCommand } from "./search-command";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { CategoryBadge } from "@/components/ui/category-icon";
+import { CategoryIcon } from "@/components/ui/category-icon";
+import { CategoryFlyout } from "@/components/market/category-flyout";
 
 const navLinks = [
   { href: "/shop", label: "Shop" },
@@ -37,7 +38,8 @@ function CountBadge({ count }: { count: number }) {
 }
 
 export function SiteHeader() {
-  const { categories } = useCatalog();
+  const { categories, products } = useCatalog();
+  const [megaCat, setMegaCat] = useState<string | null>(null);
   const cart = useCart();
   const wishlist = useWishlist();
   const auth = useAuth();
@@ -120,17 +122,30 @@ export function SiteHeader() {
                 </Link>
                 <AnimatePresence>
                   {megaOpen && (
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.18 }} className="absolute left-0 top-full w-[42rem] pt-2">
-                      <div className="card-surface grid grid-cols-2 gap-2 p-3 text-foreground shadow-card">
-                        {categories.map((c) => (
-                          <Link key={c.slug} href={`/categories/${c.slug}`} className="group flex items-center gap-3 rounded-2xl p-3 transition-colors hover:bg-surface-2">
-                            <CategoryBadge slug={c.slug} className="size-11 rounded-xl" size={20} />
-                            <span>
-                              <span className="block text-sm font-semibold group-hover:text-brand-600 dark:group-hover:text-brand-400">{c.name}</span>
-                              <span className="block text-xs text-muted">{c.tagline}</span>
-                            </span>
-                          </Link>
-                        ))}
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} transition={{ duration: 0.15 }} className="absolute left-0 top-full w-[min(76rem,calc(100vw-4rem))] pt-2">
+                      <div className="grid h-[30rem] grid-cols-[16rem_1fr] overflow-hidden rounded-2xl border border-border bg-surface text-foreground shadow-2xl">
+                        <nav className="overflow-y-auto border-r border-border bg-surface-2/60 p-2">
+                          {categories.map((c) => (
+                            <Link
+                              key={c.slug}
+                              href={`/categories/${c.slug}`}
+                              onMouseEnter={() => setMegaCat(c.slug)}
+                              onClick={() => setMegaOpen(false)}
+                              className={cn(
+                                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                                (megaCat ?? categories[0]?.slug) === c.slug ? "bg-surface text-brand-700 shadow-sm dark:text-brand-300" : "hover:bg-surface",
+                              )}
+                            >
+                              <CategoryIcon slug={c.slug} size={22} />
+                              <span className="flex-1">{c.name}</span>
+                            </Link>
+                          ))}
+                          <Link href="/categories" onClick={() => setMegaOpen(false)} className="mt-1 block px-3 py-2.5 text-sm font-bold hover:text-brand-600">View all categories</Link>
+                        </nav>
+                        {(() => {
+                          const cat = categories.find((c) => c.slug === (megaCat ?? categories[0]?.slug));
+                          return cat ? <CategoryFlyout category={cat} products={products} onNavigate={() => setMegaOpen(false)} /> : null;
+                        })()}
                       </div>
                     </motion.div>
                   )}

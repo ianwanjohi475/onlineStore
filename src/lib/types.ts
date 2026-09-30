@@ -54,8 +54,12 @@ export interface Product {
   /** used to seed flash-sale and best-seller ordering */
   soldPercent?: number;
   description: string;
-  /** product photo URL or /path; falls back to a generated render when empty */
+  /** main product photo URL or /path (empty → blank slot) */
   image?: string | null;
+  /** extra photos shown in the product gallery */
+  images?: string[];
+  /** optional product video: YouTube / Vimeo link or an uploaded .mp4/.webm */
+  video?: string | null;
 }
 
 export interface HeroSlide {
@@ -205,7 +209,8 @@ export interface Testimonial {
   rating: number;
   quote: string;
   accent: string;
-  avatar: string;
+  /** legacy — reviews now show an icon avatar, never a real person's photo */
+  avatar?: string;
 }
 
 export interface BlogPost {

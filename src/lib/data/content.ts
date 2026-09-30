@@ -9,7 +9,6 @@ export const testimonials: Testimonial[] = [
     quote:
       "The FreePods 4 Pro genuinely rival buds twice the price. The noise cancelling on my matatu commute is unreal, and they lasted a full week before a recharge.",
     accent: "#FFB703",
-    avatar: "/people/a2.jpg",
   },
   {
     id: "t2",
@@ -19,7 +18,6 @@ export const testimonials: Testimonial[] = [
     quote:
       "Ordered a Watch Meta Ultra on flash sale and it arrived next day. The AMOLED screen is stunning and the battery really does go two weeks.",
     accent: "#38BDF8",
-    avatar: "/people/a3.jpg",
   },
   {
     id: "t3",
@@ -29,7 +27,6 @@ export const testimonials: Testimonial[] = [
     quote:
       "I've bought three cables and a power bank now. Everything just feels built to last — the braided cables haven't frayed at all after months of daily use.",
     accent: "#F97316",
-    avatar: "/people/a5.jpg",
   },
   {
     id: "t4",
@@ -39,7 +36,6 @@ export const testimonials: Testimonial[] = [
     quote:
       "Customer support answered on WhatsApp within minutes and sorted my warranty claim the same day. That's why I keep coming back.",
     accent: "#3B82F6",
-    avatar: "/people/a6.jpg",
   },
 ];
 

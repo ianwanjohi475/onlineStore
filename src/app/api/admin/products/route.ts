@@ -3,6 +3,15 @@ import { readStore, writeStore } from "@/lib/store/store";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import { slugify } from "@/lib/utils";
 import type { Product } from "@/lib/types";
+import { isSafeMediaUrl, parseVideo } from "@/lib/media";
+
+/** Keep only safe media URLs (same-site paths or https), max 12 extra photos. */
+function cleanMedia(body: Partial<Product>) {
+  const image = isSafeMediaUrl(body.image) ? body.image : null;
+  const images = Array.isArray(body.images) ? body.images.filter(isSafeMediaUrl).filter((u) => u !== image).slice(0, 12) : [];
+  const video = body.video && parseVideo(body.video) ? body.video : null;
+  return { image, images, video };
+}
 
 export async function GET() {
   if (!(await isAuthed())) return unauthorized();
@@ -35,9 +44,10 @@ export async function POST(req: Request) {
     features: body.features ?? [],
     specs: body.specs ?? {},
     inStock: body.inStock ?? true,
+    stock: Number.isFinite(Number(body.stock)) ? Math.max(0, Math.floor(Number(body.stock))) : undefined,
     soldPercent: body.soldPercent ?? 0,
     description: body.description ?? "",
-    image: body.image ?? null,
+    ...cleanMedia(body),
   };
   store.products.unshift(product);
   await writeStore(store);
@@ -56,6 +66,7 @@ export async function PUT(req: Request) {
     price: Number(body.price) || 0,
     compareAt: body.compareAt ? Number(body.compareAt) : undefined,
     rating: Number(body.rating) || 0,
+    ...cleanMedia(body),
   };
   await writeStore(store);
   return NextResponse.json(store.products[idx]);

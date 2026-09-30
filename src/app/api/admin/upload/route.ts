@@ -21,17 +21,30 @@ function sniffImage(b: Buffer): { ext: string; type: string } | null {
   return null;
 }
 
+/** Product videos: MP4/MOV (ISO "ftyp" box) or WebM (EBML header). */
+function sniffVideo(b: Buffer): { ext: string; type: string } | null {
+  if (b.length > 12 && b.toString("ascii", 4, 8) === "ftyp") {
+    const brand = b.toString("ascii", 8, 12);
+    if (/qt/.test(brand)) return { ext: "mov", type: "video/quicktime" };
+    if (!/avif|avis|heic|heix|mif1/.test(brand)) return { ext: "mp4", type: "video/mp4" };
+  }
+  if (b.length > 4 && b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return { ext: "webm", type: "video/webm" };
+  return null;
+}
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
 export async function POST(req: Request) {
   if (!(await isAuthed())) return unauthorized();
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: "Image must be 5MB or smaller" }, { status: 400 });
+  if (file.size > MAX_VIDEO_BYTES) return NextResponse.json({ error: "File is too large" }, { status: 400 });
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const kind = sniffImage(bytes);
-  if (!kind) return NextResponse.json({ error: "Please upload a JPG, PNG, WebP, GIF or AVIF image" }, { status: 400 });
+  const kind = sniffImage(bytes) ?? sniffVideo(bytes);
+  if (!kind) return NextResponse.json({ error: "Please upload a JPG, PNG, WebP image or an MP4/WebM video" }, { status: 400 });
+  if (kind.type.startsWith("image/") && file.size > MAX_BYTES) return NextResponse.json({ error: "Image must be 5MB or smaller" }, { status: 400 });
   const name = `${Date.now()}-${randomBytes(6).toString("hex")}.${kind.ext}`;
 
   // On Vercel (or any host with Blob configured) store the image in Blob so it

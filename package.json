@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
+    "@tabler/icons-react": "^3.48.0",
     "@vercel/blob": "^2.8.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.43.0",

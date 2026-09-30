@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Flame } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
@@ -26,9 +26,12 @@ export function CtaBanner() {
                   Start shopping <ArrowRight size={18} />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="glass" className="text-brand-50">
-                <Link href="/flash-sales">Browse flash sales</Link>
-              </Button>
+              <Link
+                href="/flash-sales"
+                className="inline-flex h-13 items-center justify-center gap-2 rounded-full bg-deal px-8 text-base font-bold text-[#1b1d22] shadow-lg shadow-black/20 transition-all hover:-translate-y-0.5 hover:bg-[#ffcf4d] active:scale-[0.97]"
+              >
+                <Flame size={18} /> Browse flash sales
+              </Link>
             </div>
           </div>
         </div>

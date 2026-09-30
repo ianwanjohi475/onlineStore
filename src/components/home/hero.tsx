@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Sparkles, Star, Truck } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import { AvatarIcon } from "@/components/ui/avatar-icon";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductImage } from "@/components/product/product-image";
@@ -11,7 +11,6 @@ import { productMap } from "@/lib/data/products";
 import { discountPercent, formatPrice } from "@/lib/utils";
 
 const featured = ["watch-meta-ultra", "freepods-4-pro", "soundgo-boom", "powercore-27000"];
-const avatars = ["/people/a1.jpg", "/people/a2.jpg", "/people/a3.jpg", "/people/a4.jpg"];
 
 export function Hero() {
   const [index, setIndex] = useState(0);
@@ -63,14 +62,12 @@ export function Hero() {
             </Button>
           </div>
 
-          {/* trust row with real avatars */}
+          {/* trust row */}
           <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2.5">
-                {avatars.map((src) => (
-                  <span key={src} className="relative size-9 overflow-hidden rounded-full border-2 border-background">
-                    <Image src={src} alt="" fill sizes="36px" className="object-cover" />
-                  </span>
+                {["Amina", "Brian", "Grace", "Daniel"].map((n) => (
+                  <AvatarIcon key={n} name={n} className="size-9 border-2 border-background" size={17} />
                 ))}
               </div>
               <div className="text-sm">
