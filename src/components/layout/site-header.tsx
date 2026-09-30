@@ -28,7 +28,7 @@ const navLinks = [
 function CountBadge({ count }: { count: number }) {
   if (!count) return null;
   return (
-    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-brand-500 px-1 text-[0.6rem] font-bold text-white tabular-nums">
+    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-cta px-1 text-[0.6rem] font-extrabold text-navy tabular-nums ring-2 ring-navy">
       {count > 9 ? "9+" : count}
     </span>
   );
@@ -55,57 +55,66 @@ export function SiteHeader() {
     <>
       <div className="sticky top-0 z-50">
         <AnnouncementBar />
-        <header className={cn("border-b border-border transition-all duration-300", scrolled ? "bg-surface/95 shadow-card backdrop-blur-md" : "bg-background")}>
+        <header className={cn("bg-navy text-white transition-shadow duration-300", scrolled && "shadow-[0_8px_24px_-12px_rgb(0_0_0/0.5)]")}>
           {/* main row: logo · search · actions */}
           <div className="container-x flex h-16 items-center gap-3">
-            <button onClick={() => setMenuOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full hover:bg-surface-2 lg:hidden">
+            <button onClick={() => setMenuOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full hover:bg-white/10 lg:hidden">
               <Menu size={20} />
             </button>
-            <Logo />
+            <Logo onDark />
 
             {/* desktop search bar */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="ml-2 hidden h-10 flex-1 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm text-muted transition-colors hover:border-brand-500/50 lg:flex"
+              className="ml-4 hidden h-11 flex-1 items-center gap-2 overflow-hidden rounded-lg bg-white pl-4 text-sm text-slate-500 ring-cta transition-shadow hover:ring-2 lg:flex"
             >
               <Search size={17} />
               <span className="flex-1 text-left">Search products, brands and categories…</span>
-              <span className="rounded-full bg-brand-500 px-3.5 py-1.5 text-xs font-bold text-white">Search</span>
+              <span className="grid h-full place-items-center bg-cta px-5 text-sm font-bold text-navy">Search</span>
             </button>
 
             <div className="flex-1 lg:hidden" />
 
             {/* actions */}
             <div className="flex items-center gap-1">
-              <button onClick={() => setSearchOpen(true)} aria-label="Search" className="grid size-10 place-items-center rounded-full hover:bg-surface-2 lg:hidden">
-                <Search size={19} />
-              </button>
-              <div className="hidden sm:block"><ThemeToggle /></div>
-              <Link href="/account" aria-label="Account" className="hidden size-10 place-items-center rounded-full hover:bg-surface-2 sm:grid">
+              <div className="hidden sm:block"><ThemeToggle onDark /></div>
+              <Link href="/account" aria-label="Account" className="hidden size-10 place-items-center rounded-full hover:bg-white/10 sm:grid">
                 <User size={19} />
               </Link>
-              <Link href="/wishlist" aria-label="Wishlist" className="relative grid size-10 place-items-center rounded-full hover:bg-surface-2">
+              <Link href="/wishlist" aria-label="Wishlist" className="relative grid size-10 place-items-center rounded-full hover:bg-white/10">
                 <Heart size={19} />
                 <CountBadge count={wishlist.hydrated ? wishlist.count : 0} />
               </Link>
-              <button onClick={() => setCartOpen(true)} aria-label="Cart" className="relative grid size-10 place-items-center rounded-full hover:bg-surface-2">
+              <button onClick={() => setCartOpen(true)} aria-label="Cart" className="relative grid size-10 place-items-center rounded-full hover:bg-white/10">
                 <ShoppingBag size={19} />
                 <CountBadge count={cart.hydrated ? cart.count : 0} />
               </button>
             </div>
           </div>
 
+          {/* mobile search bar — always visible, like Amazon / Kilimall apps */}
+          <div className="container-x pb-3 lg:hidden">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex h-10 w-full items-center gap-2 overflow-hidden rounded-lg bg-white pl-3 text-sm text-slate-500"
+            >
+              <Search size={17} className="shrink-0" />
+              <span className="flex-1 truncate text-left">Search SIR VERT…</span>
+              <span className="grid h-full shrink-0 place-items-center bg-cta px-4 text-navy"><Search size={17} strokeWidth={2.5} /></span>
+            </button>
+          </div>
+
           {/* secondary nav row (desktop) */}
-          <div className="hidden border-t border-border lg:block">
-            <div className="container-x flex h-11 items-center gap-1">
+          <div className="hidden bg-navy-2 lg:block">
+            <div className="container-x flex h-10 items-center gap-1">
               <div onMouseEnter={() => setMegaOpen(true)} onMouseLeave={() => setMegaOpen(false)} className="relative">
-                <Link href="/categories" className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:text-brand-600 dark:hover:text-brand-400">
+                <Link href="/categories" className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-white/10">
                   <Menu size={15} /> All categories
                 </Link>
                 <AnimatePresence>
                   {megaOpen && (
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.18 }} className="absolute left-0 top-full w-[42rem] pt-2">
-                      <div className="card-surface grid grid-cols-2 gap-2 p-3 shadow-card">
+                      <div className="card-surface grid grid-cols-2 gap-2 p-3 text-foreground shadow-card">
                         {categories.map((c) => (
                           <Link key={c.slug} href={`/categories/${c.slug}`} className="group flex items-center gap-3 rounded-2xl p-3 transition-colors hover:bg-surface-2">
                             <span className="grid size-11 shrink-0 place-items-center rounded-xl text-white" style={{ background: `linear-gradient(135deg, ${c.gradient[0]}, ${c.gradient[1]})` }}>
@@ -122,9 +131,9 @@ export function SiteHeader() {
                   )}
                 </AnimatePresence>
               </div>
-              <span className="mx-1 h-4 w-px bg-border" />
+              <span className="mx-1 h-4 w-px bg-white/20" />
               {navLinks.map((l) => (
-                <Link key={l.href} href={l.href} className="rounded-full px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-foreground">
+                <Link key={l.href} href={l.href} className="rounded-md px-3 py-1.5 text-sm font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white">
                   {l.label}
                 </Link>
               ))}

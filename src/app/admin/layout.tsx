@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const SidebarInner = (
     <>
       <Link href="/admin" className="flex items-center gap-2.5 px-2 py-1" onClick={() => setMobileOpen(false)}>
-        <span className="grid size-9 shrink-0 place-items-center text-brand-700 dark:text-brand-200"><LogoMark className="size-9" /></span>
+        <span className="grid size-9 shrink-0 place-items-center text-emerald-700 dark:text-emerald-400"><LogoMark className="size-9" /></span>
         <div className="leading-tight">
           <p className="font-display text-sm font-bold">SIR VERT</p>
           <p className="text-[0.7rem] text-muted">Commerce admin</p>

@@ -5,7 +5,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-export function ThemeToggle() {
+export function ThemeToggle({ onDark = false }: { onDark?: boolean }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -17,7 +17,9 @@ export function ThemeToggle() {
       type="button"
       aria-label="Toggle colour theme"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="grid size-10 place-items-center rounded-full border border-border text-foreground transition-colors hover:border-brand-500 hover:text-brand-500"
+      className={onDark
+        ? "grid size-10 place-items-center rounded-full text-white transition-colors hover:bg-white/10"
+        : "grid size-10 place-items-center rounded-full border border-border text-foreground transition-colors hover:border-brand-500 hover:text-brand-500"}
     >
       {mounted && (
         <AnimatePresence mode="wait" initial={false}>

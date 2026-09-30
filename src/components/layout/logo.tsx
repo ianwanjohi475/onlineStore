@@ -6,20 +6,34 @@ import { cn } from "@/lib/utils";
  * paired with the two-tier wordmark. No background box — sits cleanly on any
  * header. Pure inline SVG, theme-aware, razor-sharp at any size.
  */
-export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
+export function Logo({
+  className,
+  compact = false,
+  onDark = false,
+}: {
+  className?: string;
+  compact?: boolean;
+  /** true when placed on the navy header/footer */
+  onDark?: boolean;
+}) {
   return (
     <Link
       href="/"
       aria-label="SIR VERT ENTERPRISE — home"
       className={cn("group inline-flex items-center gap-2.5", className)}
     >
-      <LogoMark className="size-9 shrink-0 text-brand-700 transition-transform duration-300 ease-out group-hover:scale-105 dark:text-brand-200" />
+      <LogoMark
+        className={cn(
+          "size-9 shrink-0 transition-transform duration-300 ease-out group-hover:scale-105",
+          onDark ? "text-emerald-400" : "text-emerald-700 dark:text-emerald-400",
+        )}
+      />
       {!compact && (
         <span className="flex flex-col leading-none">
-          <span className="font-display text-[1.05rem] font-extrabold tracking-tight text-brand-700 dark:text-brand-200">
+          <span className={cn("font-display text-[1.05rem] font-extrabold tracking-tight", onDark ? "text-white" : "text-navy dark:text-white")}>
             SIR VERT
           </span>
-          <span className="mt-0.5 text-[0.55rem] font-bold uppercase tracking-[0.3em] text-brand-600 dark:text-brand-400">
+          <span className={cn("mt-0.5 text-[0.55rem] font-bold uppercase tracking-[0.3em]", onDark ? "text-emerald-300" : "text-emerald-700 dark:text-emerald-300")}>
             Enterprise
           </span>
         </span>

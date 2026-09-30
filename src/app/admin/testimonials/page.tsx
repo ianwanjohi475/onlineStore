@@ -16,7 +16,7 @@ export default function TestimonialsAdmin() {
 
   const update = (i: number, patch: Partial<Testimonial>) => setItems(items.map((t, j) => (j === i ? { ...t, ...patch } : t)));
   const save = async () => { setSaving(true); try { await api("/api/admin/testimonials", "PUT", items); toast("Testimonials saved"); } catch { toast("Could not save", "info"); } setSaving(false); };
-  const add = () => setItems([...items, { id: `t-${Date.now()}`, author: "New customer", role: "Verified buyer", rating: 5, quote: "", accent: "#00E676", avatar: "/people/a1.jpg" }]);
+  const add = () => setItems([...items, { id: `t-${Date.now()}`, author: "New customer", role: "Verified buyer", rating: 5, quote: "", accent: "#FFB703", avatar: "/people/a1.jpg" }]);
 
   return (
     <div>

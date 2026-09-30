@@ -14,7 +14,7 @@ function blankSlide(slug: string): HeroSlide {
   return {
     id: `slide-${Date.now()}`, slug, eyebrow: "New", title: "New banner", subtitle: "",
     copy: "Describe the offer", buttonText: "Shop now", buttonLink: `/product/${slug}`,
-    from: "#0b3d2e", to: "#022018", overlay: 0, active: true,
+    from: "#131A2A", to: "#0D1320", overlay: 0, active: true,
   };
 }
 

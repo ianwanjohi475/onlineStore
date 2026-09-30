@@ -75,7 +75,7 @@ export function Hero() {
               </div>
               <div className="text-sm">
                 <div className="flex items-center gap-1 font-semibold">
-                  4.8 <Star size={13} className="fill-brand-500 text-brand-500" />
+                  4.8 <Star size={13} className="fill-amber-400 text-amber-400" />
                 </div>
                 <p className="text-xs text-muted">180k+ happy customers</p>
               </div>
@@ -125,7 +125,7 @@ export function Hero() {
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Star size={15} className="fill-brand-500 text-brand-500" />
+                <Star size={15} className="fill-amber-400 text-amber-400" />
                 <span className="text-xs font-semibold">{product.rating} · {product.reviewCount.toLocaleString()} reviews</span>
               </motion.div>
 

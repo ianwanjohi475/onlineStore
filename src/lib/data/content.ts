@@ -8,7 +8,7 @@ export const testimonials: Testimonial[] = [
     rating: 5,
     quote:
       "The FreePods 4 Pro genuinely rival buds twice the price. The noise cancelling on my matatu commute is unreal, and they lasted a full week before a recharge.",
-    accent: "#00E676",
+    accent: "#FFB703",
     avatar: "/people/a2.jpg",
   },
   {
@@ -18,7 +18,7 @@ export const testimonials: Testimonial[] = [
     rating: 5,
     quote:
       "Ordered a Watch Meta Ultra on flash sale and it arrived next day. The AMOLED screen is stunning and the battery really does go two weeks.",
-    accent: "#34F5C5",
+    accent: "#38BDF8",
     avatar: "/people/a3.jpg",
   },
   {
@@ -28,7 +28,7 @@ export const testimonials: Testimonial[] = [
     rating: 4,
     quote:
       "I've bought three cables and a power bank now. Everything just feels built to last — the braided cables haven't frayed at all after months of daily use.",
-    accent: "#7CFF6B",
+    accent: "#F97316",
     avatar: "/people/a5.jpg",
   },
   {
@@ -38,7 +38,7 @@ export const testimonials: Testimonial[] = [
     rating: 5,
     quote:
       "Customer support answered on WhatsApp within minutes and sorted my warranty claim the same day. That's why I keep coming back.",
-    accent: "#22F58C",
+    accent: "#3B82F6",
     avatar: "/people/a6.jpg",
   },
 ];
@@ -59,7 +59,7 @@ export const blogPosts: BlogPost[] = [
     category: "Buying guide",
     readMinutes: 5,
     date: "2026-07-18",
-    accent: ["#00E676", "#0B3D2E"],
+    accent: ["#FFB703", "#131A2A"],
     image: "/editorial/e1.jpg",
     author: "Njeri Kamau",
     body: body("noise cancellation"),
@@ -71,7 +71,7 @@ export const blogPosts: BlogPost[] = [
     category: "How-to",
     readMinutes: 4,
     date: "2026-07-11",
-    accent: ["#7CFF6B", "#123524"],
+    accent: ["#F97316", "#1C2538"],
     image: "/editorial/e2.jpg",
     author: "Brian Otieno",
     body: body("power banks"),
@@ -83,7 +83,7 @@ export const blogPosts: BlogPost[] = [
     category: "Wellness",
     readMinutes: 6,
     date: "2026-07-02",
-    accent: ["#34F5C5", "#0A2540"],
+    accent: ["#38BDF8", "#0A2540"],
     image: "/editorial/e3.jpg",
     author: "Dr. Amina Yusuf",
     body: body("wearable health tracking"),
@@ -95,7 +95,7 @@ export const blogPosts: BlogPost[] = [
     category: "Buying guide",
     readMinutes: 4,
     date: "2026-06-24",
-    accent: ["#22F58C", "#052E1C"],
+    accent: ["#3B82F6", "#0E2347"],
     image: "/editorial/e1.jpg",
     author: "Kevin Mwangi",
     body: body("earbud fit"),
@@ -107,7 +107,7 @@ export const blogPosts: BlogPost[] = [
     category: "Explainer",
     readMinutes: 5,
     date: "2026-06-15",
-    accent: ["#00E676", "#123524"],
+    accent: ["#FFB703", "#1C2538"],
     image: "/editorial/e2.jpg",
     author: "Grace Wambui",
     body: body("fast charging"),
@@ -119,7 +119,7 @@ export const blogPosts: BlogPost[] = [
     category: "How-to",
     readMinutes: 6,
     date: "2026-06-03",
-    accent: ["#34F5C5", "#0A2540"],
+    accent: ["#38BDF8", "#0A2540"],
     image: "/editorial/e3.jpg",
     author: "Daniel Mwangi",
     body: body("outdoor speakers"),

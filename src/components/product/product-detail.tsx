@@ -49,7 +49,7 @@ export function ProductDetail({ product }: { product: Product }) {
             <span className="font-display text-4xl font-bold">{formatPrice(product.price)}</span>
             {product.compareAt && <span className="text-lg text-muted line-through">{formatPrice(product.compareAt)}</span>}
           </div>
-          <p className={cn("mt-2 text-sm font-semibold", product.inStock ? "text-brand-600 dark:text-brand-400" : "text-rose-500")}>
+          <p className={cn("mt-2 text-sm font-semibold", product.inStock ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500")}>
             {product.inStock ? "● In stock — ships today" : "● Out of stock"}
           </p>
 

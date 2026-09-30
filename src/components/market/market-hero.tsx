@@ -74,7 +74,7 @@ export function MarketHero() {
 
         {/* banner poster carousel */}
         <div
-          className="relative overflow-hidden rounded-2xl border border-border"
+          className="relative overflow-hidden rounded-2xl bg-navy"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
@@ -85,19 +85,19 @@ export function MarketHero() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="relative grid h-full min-h-[380px] grid-cols-1 sm:grid-cols-[1.15fr_1fr]"
+              className="relative grid h-full min-h-[300px] grid-cols-1 sm:min-h-[380px] sm:grid-cols-[1.15fr_1fr]"
               style={{ background: `linear-gradient(125deg, ${slide.from}, ${slide.to})` }}
             >
               {/* decorative glow */}
-              <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 78% 42%, rgba(0,230,118,0.18), transparent 55%)" }} />
+              <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 78% 42%, rgba(255,183,3,0.16), transparent 55%)" }} />
 
               {/* copy */}
-              <div className="relative z-10 flex flex-col justify-center gap-3 p-7 text-white sm:p-8">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-500 px-2.5 py-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-white">
-                    <Zap size={11} className="fill-brand-950" /> Now in stock
+              <div className="relative z-10 flex flex-col justify-center gap-3 p-6 pb-10 text-white sm:p-8">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="inline-flex w-fit shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-cta px-2.5 py-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-navy">
+                    <Zap size={11} className="fill-navy" /> Now in stock
                   </span>
-                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-brand-300">{slide.eyebrow}</span>
+                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-cta">{slide.eyebrow}</span>
                 </div>
 
                 <h2 className="font-display text-2xl font-extrabold leading-[1.05] sm:text-3xl lg:text-[2.4rem]">
@@ -106,10 +106,10 @@ export function MarketHero() {
                 <p className="max-w-sm text-sm text-white/70">{slide.copy}</p>
 
                 {features.length > 0 && (
-                  <ul className="mt-1 grid max-w-md grid-cols-1 gap-x-5 gap-y-1.5 sm:grid-cols-2">
+                  <ul className="mt-1 hidden max-w-md grid-cols-2 gap-x-5 gap-y-1.5 sm:grid">
                     {features.map((f) => (
                       <li key={f} className="flex items-center gap-2 text-[0.82rem] text-white/85">
-                        <Check size={14} className="shrink-0 text-brand-400" strokeWidth={3} /> {f}
+                        <Check size={14} className="shrink-0 text-cta" strokeWidth={3} /> {f}
                       </li>
                     ))}
                   </ul>
@@ -124,7 +124,7 @@ export function MarketHero() {
                 <div className="mt-1 flex flex-wrap items-center gap-2.5">
                   <Link
                     href={slide.buttonLink || `/product/${slide.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-brand-600"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-cta px-6 py-2.5 text-sm font-bold text-navy shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-cta-600"
                   >
                     {slide.buttonText || "Shop now"} <ChevronRight size={16} />
                   </Link>
@@ -137,7 +137,7 @@ export function MarketHero() {
                     <MessageCircle size={16} /> WhatsApp
                   </a>
                 </div>
-                <p className="text-[0.68rem] font-medium uppercase tracking-wider text-white/45">Genuine product · 1-year warranty · SIR VERT ENTERPRISE</p>
+                <p className="hidden text-[0.68rem] font-medium uppercase tracking-wider text-white/45 sm:block">Genuine product · 1-year warranty · SIR VERT ENTERPRISE</p>
               </div>
 
               {/* product spotlight */}

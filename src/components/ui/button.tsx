@@ -7,12 +7,12 @@ type Size = "sm" | "md" | "lg" | "icon";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-brand-500 text-white hover:bg-brand-600 shadow-[0_10px_30px_-10px_var(--color-brand-500)] hover:shadow-glow",
+    "bg-cta text-navy font-bold hover:bg-cta-600 shadow-[0_10px_24px_-12px_var(--color-cta-700)]",
   outline:
-    "border border-border bg-transparent text-foreground hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400",
+    "border border-border bg-surface text-foreground hover:border-foreground/40 hover:bg-surface-2",
   ghost: "bg-transparent text-foreground hover:bg-surface-2",
   glass: "glass text-foreground hover:border-brand-500/50",
-  dark: "bg-foreground text-background hover:opacity-90",
+  dark: "bg-navy text-white hover:bg-navy-3",
 };
 
 const sizes: Record<Size, string> = {

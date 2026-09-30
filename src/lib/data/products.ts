@@ -41,7 +41,7 @@ const accentByCategory: Record<CategorySlug, string> = {
   computing: "#818CF8",     // indigo
   cameras: "#2DD4BF",       // teal
   accessories: "#FB923C",   // orange
-  "new-arrivals": "#00E676", // brand green
+  "new-arrivals": "#FFB703", // amber
 };
 
 /**
@@ -96,8 +96,8 @@ function make(seed: Seed): Product {
     compareAt: seed.compareAt,
     rating,
     reviewCount: seed.reviewCount ?? Math.round(38 + rating * 90),
-    accent: seed.accent ?? accentByCategory[seed.category] ?? "#00E676",
-    colors: seed.colors ?? ["#0B3D2E", "#F5F5F5"],
+    accent: seed.accent ?? accentByCategory[seed.category] ?? "#FFB703",
+    colors: seed.colors ?? ["#131A2A", "#F5F5F5"],
     badges: seed.badges ?? [],
     features: seed.features ?? [],
     specs: seed.specs ?? {},

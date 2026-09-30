@@ -20,7 +20,7 @@ export function NewsletterForm({ className }: { className?: string }) {
         setEmail("");
         setTimeout(() => setDone(false), 2500);
       }}
-      className={cn("flex w-full min-w-0 items-center gap-2 rounded-full border border-border bg-surface p-1.5", className)}
+      className={cn("flex w-full min-w-0 items-center gap-2 rounded-full border border-border bg-surface p-1.5 text-foreground", className)}
     >
       <input
         type="email"
@@ -33,7 +33,7 @@ export function NewsletterForm({ className }: { className?: string }) {
       />
       <button
         type="submit"
-        className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-brand-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-600 sm:px-5"
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-cta px-4 text-sm font-bold text-navy transition-colors hover:bg-cta-600 sm:px-5"
       >
         {done ? <Check size={16} /> : <>Subscribe <ArrowRight size={15} /></>}
       </button>

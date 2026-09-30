@@ -137,8 +137,8 @@ function ProductEditor({ product, categories, brands, onClose, onSaved }: { prod
   const toast = useToast();
   const [f, setF] = useState<Partial<Product>>(product ?? {
     name: "", tagline: "", category: categories[0]?.slug ?? "accessories", brand: brands[0]?.slug,
-    price: 0, rating: 4.5, reviewCount: 0, inStock: true, stock: 20, badges: [], colors: ["#0B3D2E", "#F5F5F5"],
-    features: [], specs: {}, description: "", image: null, accent: "#00E676",
+    price: 0, rating: 4.5, reviewCount: 0, inStock: true, stock: 20, badges: [], colors: ["#131A2A", "#F5F5F5"],
+    features: [], specs: {}, description: "", image: null, accent: "#FFB703",
   });
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof Product>(k: K, v: Product[K]) => setF((p) => ({ ...p, [k]: v }));

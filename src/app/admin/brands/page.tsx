@@ -27,7 +27,7 @@ export default function BrandsAdmin() {
     <div>
       <PageHeader title="Brands" subtitle="Manufacturers assigned to products" actions={
         <div className="flex gap-2">
-          <Btn variant="outline" onClick={() => setBrands([...brands, { slug: "", name: "New brand", color: "#00E676" }])}><Plus size={16} /> Add</Btn>
+          <Btn variant="outline" onClick={() => setBrands([...brands, { slug: "", name: "New brand", color: "#FFB703" }])}><Plus size={16} /> Add</Btn>
           <Btn disabled={saving} onClick={save}>{saving ? "Saving…" : "Save"}</Btn>
         </div>
       } />

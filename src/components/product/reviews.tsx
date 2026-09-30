@@ -47,7 +47,7 @@ export function Reviews({ product }: { product: Product }) {
         <div className="mt-5 flex flex-col gap-2">
           {breakdown.map((b) => (
             <div key={b.stars} className="flex items-center gap-2 text-xs">
-              <span className="flex w-8 items-center gap-0.5 text-muted">{b.stars}<Star size={11} className="fill-brand-500 text-brand-500" /></span>
+              <span className="flex w-8 items-center gap-0.5 text-muted">{b.stars}<Star size={11} className="fill-amber-400 text-amber-400" /></span>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
                 <div className="h-full rounded-full bg-brand-500" style={{ width: `${b.pct}%` }} />
               </div>

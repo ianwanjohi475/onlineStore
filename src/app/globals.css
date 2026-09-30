@@ -5,19 +5,28 @@
 
 /* ── Static design tokens ─────────────────────────────────── */
 @theme {
-  /* Deep, premium brand green — richer than the old minty emerald so buttons
-     and accents feel confident rather than loud. Still green (SIR VERT). */
-  --color-brand-50: #edfaf4;
-  --color-brand-100: #d2f3e3;
-  --color-brand-200: #a6e6c9;
-  --color-brand-300: #6ed2a8;
-  --color-brand-400: #34b884;
-  --color-brand-500: #0a8a5f;
-  --color-brand-600: #087550;
-  --color-brand-700: #075e41;
-  --color-brand-800: #064b35;
-  --color-brand-900: #053d2c;
-  --color-brand-950: #03241a;
+  /* Accent blue — links, highlights, active states (Amazon/Walmart feel). */
+  --color-brand-50: #eef5fd;
+  --color-brand-100: #d8e8fa;
+  --color-brand-200: #b3d1f5;
+  --color-brand-300: #7fb1ed;
+  --color-brand-400: #4a8fe3;
+  --color-brand-500: #0b62c4;
+  --color-brand-600: #0a53a8;
+  --color-brand-700: #0a4589;
+  --color-brand-800: #0c3a70;
+  --color-brand-900: #0e325d;
+  --color-brand-950: #0a1f3d;
+
+  /* Amber call-to-action buttons (Add to cart, Buy, Search) — dark text on top. */
+  --color-cta: #ffb703;
+  --color-cta-600: #f5a200;
+  --color-cta-700: #d98a00;
+
+  /* Navy chrome — header, footer, banners. */
+  --color-navy: #131a2a;
+  --color-navy-2: #1c2538;
+  --color-navy-3: #26314a;
 
   --radius-4xl: 2rem;
   --shadow-glow: 0 0 60px -12px color-mix(in oklab, var(--color-brand-500) 55%, transparent);
@@ -31,17 +40,15 @@
 }
 
 /* ── Semantic tokens that flip per theme ──────────────────── */
-/* True neutral greys. The old ones were green-tinted (#f7f9f8, #5b6b63…),
-   which made the whole site — background, borders, body text — read green.
-   Green is now reserved for the brand accent only. */
+/* True neutral greys; colour comes from the navy chrome and amber buttons. */
 :root {
-  --background: #f6f7f9;
+  --background: #f3f4f6;
   --surface: #ffffff;
   --surface-2: #f0f2f5;
   --foreground: #0f1419;
   --muted: #5d6673;
   --border: #e3e6eb;
-  --ring: #0a8a5f;
+  --ring: #0b62c4;
 }
 
 .dark {
@@ -51,7 +58,7 @@
   --foreground: #eceef1;
   --muted: #949ca8;
   --border: #252a31;
-  --ring: #34c38f;
+  --ring: #4a8fe3;
 }
 
 /* Map semantic tokens to Tailwind color utilities (resolved at runtime) */
@@ -113,8 +120,8 @@
     text-rendering: optimizeLegibility;
   }
   ::selection {
-    background: var(--color-brand-500);
-    color: #04150c;
+    background: var(--color-cta);
+    color: var(--color-navy);
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);

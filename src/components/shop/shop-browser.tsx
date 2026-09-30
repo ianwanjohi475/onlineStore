@@ -137,7 +137,7 @@ export function ShopBrowser({
               )}
             >
               {r === 0 ? "Any rating" : (
-                <><Star size={13} className="fill-brand-500 text-brand-500" /> {r.toFixed(1)} &amp; up</>
+                <><Star size={13} className="fill-amber-400 text-amber-400" /> {r.toFixed(1)} &amp; up</>
               )}
             </button>
           ))}

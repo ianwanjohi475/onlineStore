@@ -72,14 +72,14 @@ export function AddToCartButton({
         soldOut
           ? "bg-surface-2 text-muted"
           : state === "added"
-            ? "bg-brand-600 text-white shadow-[0_8px_24px_-8px_var(--color-brand-600)]"
-            : "bg-brand-500 text-white shadow-[0_6px_18px_-8px_var(--color-brand-500)] hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-[0_14px_30px_-10px_var(--color-brand-500)]",
+            ? "bg-emerald-600 text-white"
+            : "bg-cta font-bold text-navy shadow-[0_6px_16px_-8px_var(--color-cta-700)] hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_12px_24px_-10px_var(--color-cta-700)]",
         className,
       )}
     >
       {/* sheen sweep on hover */}
       {!soldOut && (
-        <span aria-hidden className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover/atc:translate-x-full" />
+        <span aria-hidden className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover/atc:translate-x-full" />
       )}
 
       <span className="relative flex items-center justify-center" style={{ gap: iconOnly ? 0 : undefined }}>

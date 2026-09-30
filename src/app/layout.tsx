@@ -71,8 +71,8 @@ export const revalidate = 60;
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#050a08" },
+    { media: "(prefers-color-scheme: light)", color: "#131a2a" },
+    { media: "(prefers-color-scheme: dark)", color: "#131a2a" },
   ],
   width: "device-width",
   initialScale: 1,

@@ -28,8 +28,8 @@ export default async function HomePage() {
       <CategoryStrip />
       <ProductBlock title="Top deals this week" subtitle="Biggest discounts, hand-picked" href="/flash-sales" products={topDeals} accent="#f43f5e" />
       <ProductBlock title="Best sellers" subtitle="What Kenya is buying right now" href="/shop?sort=popular" products={bestSellers.slice(0, 10)} />
-      <ProductBlock title="Sound & audio" subtitle="Earbuds, speakers and more" href="/categories/earbuds" products={audio} accent="#34f5c5" />
-      <ProductBlock title="Charge & power" subtitle="Power banks, chargers and cables" href="/categories/power-banks" products={power} accent="#7cff6b" />
+      <ProductBlock title="Sound & audio" subtitle="Earbuds, speakers and more" href="/categories/earbuds" products={audio} accent="#38BDF8" />
+      <ProductBlock title="Charge & power" subtitle="Power banks, chargers and cables" href="/categories/power-banks" products={power} accent="#F97316" />
       <ProductBlock title="New arrivals" subtitle="Fresh off the line" href="/categories/new-arrivals" products={newArrivals.slice(0, 10)} accent="#22e188" />
       <Stats />
       <Testimonials />

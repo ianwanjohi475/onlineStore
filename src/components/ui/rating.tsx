@@ -21,7 +21,7 @@ export function Rating({
             <Star
               key={i}
               size={size}
-              className={filled ? "fill-brand-500 text-brand-500" : "fill-transparent text-muted/50"}
+              className={filled ? "fill-amber-400 text-amber-400" : "fill-transparent text-muted/50"}
             />
           );
         })}

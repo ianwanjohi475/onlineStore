@@ -22,9 +22,9 @@ export function AnnouncementBar() {
   const m = messages[Math.min(i, messages.length - 1)];
 
   return (
-    <div className="relative bg-neutral-950 text-neutral-100 dark:bg-black">
+    <div className="relative bg-navy-2 text-white/90">
       <div className="container-x flex h-9 items-center justify-center gap-3 text-xs">
-        <Truck size={13} className="shrink-0 text-brand-400" />
+        <Truck size={13} className="shrink-0 text-cta" />
         <AnimatePresence mode="wait">
           <motion.div
             key={i}
@@ -35,7 +35,7 @@ export function AnnouncementBar() {
             className="flex items-center gap-2 truncate"
           >
             <span className="truncate font-medium">{m.text}</span>
-            <Link href={m.href} className="hidden shrink-0 items-center gap-0.5 font-semibold text-brand-300 hover:text-brand-200 sm:inline-flex">
+            <Link href={m.href} className="hidden shrink-0 items-center gap-0.5 font-semibold text-cta hover:text-white sm:inline-flex">
               {m.cta} <ChevronRight size={12} />
             </Link>
           </motion.div>
@@ -43,7 +43,7 @@ export function AnnouncementBar() {
         <button
           onClick={() => setClosed(true)}
           aria-label="Dismiss announcement"
-          className="absolute right-4 text-brand-200/70 transition-colors hover:text-white"
+          className="absolute right-4 text-white/60 transition-colors hover:text-white"
         >
           <X size={14} />
         </button>
