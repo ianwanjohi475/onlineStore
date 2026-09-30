@@ -111,7 +111,7 @@ export function Btn({
   ...props
 }: { variant?: "primary" | "outline" | "ghost" | "danger"; size?: "sm" | "md" } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const v = {
-    primary: "bg-cta font-bold text-navy hover:bg-cta-600",
+    primary: "bg-cta font-bold text-white hover:bg-cta-600",
     outline: "border border-border hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400",
     ghost: "hover:bg-surface-2 text-muted hover:text-foreground",
     danger: "bg-rose-500 text-white hover:bg-rose-600",
@@ -167,7 +167,7 @@ export function Toggle({ label, checked, onChange }: { label?: string; checked: 
 /* ── Search input ─────────────────────────────────────────── */
 export function SearchInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
       <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? "Search…"} className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none focus:border-brand-500 sm:w-64" />
     </div>

@@ -33,7 +33,7 @@ export function NewsletterForm({ className }: { className?: string }) {
       />
       <button
         type="submit"
-        className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-cta px-4 text-sm font-bold text-navy transition-colors hover:bg-cta-600 sm:px-5"
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-cta px-4 text-sm font-bold text-white transition-colors hover:bg-cta-600 sm:px-5"
       >
         {done ? <Check size={16} /> : <>Subscribe <ArrowRight size={15} /></>}
       </button>

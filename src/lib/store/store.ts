@@ -55,7 +55,7 @@ function assemble(raw: Partial<StoreData>): StoreData {
  * and customer suspensions are preserved. Admin edits made after a refresh
  * persist normally (every save re-stamps the current version).
  */
-const SEED_VERSION = 10;
+const SEED_VERSION = 11;
 
 type Persisted = StoreData & { seedVersion?: number };
 

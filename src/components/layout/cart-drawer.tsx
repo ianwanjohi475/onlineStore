@@ -7,18 +7,21 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/cart";
 import { formatPrice } from "@/lib/utils";
 import { ProductImage } from "@/components/product/product-image";
+import { Portal, useScrollLock } from "@/hooks/use-overlay";
 
 export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const cart = useCart();
   const remaining = Math.max(0, cart.freeShipThreshold - cart.subtotal);
   const progress = cart.freeShipProgress;
+  useScrollLock(open);
 
   return (
+    <Portal>
     <AnimatePresence>
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 z-[95] bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[115] bg-black/60"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -31,7 +34,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 34 }}
-            className="fixed inset-y-0 right-0 z-[96] flex w-[min(92vw,26rem)] flex-col bg-surface shadow-2xl"
+            className="fixed right-0 top-0 z-[116] flex h-dvh w-[min(92vw,26rem)] flex-col bg-surface shadow-2xl"
           >
             <header className="flex items-center justify-between border-b border-border p-5">
               <h2 className="flex items-center gap-2 font-display text-lg font-bold">
@@ -61,7 +64,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                     {remaining > 0 ? (
                       <>Add <b className="text-foreground">{formatPrice(remaining)}</b> for free shipping</>
                     ) : (
-                      <b className="text-brand-600 dark:text-brand-400">You&apos;ve unlocked free shipping! 🎉</b>
+                      <b className="text-emerald-600 dark:text-emerald-400">You&apos;ve unlocked free shipping! 🎉</b>
                     )}
                   </p>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
@@ -69,7 +72,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                   </div>
                 </div>
 
-                <ul className="flex-1 divide-y divide-border overflow-y-auto">
+                <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto overscroll-contain">
                   {cart.lines.map((line) => (
                     <li key={line.product.slug} className="flex gap-3 p-4">
                       <ProductImage product={line.product} className="size-20 shrink-0 rounded-xl" glow={false} />
@@ -100,7 +103,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                   ))}
                 </ul>
 
-                <footer className="space-y-3 border-t border-border p-5">
+                <footer className="space-y-3 border-t border-border p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
                   <div className="flex justify-between font-semibold">
                     <span>Subtotal</span>
                     <span className="tabular-nums">{formatPrice(cart.subtotal)}</span>
@@ -118,5 +121,6 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         </>
       )}
     </AnimatePresence>
+    </Portal>
   );
 }

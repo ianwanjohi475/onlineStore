@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Loader2, ShoppingBag } from "lucide-react";
 import { useRef, useState } from "react";
 import { useCart } from "@/context/cart";
-import { useToast } from "@/context/toast";
+import { useCartDrawer } from "@/context/cart-drawer";
+import { playCartSound } from "@/lib/cart-sound";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +32,7 @@ export function AddToCartButton({
   className?: string;
 }) {
   const cart = useCart();
-  const toast = useToast();
+  const { showAdded } = useCartDrawer();
   const [state, setState] = useState<State>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const iconOnly = variant === "icon";
@@ -44,10 +45,10 @@ export function AddToCartButton({
     // brief, deliberate loading beat so the feedback is felt, not skipped
     timer.current = setTimeout(() => {
       cart.add(product, quantity, color);
-      // Stay on the page (like Kilimall / Alibaba): a quick toast + the button's
-      // own "Added" state confirm it. The cart badge in the header ticks up, and
-      // the cart drawer opens only when the shopper chooses to click the cart.
-      toast(`${product.name} added to cart`);
+      // Original synthesised chime + the "Added to cart" panel with next steps
+      // (View cart / Checkout / Continue shopping) — the shopper stays on the page.
+      playCartSound();
+      showAdded(product, quantity);
       setState("added");
       timer.current = setTimeout(() => setState("idle"), 1500);
     }, 420);
@@ -73,7 +74,7 @@ export function AddToCartButton({
           ? "bg-surface-2 text-muted"
           : state === "added"
             ? "bg-emerald-600 text-white"
-            : "bg-cta font-bold text-navy shadow-[0_6px_16px_-8px_var(--color-cta-700)] hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_12px_24px_-10px_var(--color-cta-700)]",
+            : "bg-cta font-bold text-white shadow-[0_6px_16px_-8px_var(--color-cta-700)] hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_12px_24px_-10px_var(--color-cta-700)]",
         className,
       )}
     >

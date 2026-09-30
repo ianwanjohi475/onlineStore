@@ -69,11 +69,11 @@ export default function ProductsAdmin() {
 
       <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
         <SearchInput value={query} onChange={setQuery} placeholder="Search products" />
-        <select value={cat} onChange={(e) => setCat(e.target.value)} className="h-10 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500">
+        <select value={cat} onChange={(e) => setCat(e.target.value)} className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500 sm:flex-none">
           <option value="all">All categories</option>
           {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
         </select>
-        <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="h-10 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500">
+        <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 text-sm outline-none focus:border-brand-500 sm:flex-none">
           <option value="recent">Newest</option><option value="name">Name A–Z</option>
           <option value="price-asc">Price ↑</option><option value="price-desc">Price ↓</option><option value="stock">Low stock</option>
         </select>
@@ -87,21 +87,21 @@ export default function ProductsAdmin() {
           <EmptyState icon={Package} title="No products" desc="Add your first product to get started." action={<Btn onClick={() => setEditing("new")}><Plus size={16} /> Add product</Btn>} />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm [&_td]:px-3 [&_th]:px-3 sm:[&_td]:px-5 sm:[&_th]:px-5">
               <thead className="text-left text-xs uppercase tracking-wide text-muted">
                 <tr className="border-b border-border">
-                  <th className="w-10 px-4 py-3"><input type="checkbox" className="size-4 accent-brand-500" checked={slice.every((p) => selected.has(p.slug)) && slice.length > 0} onChange={(e) => setSelected((s) => { const n = new Set(s); slice.forEach((p) => e.target.checked ? n.add(p.slug) : n.delete(p.slug)); return n; })} /></th>
+                  <th className="hidden w-10 px-4 py-3 sm:table-cell"><input type="checkbox" className="size-4 accent-brand-500" checked={slice.every((p) => selected.has(p.slug)) && slice.length > 0} onChange={(e) => setSelected((s) => { const n = new Set(s); slice.forEach((p) => e.target.checked ? n.add(p.slug) : n.delete(p.slug)); return n; })} /></th>
                   <th className="px-3 py-3 font-semibold">Product</th>
                   <th className="hidden px-5 py-3 font-semibold md:table-cell">Category</th>
                   <th className="px-5 py-3 font-semibold">Price</th>
-                  <th className="px-5 py-3 font-semibold">Stock</th>
+                  <th className="hidden px-5 py-3 font-semibold sm:table-cell">Stock</th>
                   <th className="px-5 py-3 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {slice.map((p) => (
                   <tr key={p.slug} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3"><input type="checkbox" className="size-4 accent-brand-500" checked={selected.has(p.slug)} onChange={() => toggleSel(p.slug)} /></td>
+                    <td className="hidden px-4 py-3 sm:table-cell"><input type="checkbox" className="size-4 accent-brand-500" checked={selected.has(p.slug)} onChange={() => toggleSel(p.slug)} /></td>
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-3">
                         <ProductImage product={p} glow={false} className="size-11 shrink-0 rounded-lg" sizes="44px" />
@@ -109,8 +109,8 @@ export default function ProductsAdmin() {
                       </div>
                     </td>
                     <td className="hidden px-5 py-3 capitalize text-muted md:table-cell">{p.category}</td>
-                    <td className="px-5 py-3"><span className="font-semibold">{formatPrice(p.price)}</span>{p.compareAt && <span className="ml-1 text-xs text-muted line-through">{formatPrice(p.compareAt)}</span>}</td>
-                    <td className="px-5 py-3"><span className={`font-semibold tabular-nums ${(p.stock ?? 0) === 0 ? "text-rose-500" : (p.stock ?? 0) <= 5 ? "text-amber-600" : ""}`}>{p.stock ?? 0}</span></td>
+                    <td className="px-5 py-3"><span className="font-semibold">{formatPrice(p.price)}</span>{p.compareAt && <span className="block text-xs text-muted line-through sm:ml-1 sm:inline">{formatPrice(p.compareAt)}</span>}</td>
+                    <td className="hidden px-5 py-3 sm:table-cell"><span className={`font-semibold tabular-nums ${(p.stock ?? 0) === 0 ? "text-rose-500" : (p.stock ?? 0) <= 5 ? "text-amber-600" : ""}`}>{p.stock ?? 0}</span></td>
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => setEditing(p)} aria-label="Edit" className="grid size-9 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-foreground"><Pencil size={16} /></button>

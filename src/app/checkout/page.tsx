@@ -2,12 +2,14 @@
 
 import { Banknote, Check, CreditCard, Loader2, Lock, Smartphone } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OrderSummary } from "@/components/cart/order-summary";
 import { ProductImage } from "@/components/product/product-image";
 import { useCart } from "@/context/cart";
 import { rememberOrder } from "@/hooks/use-my-orders";
+import { OrderCard } from "@/components/orders/order-card";
+import type { PublicOrder } from "@/lib/order-public";
 import { cn, formatPrice } from "@/lib/utils";
 
 const steps = ["Details", "Payment", "Review"] as const;
@@ -35,22 +37,7 @@ export default function CheckoutPage() {
   const [customer, setCustomer] = useState({ name: "", email: "", phone: "", address: "", city: "" });
 
   if (done) {
-    return (
-      <div className="container-x flex flex-col items-center justify-center gap-5 py-28 text-center">
-        <div className="grid size-20 place-items-center rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-400">
-          <Check size={40} />
-        </div>
-        <h1 className="font-display text-3xl font-bold">Order confirmed 🎉</h1>
-        <p className="max-w-md text-muted">
-          Thank you! Your order <b className="text-foreground">{orderNo || "confirmed"}</b> is
-          confirmed. We&apos;ve sent tracking details to your phone and email.
-        </p>
-        <div className="flex gap-3">
-          <Button asChild><Link href="/track-order">Track order</Link></Button>
-          <Button asChild variant="outline"><Link href="/shop">Keep shopping</Link></Button>
-        </div>
-      </div>
-    );
+    return <OrderPlaced number={orderNo} />;
   }
 
   if (cart.hydrated && cart.lines.length === 0) {
@@ -227,6 +214,40 @@ export default function CheckoutPage() {
           </div>
           <OrderSummary />
         </aside>
+      </div>
+    </div>
+  );
+}
+
+/** Confirmation screen: the new order with its live tracker, plus next steps. */
+function OrderPlaced({ number }: { number: string }) {
+  const [order, setOrder] = useState<PublicOrder | null>(null);
+  useEffect(() => {
+    if (!number) return;
+    fetch(`/api/track?number=${encodeURIComponent(number)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setOrder(d))
+      .catch(() => {});
+  }, [number]);
+
+  return (
+    <div className="container-x max-w-2xl py-10 sm:py-14">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="grid size-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
+          <Check size={34} strokeWidth={3} />
+        </div>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">Thank you — order placed!</h1>
+        <p className="max-w-md text-sm text-muted">
+          Order <b className="text-foreground">{number || "confirmed"}</b> is saved on this device. Follow it any time from{" "}
+          <Link href="/track-order" className="font-semibold text-brand-600 hover:underline">My orders</Link> — no number to remember.
+        </p>
+      </div>
+      <div className="mt-6">
+        {order ? <OrderCard order={order} defaultOpen /> : <div className="h-56 animate-pulse rounded-2xl bg-surface-2" />}
+      </div>
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <Button asChild size="lg"><Link href="/track-order">View my orders</Link></Button>
+        <Button asChild size="lg" variant="outline"><Link href="/shop">Continue shopping</Link></Button>
       </div>
     </div>
   );

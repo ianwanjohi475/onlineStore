@@ -65,7 +65,7 @@ export default function OrdersAdmin() {
     else { setSort(key); setAsc(false); }
   };
 
-  const selectCls = "h-10 rounded-lg border border-border bg-surface px-3 text-sm capitalize outline-none focus:border-brand-500";
+  const selectCls = "h-10 rounded-lg border border-border bg-surface px-3 text-sm capitalize outline-none focus:border-brand-500 min-w-0 flex-1 sm:flex-none";
 
   return (
     <div>
@@ -82,7 +82,7 @@ export default function OrdersAdmin() {
           <option value="all">All payments</option>
           {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{titleCase(s)}</option>)}
         </select>
-        <div className="ml-auto"><Toggle label="Show archived" checked={showArchived} onChange={setShowArchived} /></div>
+        <div className="w-full sm:ml-auto sm:w-auto"><Toggle label="Show archived" checked={showArchived} onChange={setShowArchived} /></div>
       </Card>
 
       <Card>
@@ -92,14 +92,14 @@ export default function OrdersAdmin() {
           <EmptyState icon={ShoppingCart} title="No orders found" desc="Orders placed at checkout appear here automatically." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm [&_td]:px-3 [&_th]:px-3 sm:[&_td]:px-5 sm:[&_th]:px-5">
               <thead className="text-left text-xs uppercase tracking-wide text-muted">
                 <tr className="border-b border-border">
                   <th className="px-5 py-3 font-semibold"><SortBtn label="Order" active={sort === "number"} onClick={() => toggleSort("number")} /></th>
                   <th className="px-5 py-3 font-semibold">Customer</th>
                   <th className="hidden px-5 py-3 font-semibold md:table-cell"><SortBtn label="Date" active={sort === "date"} onClick={() => toggleSort("date")} /></th>
                   <th className="hidden px-5 py-3 font-semibold sm:table-cell">Payment</th>
-                  <th className="px-5 py-3 font-semibold">Status</th>
+                  <th className="hidden px-5 py-3 font-semibold sm:table-cell">Status</th>
                   <th className="px-5 py-3 text-right font-semibold"><SortBtn label="Total" active={sort === "total"} onClick={() => toggleSort("total")} right /></th>
                 </tr>
               </thead>
@@ -109,11 +109,12 @@ export default function OrdersAdmin() {
                     <td className="px-5 py-3">
                       <Link href={`/admin/orders/${o.id}`} onClick={(e) => e.stopPropagation()} className="font-medium group-hover:text-brand-600 dark:group-hover:text-brand-400">{o.number}</Link>
                       {o.archived && <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[0.6rem] text-muted">archived</span>}
+                      <div className="mt-1 sm:hidden"><StatusPill status={o.status} /></div>
                     </td>
                     <td className="px-5 py-3"><p className="font-medium">{o.customer.name}</p><p className="text-xs text-muted">{o.customer.city || o.customer.email}</p></td>
                     <td className="hidden px-5 py-3 text-muted md:table-cell">{new Date(o.date).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</td>
                     <td className="hidden px-5 py-3 sm:table-cell"><div className="flex flex-col items-start gap-1"><span className="text-xs text-muted">{o.payment}</span><StatusPill status={o.paymentStatus} /></div></td>
-                    <td className="px-5 py-3"><StatusPill status={o.status} /></td>
+                    <td className="hidden px-5 py-3 sm:table-cell"><StatusPill status={o.status} /></td>
                     <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatPrice(o.total)}</td>
                   </tr>
                 ))}

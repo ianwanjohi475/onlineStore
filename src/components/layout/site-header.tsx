@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Heart, Menu, Search, ShoppingBag, User } from "lucide-react";
+import { Heart, Menu, Package, Search, ShoppingBag, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCatalog } from "@/context/catalog";
@@ -10,11 +10,13 @@ import { useCartDrawer } from "@/context/cart-drawer";
 import { useWishlist } from "@/context/wishlist";
 import { cn } from "@/lib/utils";
 import { AnnouncementBar } from "./announcement-bar";
+import { AddedToCart } from "./added-to-cart";
 import { CartDrawer } from "./cart-drawer";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
 import { SearchCommand } from "./search-command";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { CategoryIcon } from "@/components/ui/category-icon";
 
 const navLinks = [
   { href: "/shop", label: "Shop" },
@@ -28,7 +30,7 @@ const navLinks = [
 function CountBadge({ count }: { count: number }) {
   if (!count) return null;
   return (
-    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-cta px-1 text-[0.6rem] font-extrabold text-navy tabular-nums ring-2 ring-navy">
+    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-brand-500 px-1 text-[0.6rem] font-extrabold text-white tabular-nums ring-2 ring-surface">
       {count > 9 ? "9+" : count}
     </span>
   );
@@ -55,37 +57,40 @@ export function SiteHeader() {
     <>
       <div className="sticky top-0 z-50">
         <AnnouncementBar />
-        <header className={cn("bg-navy text-white transition-shadow duration-300", scrolled && "shadow-[0_8px_24px_-12px_rgb(0_0_0/0.5)]")}>
+        <header className={cn("border-b border-border bg-surface text-foreground transition-shadow duration-300", scrolled && "shadow-[0_8px_24px_-16px_rgb(0_0_0/0.35)]")}>
           {/* main row: logo · search · actions */}
           <div className="container-x flex h-16 items-center gap-3">
-            <button onClick={() => setMenuOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full hover:bg-white/10 lg:hidden">
+            <button onClick={() => setMenuOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full hover:bg-surface-2 lg:hidden">
               <Menu size={20} />
             </button>
-            <Logo onDark />
+            <Logo />
 
             {/* desktop search bar */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="ml-4 hidden h-11 flex-1 items-center gap-2 overflow-hidden rounded-lg bg-white pl-4 text-sm text-slate-500 ring-cta transition-shadow hover:ring-2 lg:flex"
+              className="ml-4 hidden h-11 flex-1 items-center gap-2 overflow-hidden rounded-full border-2 border-brand-500 bg-surface pl-4 text-sm text-muted transition-shadow hover:shadow-[0_0_0_4px_rgb(249_115_22/0.15)] lg:flex"
             >
               <Search size={17} />
               <span className="flex-1 text-left">Search products, brands and categories…</span>
-              <span className="grid h-full place-items-center bg-cta px-5 text-sm font-bold text-navy">Search</span>
+              <span className="grid h-full place-items-center bg-brand-500 px-6 text-sm font-bold text-white">Search</span>
             </button>
 
             <div className="flex-1 lg:hidden" />
 
             {/* actions */}
             <div className="flex items-center gap-1">
-              <div className="hidden sm:block"><ThemeToggle onDark /></div>
-              <Link href="/account" aria-label="Account" className="hidden size-10 place-items-center rounded-full hover:bg-white/10 sm:grid">
+              <div className="hidden sm:block"><ThemeToggle /></div>
+              <Link href="/track-order" aria-label="My orders" className="hidden h-10 items-center gap-1.5 rounded-full px-3 text-sm font-semibold hover:bg-surface-2 md:flex">
+                <Package size={19} /> Orders
+              </Link>
+              <Link href="/account" aria-label="Account" className="hidden size-10 place-items-center rounded-full hover:bg-surface-2 sm:grid">
                 <User size={19} />
               </Link>
-              <Link href="/wishlist" aria-label="Wishlist" className="relative grid size-10 place-items-center rounded-full hover:bg-white/10">
+              <Link href="/wishlist" aria-label="Wishlist" className="relative grid size-10 place-items-center rounded-full hover:bg-surface-2">
                 <Heart size={19} />
                 <CountBadge count={wishlist.hydrated ? wishlist.count : 0} />
               </Link>
-              <button onClick={() => setCartOpen(true)} aria-label="Cart" className="relative grid size-10 place-items-center rounded-full hover:bg-white/10">
+              <button onClick={() => setCartOpen(true)} aria-label="Cart" className="relative grid size-10 place-items-center rounded-full hover:bg-surface-2">
                 <ShoppingBag size={19} />
                 <CountBadge count={cart.hydrated ? cart.count : 0} />
               </button>
@@ -96,19 +101,19 @@ export function SiteHeader() {
           <div className="container-x pb-3 lg:hidden">
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex h-10 w-full items-center gap-2 overflow-hidden rounded-lg bg-white pl-3 text-sm text-slate-500"
+              className="flex h-10 w-full items-center gap-2 overflow-hidden rounded-full border-2 border-brand-500 bg-surface pl-3 text-sm text-muted"
             >
               <Search size={17} className="shrink-0" />
               <span className="flex-1 truncate text-left">Search SIR VERT…</span>
-              <span className="grid h-full shrink-0 place-items-center bg-cta px-4 text-navy"><Search size={17} strokeWidth={2.5} /></span>
+              <span className="grid h-full shrink-0 place-items-center bg-brand-500 px-4 text-white"><Search size={17} strokeWidth={2.5} /></span>
             </button>
           </div>
 
           {/* secondary nav row (desktop) */}
-          <div className="hidden bg-navy-2 lg:block">
+          <div className="hidden border-t border-border lg:block">
             <div className="container-x flex h-10 items-center gap-1">
               <div onMouseEnter={() => setMegaOpen(true)} onMouseLeave={() => setMegaOpen(false)} className="relative">
-                <Link href="/categories" className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-white/10">
+                <Link href="/categories" className="flex items-center gap-1.5 rounded-md bg-brand-500 px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-brand-600">
                   <Menu size={15} /> All categories
                 </Link>
                 <AnimatePresence>
@@ -117,8 +122,8 @@ export function SiteHeader() {
                       <div className="card-surface grid grid-cols-2 gap-2 p-3 text-foreground shadow-card">
                         {categories.map((c) => (
                           <Link key={c.slug} href={`/categories/${c.slug}`} className="group flex items-center gap-3 rounded-2xl p-3 transition-colors hover:bg-surface-2">
-                            <span className="grid size-11 shrink-0 place-items-center rounded-xl text-white" style={{ background: `linear-gradient(135deg, ${c.gradient[0]}, ${c.gradient[1]})` }}>
-                              <span className="size-2.5 rounded-full bg-white/90" />
+                            <span className="grid size-11 shrink-0 place-items-center rounded-xl" style={{ background: `color-mix(in oklab, ${c.gradient[0]} 16%, transparent)` }}>
+                              <CategoryIcon slug={c.slug} className="size-7" />
                             </span>
                             <span>
                               <span className="block text-sm font-semibold group-hover:text-brand-600 dark:group-hover:text-brand-400">{c.name}</span>
@@ -131,9 +136,9 @@ export function SiteHeader() {
                   )}
                 </AnimatePresence>
               </div>
-              <span className="mx-1 h-4 w-px bg-white/20" />
+              <span className="mx-2 h-4 w-px bg-border" />
               {navLinks.map((l) => (
-                <Link key={l.href} href={l.href} className="rounded-md px-3 py-1.5 text-sm font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white">
+                <Link key={l.href} href={l.href} className="rounded-md px-3 py-1.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-white/5">
                   {l.label}
                 </Link>
               ))}
@@ -144,6 +149,7 @@ export function SiteHeader() {
 
       <SearchCommand open={searchOpen} onClose={() => setSearchOpen(false)} />
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <AddedToCart />
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );

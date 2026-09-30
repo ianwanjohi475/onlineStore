@@ -54,7 +54,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 h-11 w-full rounded-full bg-cta font-bold text-navy transition-colors hover:bg-cta-600 disabled:opacity-60"
+            className="mt-4 h-11 w-full rounded-full bg-cta font-bold text-white transition-colors hover:bg-cta-600 disabled:opacity-60"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>

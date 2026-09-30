@@ -57,7 +57,7 @@ export function Pwa() {
           </div>
           <button
             onClick={install}
-            className="rounded-full bg-cta px-3 py-1.5 text-xs font-bold text-navy transition-colors hover:bg-cta-600"
+            className="rounded-full bg-cta px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-cta-600"
           >
             Install
           </button>

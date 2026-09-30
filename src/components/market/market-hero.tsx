@@ -1,19 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  BatteryCharging, Cable, Camera, Check, ChevronRight, Headphones, Home, Monitor, MessageCircle,
-  Rocket, Speaker, Sparkles, Truck, Watch, Zap, type LucideIcon,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, LayoutGrid, Package, Truck, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ProductImage } from "@/components/product/product-image";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { useCatalog } from "@/context/catalog";
 import { discountPercent, formatPrice } from "@/lib/utils";
-
-const icons: Record<string, LucideIcon> = {
-  Headphones, Watch, BatteryCharging, Zap, Cable, Speaker, Home, Monitor, Camera, Sparkles, Rocket,
-};
+import { PosterSlide } from "./poster-slide";
 
 export function MarketHero() {
   const { productMap, categories, settings } = useCatalog();
@@ -30,16 +25,16 @@ export function MarketHero() {
 
   useEffect(() => {
     if (paused || slides.length === 0) return;
-    const id = setInterval(() => setI((n) => (n + 1) % slides.length), 5500);
-    return () => clearInterval(id);
-  }, [paused, slides.length]);
+    const id = setTimeout(() => setI((n) => (n + 1) % slides.length), 5500);
+    return () => clearTimeout(id);
+  }, [paused, slides.length, i]);
+
+  const next = () => setI((n) => (n + 1) % Math.max(slides.length, 1));
+  const prev = () => setI((n) => (n - 1 + slides.length) % Math.max(slides.length, 1));
 
   if (slides.length === 0) return null;
   const slide = slides[Math.min(i, slides.length - 1)];
   const product = productMap[slide.slug];
-  const off = product.compareAt ? discountPercent(product.compareAt, product.price) : 0;
-  const features = (product.features ?? []).slice(0, 4);
-  const wa = settings.whatsapp ? `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}` : "/contact";
 
   // Biggest-discount product, shown on the Flash Sale promo card.
   const deal = Object.values(productMap)
@@ -52,18 +47,17 @@ export function MarketHero() {
         {/* category sidebar */}
         <aside className="hidden overflow-hidden rounded-2xl border border-border bg-surface lg:block">
           <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-bold">
-            <Sparkles size={15} className="text-brand-500" /> Categories
+            <LayoutGrid size={15} className="text-brand-500" /> Categories
           </div>
           <nav className="p-1.5">
             {categories.map((c) => {
-              const Icon = icons[c.icon] ?? Sparkles;
               return (
                 <Link
                   key={c.slug}
                   href={`/categories/${c.slug}`}
-                  className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-brand-500/10"
+                  className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-white/5"
                 >
-                  <Icon size={17} className="text-muted transition-colors group-hover:text-brand-600 dark:group-hover:text-brand-400" />
+                  <CategoryIcon slug={c.slug} className="size-5" />
                   <span className="flex-1 font-medium">{c.name}</span>
                   <ChevronRight size={14} className="text-muted opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>
@@ -74,95 +68,53 @@ export function MarketHero() {
 
         {/* banner poster carousel */}
         <div
-          className="relative overflow-hidden rounded-2xl bg-navy"
+          className="group/poster relative h-[250px] overflow-hidden rounded-2xl shadow-sm sm:h-[360px] lg:h-auto lg:min-h-[400px]"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
-              key={slide.slug}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              className="relative grid h-full min-h-[300px] grid-cols-1 sm:min-h-[380px] sm:grid-cols-[1.15fr_1fr]"
-              style={{ background: `linear-gradient(125deg, ${slide.from}, ${slide.to})` }}
+              key={slide.id}
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -50) next();
+                else if (info.offset.x > 50) prev();
+              }}
+              className="absolute inset-0"
             >
-              {/* decorative glow */}
-              <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 78% 42%, rgba(255,183,3,0.16), transparent 55%)" }} />
-
-              {/* copy */}
-              <div className="relative z-10 flex flex-col justify-center gap-3 p-6 pb-10 text-white sm:p-8">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="inline-flex w-fit shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-cta px-2.5 py-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-navy">
-                    <Zap size={11} className="fill-navy" /> Now in stock
-                  </span>
-                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-cta">{slide.eyebrow}</span>
-                </div>
-
-                <h2 className="font-display text-2xl font-extrabold leading-[1.05] sm:text-3xl lg:text-[2.4rem]">
-                  {slide.headline ?? slide.title}
-                </h2>
-                <p className="max-w-sm text-sm text-white/70">{slide.copy}</p>
-
-                {features.length > 0 && (
-                  <ul className="mt-1 hidden max-w-md grid-cols-2 gap-x-5 gap-y-1.5 sm:grid">
-                    {features.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-[0.82rem] text-white/85">
-                        <Check size={14} className="shrink-0 text-cta" strokeWidth={3} /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                <div className="mt-1 flex items-center gap-3">
-                  <span className="font-display text-3xl font-extrabold">{formatPrice(product.price)}</span>
-                  {product.compareAt && <span className="text-sm text-white/50 line-through">{formatPrice(product.compareAt)}</span>}
-                  {off > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">-{off}%</span>}
-                </div>
-
-                <div className="mt-1 flex flex-wrap items-center gap-2.5">
-                  <Link
-                    href={slide.buttonLink || `/product/${slide.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-cta px-6 py-2.5 text-sm font-bold text-navy shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-cta-600"
-                  >
-                    {slide.buttonText || "Shop now"} <ChevronRight size={16} />
-                  </Link>
-                  <a
-                    href={wa}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white/60"
-                  >
-                    <MessageCircle size={16} /> WhatsApp
-                  </a>
-                </div>
-                <p className="hidden text-[0.68rem] font-medium uppercase tracking-wider text-white/45 sm:block">Genuine product · 1-year warranty · SIR VERT ENTERPRISE</p>
-              </div>
-
-              {/* product spotlight */}
-              <div className="relative hidden items-center justify-center p-6 sm:flex">
-                <div className="relative aspect-square w-[86%] max-w-[300px]">
-                  {off > 0 && (
-                    <span className="absolute -left-1 top-2 z-10 rounded-full bg-rose-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">-{off}%</span>
-                  )}
-                  <ProductImage product={product} priority sizes="320px" glow={false} className="absolute inset-0 rounded-2xl bg-white shadow-2xl ring-1 ring-black/5" />
-                </div>
-              </div>
+              <Link href={slide.buttonLink || `/product/${slide.slug}`} draggable={false} aria-label={`${slide.title} — ${slide.buttonText || "Shop now"}`} className="block h-full">
+                <PosterSlide slide={slide} product={product} priority={i === 0} />
+              </Link>
             </motion.div>
           </AnimatePresence>
 
-          <div className="absolute bottom-4 left-8 flex gap-1.5">
-            {slides.map((s, n) => (
-              <button
-                key={s.slug}
-                onClick={() => setI(n)}
-                aria-label={`Slide ${n + 1}`}
-                className="h-1.5 rounded-full bg-white transition-all"
-                style={{ width: n === i ? 26 : 8, opacity: n === i ? 1 : 0.4 }}
-              />
-            ))}
-          </div>
+          {slides.length > 1 && (
+            <>
+              <button onClick={prev} aria-label="Previous banner" className="absolute left-2 top-1/2 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-white/80 text-[#111] opacity-0 shadow-md backdrop-blur transition-opacity group-hover/poster:opacity-100 sm:grid">
+                <ChevronLeft size={20} />
+              </button>
+              <button onClick={next} aria-label="Next banner" className="absolute right-2 top-1/2 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-white/80 text-[#111] opacity-0 shadow-md backdrop-blur transition-opacity group-hover/poster:opacity-100 sm:grid">
+                <ChevronRight size={20} />
+              </button>
+              <div className="absolute bottom-7 right-4 z-10 flex gap-1.5 sm:bottom-10 sm:left-1/2 sm:right-auto sm:-translate-x-1/2">
+                {slides.map((s, n) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setI(n)}
+                    aria-label={`Banner ${n + 1}`}
+                    className="h-1.5 rounded-full bg-[#111] transition-all"
+                    style={{ width: n === i ? 22 : 7, opacity: n === i ? 0.9 : 0.3 }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* side promo cards */}
@@ -195,6 +147,21 @@ export function MarketHero() {
             </span>
           </Link>
         </div>
+      </div>
+
+      {/* quick links under the banner on phones & tablets */}
+      <div className="mt-3 grid grid-cols-4 gap-2 xl:hidden">
+        {[
+          { href: "/flash-sales", label: "Flash Sale", icon: Flame, tint: "bg-rose-50 text-rose-600 dark:bg-rose-500/10" },
+          { href: "/track-order", label: "My Orders", icon: Package, tint: "bg-brand-50 text-brand-600 dark:bg-brand-500/10" },
+          { href: "/services", label: "Services", icon: Wrench, tint: "bg-sky-50 text-sky-600 dark:bg-sky-500/10" },
+          { href: "/shipping", label: "Delivery", icon: Truck, tint: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" },
+        ].map((q) => (
+          <Link key={q.href} href={q.href} className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-surface py-2.5 text-[11px] font-semibold transition-colors hover:border-brand-500/40">
+            <span className={`grid size-9 place-items-center rounded-full ${q.tint}`}><q.icon size={18} /></span>
+            {q.label}
+          </Link>
+        ))}
       </div>
     </section>
   );

@@ -80,7 +80,7 @@ export default function PaymentsAdmin() {
     URL.revokeObjectURL(url);
   };
 
-  const selectCls = "h-10 rounded-lg border border-border bg-surface px-3 text-sm capitalize outline-none focus:border-brand-500";
+  const selectCls = "h-10 rounded-lg border border-border bg-surface px-3 text-sm capitalize outline-none focus:border-brand-500 min-w-0 flex-1 sm:flex-none";
 
   return (
     <div>
@@ -126,7 +126,7 @@ export default function PaymentsAdmin() {
           <EmptyState icon={CreditCard} title="No transactions" desc="Payments from orders will appear here." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm [&_td]:px-3 [&_th]:px-3 sm:[&_td]:px-5 sm:[&_th]:px-5">
               <thead className="text-left text-xs uppercase tracking-wide text-muted">
                 <tr className="border-b border-border">
                   <th className="px-5 py-3 font-semibold">Reference</th>

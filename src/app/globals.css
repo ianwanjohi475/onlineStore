@@ -5,28 +5,28 @@
 
 /* ── Static design tokens ─────────────────────────────────── */
 @theme {
-  /* Accent blue — links, highlights, active states (Amazon/Walmart feel). */
-  --color-brand-50: #eef5fd;
-  --color-brand-100: #d8e8fa;
-  --color-brand-200: #b3d1f5;
-  --color-brand-300: #7fb1ed;
-  --color-brand-400: #4a8fe3;
-  --color-brand-500: #0b62c4;
-  --color-brand-600: #0a53a8;
-  --color-brand-700: #0a4589;
-  --color-brand-800: #0c3a70;
-  --color-brand-900: #0e325d;
-  --color-brand-950: #0a1f3d;
+  /* Marketplace orange — buttons, links, highlights, price tags. */
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316;
+  --color-brand-600: #dc4a0c;
+  --color-brand-700: #b93d0a;
+  --color-brand-800: #9a3412;
+  --color-brand-900: #7c2d12;
+  --color-brand-950: #431407;
 
-  /* Amber call-to-action buttons (Add to cart, Buy, Search) — dark text on top. */
-  --color-cta: #ffb703;
-  --color-cta-600: #f5a200;
-  --color-cta-700: #d98a00;
+  /* Call-to-action buttons (Add to cart, Buy, Search) — white text on top. */
+  --color-cta: #f97316;
+  --color-cta-600: #ea580c;
+  --color-cta-700: #c2410c;
 
-  /* Navy chrome — header, footer, banners. */
-  --color-navy: #131a2a;
-  --color-navy-2: #1c2538;
-  --color-navy-3: #26314a;
+  /* Charcoal — footer and dark panels. */
+  --color-navy: #1b1d22;
+  --color-navy-2: #23262d;
+  --color-navy-3: #2e323b;
 
   --radius-4xl: 2rem;
   --shadow-glow: 0 0 60px -12px color-mix(in oklab, var(--color-brand-500) 55%, transparent);
@@ -48,7 +48,7 @@
   --foreground: #0f1419;
   --muted: #5d6673;
   --border: #e3e6eb;
-  --ring: #0b62c4;
+  --ring: #f97316;
 }
 
 .dark {
@@ -58,7 +58,7 @@
   --foreground: #eceef1;
   --muted: #949ca8;
   --border: #252a31;
-  --ring: #4a8fe3;
+  --ring: #fb923c;
 }
 
 /* Map semantic tokens to Tailwind color utilities (resolved at runtime) */
@@ -120,8 +120,8 @@
     text-rendering: optimizeLegibility;
   }
   ::selection {
-    background: var(--color-cta);
-    color: var(--color-navy);
+    background: var(--color-brand-200);
+    color: #1b1d22;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
