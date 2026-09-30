@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Eye, Heart } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -14,7 +13,7 @@ import { AddToCartButton } from "./add-to-cart-button";
 import { ProductImage } from "./product-image";
 import { QuickView } from "./quick-view";
 
-export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+export function ProductCard({ product }: { product: Product; index?: number }) {
   const wishlist = useWishlist();
   const toast = useToast();
   const [quickOpen, setQuickOpen] = useState(false);
@@ -24,13 +23,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
 
   return (
     <>
-      <motion.article
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.45, delay: (index % 4) * 0.05 }}
-        className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/40 hover:shadow-card"
-      >
+      <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-[border-color,box-shadow] duration-200 hover:border-brand-500/40 hover:shadow-card">
         {/* media */}
         <div className="relative">
           <Link href={`/product/${product.slug}`} aria-label={product.name}>
@@ -74,7 +67,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
 
           <AddToCartButton product={product} variant="full" className="mt-3" />
         </div>
-      </motion.article>
+      </article>
 
       <QuickView product={product} open={quickOpen} onClose={() => setQuickOpen(false)} />
     </>

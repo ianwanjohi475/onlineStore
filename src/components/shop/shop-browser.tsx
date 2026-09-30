@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LayoutGrid, Rows3, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ProductCard } from "@/components/product/product-card";
-import { ProductCardSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useCatalog } from "@/context/catalog";
 import type { CategorySlug, Product } from "@/lib/types";
@@ -34,6 +33,11 @@ export function ShopBrowser({
   const { categories } = useCatalog();
   const [active, setActive] = useState<CategorySlug | "all">(initialCategory ?? "all");
   const [sort, setSort] = useState<Sort>(initialSort);
+  // /shop is prerendered; pick up ?sort= from the URL on the client
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("sort");
+    if (q && sorts.some((x) => x.value === q)) setSort(q as Sort);
+  }, []);
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
   const [minRating, setMinRating] = useState(0);
   const [onlySale, setOnlySale] = useState(false);
@@ -41,7 +45,6 @@ export function ShopBrowser({
   const [query, setQuery] = useState("");
   const [cols, setCols] = useState<3 | 4>(3);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(PER_PAGE);
 
   const counts = useMemo(() => {
@@ -69,12 +72,9 @@ export function ShopBrowser({
     return [...list].sort(by[sort]);
   }, [products, active, sort, maxPrice, minRating, onlySale, inStockOnly, query]);
 
-  // brief loading pulse on any change — smooths reflow and reads as intentional
+  // filters change → start from the first page again (instant, no fake loading)
   useEffect(() => {
-    setLoading(true);
     setVisible(PER_PAGE);
-    const t = setTimeout(() => setLoading(false), 320);
-    return () => clearTimeout(t);
   }, [active, sort, maxPrice, minRating, onlySale, inStockOnly, query]);
 
   const filtersActive =
@@ -228,15 +228,11 @@ export function ShopBrowser({
 
         {/* count */}
         <p className="mb-5 text-sm text-muted">
-          {loading ? "Updating…" : <><b className="text-foreground">{filtered.length}</b> product{filtered.length !== 1 && "s"}{filtersActive && " match your filters"}</>}
+          <b className="text-foreground">{filtered.length}</b> product{filtered.length !== 1 && "s"}{filtersActive && " match your filters"}
         </p>
 
         {/* grid */}
-        {loading ? (
-          <div className={cn("grid grid-cols-2 gap-4", cols === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4")}>
-            {Array.from({ length: cols === 3 ? 6 : 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="card-surface flex flex-col items-center gap-3 p-14 text-center">
             <div className="grid size-14 place-items-center rounded-full bg-surface-2 text-muted"><Search size={24} /></div>
             <p className="font-semibold">No products match your filters</p>
@@ -245,17 +241,9 @@ export function ShopBrowser({
           </div>
         ) : (
           <>
-            <AnimatePresence mode="popLayout">
-              <motion.div
-                key={`${active}-${sort}-${minRating}-${cols}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className={cn("grid grid-cols-2 gap-4", cols === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4")}
-              >
-                {shown.map((p, i) => <ProductCard key={p.slug} product={p} index={i} />)}
-              </motion.div>
-            </AnimatePresence>
+            <div className={cn("grid grid-cols-2 gap-3 sm:gap-4", cols === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4")}>
+              {shown.map((p) => <ProductCard key={p.slug} product={p} />)}
+            </div>
 
             {visible < filtered.length && (
               <div className="mt-10 flex flex-col items-center gap-3">

@@ -10,10 +10,22 @@
 
 export const ADMIN_COOKIE = "sv_admin";
 
+/** On the live site (Vercel) the admin stays LOCKED until ADMIN_PASSWORD is set:
+ *  the fallback secret/password below are public (they're in the source code),
+ *  so using them in production would let anyone forge an admin login. */
+const HOSTED = process.env.VERCEL === "1";
+export const ADMIN_CONFIGURED = !!process.env.ADMIN_PASSWORD;
+const ADMIN_LOCKED = HOSTED && !ADMIN_CONFIGURED;
+
 const SESSION_SECRET =
   process.env.ADMIN_SESSION_SECRET ||
   process.env.ADMIN_PASSWORD ||
   "sirvert-dev-secret-change-me";
+
+/** True when the admin is disabled because no password has been configured. */
+export function adminLocked() {
+  return ADMIN_LOCKED;
+}
 
 const encoder = new TextEncoder();
 
@@ -51,7 +63,7 @@ export async function createSession(ttlMs = 7 * 24 * 60 * 60 * 1000): Promise<st
 
 /** Verify a session token: correct signature AND not expired. */
 export async function verifySession(token?: string | null): Promise<boolean> {
-  if (!token) return false;
+  if (ADMIN_LOCKED || !token) return false;
   const dot = token.indexOf(".");
   if (dot <= 0) return false;
   const exp = token.slice(0, dot);
@@ -63,6 +75,7 @@ export async function verifySession(token?: string | null): Promise<boolean> {
 
 /** Constant-time password check against ADMIN_PASSWORD (default "admin123"). */
 export function checkPassword(pw: string): boolean {
+  if (ADMIN_LOCKED) return false;
   const expected = process.env.ADMIN_PASSWORD || "admin123";
   return constantTimeEqual(String(pw ?? ""), expected);
 }

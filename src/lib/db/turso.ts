@@ -58,6 +58,16 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS settings (id TEXT PRIMARY KEY, data TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS suspended_customers (email TEXT PRIMARY KEY)`,
   `CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS users (
+     id TEXT PRIMARY KEY,
+     email TEXT NOT NULL UNIQUE,
+     name TEXT,
+     phone TEXT,
+     password_hash TEXT NOT NULL,
+     created_at TEXT NOT NULL,
+     session_version INTEGER NOT NULL DEFAULT 1
+   )`,
+  `CREATE INDEX IF NOT EXISTS idx_orders_user ON orders (json_extract(data, '$.userId'))`,
 ];
 
 /** Create tables/indexes once per process. Safe to call on every request. */

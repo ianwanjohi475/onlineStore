@@ -44,16 +44,11 @@ const accentByCategory: Record<CategorySlug, string> = {
   "new-arrivals": "#FFB703", // amber
 };
 
-/**
- * The uploaded product photos are shot on green shop shelves, which makes the
- * whole storefront look green and less premium. So by default the catalogue
- * uses the clean studio renders (see ProductArt). The real photos are still in
- * the repo and can be turned back on by flipping this flag, or replaced one by
- * one with proper white-background shots from Admin → Products.
- */
+/** Show the real shop photos. Products without one get an empty image slot
+ *  until a photo is added from Admin → Products. */
 const USE_SHELF_PHOTOS = true;
 
-/** Real product photography keyed by slug (currently off — see USE_SHELF_PHOTOS). */
+/** Real product photography keyed by slug. */
 const photoBySlug: Record<string, string> = {
   spacebuds: "/products/spacebuds.jpg",
   "spacebuds-neo": "/products/spacebuds-neo.jpg",

@@ -8,16 +8,7 @@ export const metadata: Metadata = {
   description: "Browse the full range — earbuds, smartwatches, power banks, chargers, home appliances, computer accessories and cameras. Filter by category, price and rating.",
 };
 
-export default async function ShopPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ sort?: string }>;
-}) {
-  const { sort } = await searchParams;
-  const initialSort = (["popular", "price-asc", "price-desc", "rating", "new"].includes(sort ?? "")
-    ? sort
-    : "popular") as "popular" | "price-asc" | "price-desc" | "rating" | "new";
-
+export default async function ShopPage() {
   return (
     <>
       <PageHero
@@ -27,7 +18,7 @@ export default async function ShopPage({
         description="Genuine tech, filtered your way. Every product ships fast and carries a warranty."
         crumbs={[{ label: "Shop" }]}
       />
-      <ShopBrowser products={await getProducts()} initialSort={initialSort} />
+      <ShopBrowser products={await getProducts()} />
     </>
   );
 }

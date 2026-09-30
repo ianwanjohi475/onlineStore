@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ADMIN_COOKIE, verifySession } from "@/lib/admin/auth";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const authed = await verifySession(req.cookies.get(ADMIN_COOKIE)?.value);
   const { pathname } = req.nextUrl;
 

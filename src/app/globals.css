@@ -5,23 +5,26 @@
 
 /* ── Static design tokens ─────────────────────────────────── */
 @theme {
-  /* Marketplace orange — buttons, links, highlights, price tags. */
-  --color-brand-50: #fff7ed;
-  --color-brand-100: #ffedd5;
-  --color-brand-200: #fed7aa;
-  --color-brand-300: #fdba74;
-  --color-brand-400: #fb923c;
-  --color-brand-500: #f97316;
-  --color-brand-600: #dc4a0c;
-  --color-brand-700: #b93d0a;
-  --color-brand-800: #9a3412;
-  --color-brand-900: #7c2d12;
-  --color-brand-950: #431407;
+  /* Trust blue — buttons, links, highlights (clean, not orange like Jumia). */
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dce8ff;
+  --color-brand-200: #bcd3ff;
+  --color-brand-300: #8db4ff;
+  --color-brand-400: #5a8ef7;
+  --color-brand-500: #0b57d0;
+  --color-brand-600: #0949b3;
+  --color-brand-700: #083c92;
+  --color-brand-800: #0a3276;
+  --color-brand-900: #0c2a5f;
+  --color-brand-950: #08193b;
 
   /* Call-to-action buttons (Add to cart, Buy, Search) — white text on top. */
-  --color-cta: #f97316;
-  --color-cta-600: #ea580c;
-  --color-cta-700: #c2410c;
+  --color-cta: #0b57d0;
+  --color-cta-600: #0949b3;
+  --color-cta-700: #083c92;
+
+  /* Deal yellow — price tags, sale highlights. */
+  --color-deal: #ffc220;
 
   /* Charcoal — footer and dark panels. */
   --color-navy: #1b1d22;
@@ -42,13 +45,13 @@
 /* ── Semantic tokens that flip per theme ──────────────────── */
 /* True neutral greys; colour comes from the navy chrome and amber buttons. */
 :root {
-  --background: #f3f4f6;
+  --background: #f5f7fa;
   --surface: #ffffff;
   --surface-2: #f0f2f5;
   --foreground: #0f1419;
   --muted: #5d6673;
   --border: #e3e6eb;
-  --ring: #f97316;
+  --ring: #0b57d0;
 }
 
 .dark {
@@ -58,7 +61,7 @@
   --foreground: #eceef1;
   --muted: #949ca8;
   --border: #252a31;
-  --ring: #fb923c;
+  --ring: #5a8ef7;
 }
 
 /* Map semantic tokens to Tailwind color utilities (resolved at runtime) */
@@ -186,6 +189,11 @@
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-14px); }
+}
+@keyframes badge-pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }
 @keyframes marquee {
   from { transform: translateX(0); }

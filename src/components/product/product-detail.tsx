@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Heart, Minus, Plus, RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import { Check, Heart, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Rating } from "@/components/ui/rating";
@@ -19,7 +19,6 @@ export function ProductDetail({ product }: { product: Product }) {
   const wishlist = useWishlist();
   const toast = useToast();
   const { push: pushRecent } = useRecentlyViewed();
-  const [qty, setQty] = useState(1);
   const [color, setColor] = useState(product.colors[0]);
   const [tab, setTab] = useState<(typeof tabs)[number]>("Description");
 
@@ -80,18 +79,13 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
           </div>
 
-          {/* qty + actions — phones: qty & wishlist on top, full-width Add to cart below */}
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="order-1 flex items-center rounded-full border border-border">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid size-11 place-items-center" aria-label="Decrease"><Minus size={16} /></button>
-              <span className="w-10 text-center font-semibold tabular-nums">{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)} className="grid size-11 place-items-center" aria-label="Increase"><Plus size={16} /></button>
-            </div>
-            <AddToCartButton product={product} quantity={qty} color={color} variant="lg" className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1" />
+          {/* Add to cart (turns into a quantity stepper) + wishlist */}
+          <div className="mt-6 flex items-center gap-3">
+            <AddToCartButton product={product} color={color} variant="lg" className="min-w-0 flex-1" />
             <button
               onClick={() => { wishlist.toggle(product.slug); toast(wished ? "Removed from wishlist" : "Saved to wishlist"); }}
               aria-label="Toggle wishlist"
-              className={cn("order-2 ml-auto grid size-12 place-items-center rounded-full border border-border transition-colors hover:border-rose-500 sm:order-3 sm:ml-0", wished && "text-rose-500")}
+              className={cn("grid size-13 shrink-0 place-items-center rounded-full border border-border transition-colors hover:border-rose-500", wished && "text-rose-500")}
             >
               <Heart size={20} className={cn(wished && "fill-rose-500")} />
             </button>

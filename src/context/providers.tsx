@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from "next-themes";
 import type { Category, Product, SiteSettings } from "@/lib/types";
+import { AuthProvider } from "./auth";
 import { CatalogProvider } from "./catalog";
 import { CartProvider } from "./cart";
 import { CartDrawerProvider } from "./cart-drawer";
@@ -25,6 +26,7 @@ export function Providers({
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
       <CatalogProvider products={products} categories={categories} settings={settings}>
         <ToastProvider>
+          <AuthProvider>
           <WishlistProvider>
             <CartProvider catalog={productMap} promos={settings.promos} freeShip={settings.freeShipThreshold} shippingFee={settings.shippingFee}>
               <CartDrawerProvider>
@@ -32,6 +34,7 @@ export function Providers({
               </CartDrawerProvider>
             </CartProvider>
           </WishlistProvider>
+          </AuthProvider>
         </ToastProvider>
       </CatalogProvider>
     </ThemeProvider>

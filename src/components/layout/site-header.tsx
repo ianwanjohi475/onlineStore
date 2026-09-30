@@ -5,12 +5,12 @@ import { Heart, Menu, Package, Search, ShoppingBag, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCatalog } from "@/context/catalog";
+import { useAuth } from "@/context/auth";
 import { useCart } from "@/context/cart";
 import { useCartDrawer } from "@/context/cart-drawer";
 import { useWishlist } from "@/context/wishlist";
 import { cn } from "@/lib/utils";
 import { AnnouncementBar } from "./announcement-bar";
-import { AddedToCart } from "./added-to-cart";
 import { CartDrawer } from "./cart-drawer";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
@@ -30,7 +30,7 @@ const navLinks = [
 function CountBadge({ count }: { count: number }) {
   if (!count) return null;
   return (
-    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-brand-500 px-1 text-[0.6rem] font-extrabold text-white tabular-nums ring-2 ring-surface">
+    <span key={count} className="animate-[badge-pop_0.35s_ease-out] absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-deal px-1 text-[0.6rem] font-extrabold text-[#111] tabular-nums ring-2 ring-surface">
       {count > 9 ? "9+" : count}
     </span>
   );
@@ -40,6 +40,7 @@ export function SiteHeader() {
   const { categories } = useCatalog();
   const cart = useCart();
   const wishlist = useWishlist();
+  const auth = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { open: cartOpen, setOpen: setCartOpen } = useCartDrawer();
@@ -68,7 +69,7 @@ export function SiteHeader() {
             {/* desktop search bar */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="ml-4 hidden h-11 flex-1 items-center gap-2 overflow-hidden rounded-full border-2 border-brand-500 bg-surface pl-4 text-sm text-muted transition-shadow hover:shadow-[0_0_0_4px_rgb(249_115_22/0.15)] lg:flex"
+              className="ml-4 hidden h-11 flex-1 items-center gap-2 overflow-hidden rounded-full border-2 border-brand-500 bg-surface pl-4 text-sm text-muted transition-shadow hover:shadow-[0_0_0_4px_rgb(11_87_208/0.15)] lg:flex"
             >
               <Search size={17} />
               <span className="flex-1 text-left">Search products, brands and categories…</span>
@@ -83,8 +84,9 @@ export function SiteHeader() {
               <Link href="/track-order" aria-label="My orders" className="hidden h-10 items-center gap-1.5 rounded-full px-3 text-sm font-semibold hover:bg-surface-2 md:flex">
                 <Package size={19} /> Orders
               </Link>
-              <Link href="/account" aria-label="Account" className="hidden size-10 place-items-center rounded-full hover:bg-surface-2 sm:grid">
+              <Link href="/account" aria-label={auth.user ? "Your account" : "Sign in"} className="hidden h-10 items-center gap-1.5 rounded-full px-2.5 text-sm font-semibold hover:bg-surface-2 sm:flex">
                 <User size={19} />
+                <span className="hidden max-w-24 truncate lg:inline">{auth.user ? `Hi, ${auth.user.name.split(" ")[0]}` : "Sign in"}</span>
               </Link>
               <Link href="/wishlist" aria-label="Wishlist" className="relative grid size-10 place-items-center rounded-full hover:bg-surface-2">
                 <Heart size={19} />
@@ -149,7 +151,6 @@ export function SiteHeader() {
 
       <SearchCommand open={searchOpen} onClose={() => setSearchOpen(false)} />
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
-      <AddedToCart />
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );

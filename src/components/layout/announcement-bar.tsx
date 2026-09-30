@@ -22,9 +22,9 @@ export function AnnouncementBar() {
   const m = messages[Math.min(i, messages.length - 1)];
 
   return (
-    <div className="relative bg-brand-500 text-white">
+    <div className="relative bg-brand-900 text-white">
       <div className="container-x flex h-9 items-center justify-center gap-3 text-xs">
-        <Truck size={13} className="shrink-0 text-white" />
+        <Truck size={13} className="shrink-0 text-deal" />
         <AnimatePresence mode="wait">
           <motion.div
             key={i}
@@ -35,7 +35,7 @@ export function AnnouncementBar() {
             className="flex items-center gap-2 truncate"
           >
             <span className="truncate font-medium">{m.text}</span>
-            <Link href={m.href} className="hidden shrink-0 items-center gap-0.5 font-semibold text-white underline underline-offset-2 hover:text-brand-100 sm:inline-flex">
+            <Link href={m.href} className="hidden shrink-0 items-center gap-0.5 font-semibold text-deal underline underline-offset-2 hover:text-white sm:inline-flex">
               {m.cta} <ChevronRight size={12} />
             </Link>
           </motion.div>

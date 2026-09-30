@@ -60,7 +60,7 @@ export default function MyOrdersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const find = async (value: string) => {
+  async function find(value: string) {
     const v = value.trim();
     if (!v) return;
     setNumber(v);
@@ -78,7 +78,7 @@ export default function MyOrdersPage() {
     } finally {
       setFinding(false);
     }
-  };
+  }
 
   const list = found ? [found, ...orders.filter((o) => o.number !== found.number)] : orders;
 

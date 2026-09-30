@@ -19,8 +19,8 @@ export default function AdminLogin() {
       await api("/api/admin/login", "POST", { password });
       router.push("/admin");
       router.refresh();
-    } catch {
-      setError("Incorrect password. The default is admin123.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Incorrect password.");
       setLoading(false);
     }
   };
@@ -58,9 +58,6 @@ export default function AdminLogin() {
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
-          <p className="mt-3 text-center text-xs text-muted">
-            Demo password: <b className="text-foreground">admin123</b>
-          </p>
         </form>
       </div>
     </div>

@@ -36,7 +36,7 @@ export function CompactProductCard({ product, showSold = false }: { product: Pro
         >
           <Heart size={15} className={cn(wished && "fill-rose-500 text-rose-500")} />
         </button>
-        <AddToCartButton product={product} variant="icon" className="absolute bottom-2 right-2 size-9 shadow-lg" />
+        <AddToCartButton product={product} variant="icon" className="absolute bottom-2 right-2" />
       </div>
 
       <div className="flex flex-1 flex-col p-3">

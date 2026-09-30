@@ -1,108 +1,111 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, Loader2, ShoppingBag } from "lucide-react";
-import { useRef, useState } from "react";
+import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/cart";
-import { useCartDrawer } from "@/context/cart-drawer";
 import { playCartSound } from "@/lib/cart-sound";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type State = "idle" | "loading" | "added";
 type Variant = "full" | "lg" | "icon";
 
-const sizeClasses: Record<Variant, string> = {
-  full: "h-11 px-5 text-sm gap-2 w-full",
-  lg: "h-13 px-8 text-base gap-2.5",
-  icon: "size-10",
+const MAX_QTY = 99;
+
+const heights: Record<Variant, string> = {
+  full: "h-11 text-sm",
+  lg: "h-13 text-base",
+  icon: "h-9 text-sm",
 };
 
+/**
+ * Walmart-style Add to cart: tap once and the button itself becomes a
+ * "−  2 added  +" stepper, so the shopper stays exactly where they are — no
+ * pop-up, no redirect. The header cart badge updates instantly.
+ */
 export function AddToCartButton({
   product,
-  quantity = 1,
   color,
   variant = "full",
   className,
 }: {
   product: Product;
+  /** kept for backwards compatibility; the stepper now controls quantity */
   quantity?: number;
   color?: string;
   variant?: Variant;
   className?: string;
 }) {
   const cart = useCart();
-  const { showAdded } = useCartDrawer();
-  const [state, setState] = useState<State>("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const iconOnly = variant === "icon";
+  const inCart = cart.hydrated ? cart.lines.find((l) => l.product.slug === product.slug)?.quantity ?? 0 : 0;
+  const max = Math.min(MAX_QTY, typeof product.stock === "number" && product.stock > 0 ? product.stock : MAX_QTY);
   const soldOut = !product.inStock;
+  const icon = variant === "icon";
 
-  const handle = () => {
-    if (state !== "idle" || soldOut) return;
-    setState("loading");
-    if (timer.current) clearTimeout(timer.current);
-    // brief, deliberate loading beat so the feedback is felt, not skipped
-    timer.current = setTimeout(() => {
-      cart.add(product, quantity, color);
-      // Original synthesised chime + the "Added to cart" panel with next steps
-      // (View cart / Checkout / Continue shopping) — the shopper stays on the page.
-      playCartSound();
-      showAdded(product, quantity);
-      setState("added");
-      timer.current = setTimeout(() => setState("idle"), 1500);
-    }, 420);
-  };
+  if (soldOut) {
+    return (
+      <button type="button" disabled className={cn("inline-flex items-center justify-center rounded-full bg-surface-2 px-4 font-semibold text-muted", heights[variant], icon ? "px-3 text-xs" : "w-full", className)}>
+        Sold out
+      </button>
+    );
+  }
 
-  const label = soldOut ? "Sold out" : state === "added" ? "Added" : state === "loading" ? "Adding…" : "Add to cart";
+  if (inCart === 0) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          cart.add(product, 1, color);
+          playCartSound();
+        }}
+        aria-label={icon ? `Add ${product.name} to cart` : undefined}
+        className={cn(
+          "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-full bg-cta font-bold text-white transition-[background-color,transform] duration-150 hover:bg-cta-600 active:scale-[0.97]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          heights[variant],
+          icon ? "w-9 shadow-lg" : "w-full px-5",
+          className,
+        )}
+      >
+        {icon ? <Plus size={18} strokeWidth={2.75} /> : <><ShoppingCart size={17} /> Add to cart</>}
+      </button>
+    );
+  }
 
   return (
-    <button
-      type="button"
-      onClick={handle}
-      disabled={soldOut || state === "loading"}
-      aria-label={iconOnly ? `Add ${product.name} to cart` : undefined}
-      aria-live="polite"
-      data-state={state}
+    <div
+      role="group"
+      aria-label={`${product.name} quantity in cart`}
       className={cn(
-        "group/atc relative inline-flex select-none items-center justify-center overflow-hidden whitespace-nowrap rounded-full font-semibold",
-        "transition-[transform,box-shadow,background-color,color] duration-200 ease-out",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        "active:scale-[0.96] disabled:cursor-not-allowed",
-        sizeClasses[variant],
-        soldOut
-          ? "bg-surface-2 text-muted"
-          : state === "added"
-            ? "bg-emerald-600 text-white"
-            : "bg-cta font-bold text-white shadow-[0_6px_16px_-8px_var(--color-cta-700)] hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_12px_24px_-10px_var(--color-cta-700)]",
+        "inline-flex select-none items-center justify-between rounded-full bg-cta font-bold text-white",
+        heights[variant],
+        icon ? "w-[6.5rem] shadow-lg" : "w-full",
         className,
       )}
     >
-      {/* sheen sweep on hover */}
-      {!soldOut && (
-        <span aria-hidden className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover/atc:translate-x-full" />
-      )}
-
-      <span className="relative flex items-center justify-center" style={{ gap: iconOnly ? 0 : undefined }}>
-        <AnimatePresence mode="wait" initial={false}>
-          {state === "loading" ? (
-            <motion.span key="loading" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.15 }} className="flex items-center gap-2">
-              <Loader2 size={iconOnly ? 17 : 16} className="animate-spin" />
-              {!iconOnly && <span>Adding…</span>}
-            </motion.span>
-          ) : state === "added" ? (
-            <motion.span key="added" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ type: "spring", stiffness: 500, damping: 22 }} className="flex items-center gap-2">
-              <Check size={iconOnly ? 18 : 16} strokeWidth={3} />
-              {!iconOnly && <span>Added</span>}
-            </motion.span>
-          ) : (
-            <motion.span key="idle" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }} className="flex items-center gap-2">
-              <ShoppingBag size={iconOnly ? 17 : 16} className="transition-transform duration-200 group-hover/atc:-rotate-6" />
-              {!iconOnly && <span>{label}</span>}
-            </motion.span>
-          )}
-        </AnimatePresence>
+      <button
+        type="button"
+        onClick={() => cart.setQuantity(product.slug, inCart - 1)}
+        aria-label={inCart === 1 ? `Remove ${product.name} from cart` : "Decrease quantity"}
+        className={cn("grid h-full place-items-center rounded-full transition-colors hover:bg-white/15", icon ? "w-9" : "w-12")}
+      >
+        <Minus size={icon ? 16 : 20} strokeWidth={2.5} />
+      </button>
+      <span aria-live="polite" className="whitespace-nowrap tabular-nums">
+        {inCart}{icon ? "" : " added"}
       </span>
-    </button>
+      <button
+        type="button"
+        onClick={() => {
+          if (inCart < max) {
+            cart.setQuantity(product.slug, inCart + 1);
+            playCartSound();
+          }
+        }}
+        disabled={inCart >= max}
+        aria-label="Increase quantity"
+        className={cn("grid h-full place-items-center rounded-full transition-colors hover:bg-white/15 disabled:opacity-40", icon ? "w-9" : "w-12")}
+      >
+        <Plus size={icon ? 16 : 20} strokeWidth={2.5} />
+      </button>
+    </div>
   );
 }

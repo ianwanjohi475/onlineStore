@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Minus, Plus, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Rating } from "@/components/ui/rating";
@@ -19,12 +19,7 @@ export function QuickView({
   open: boolean;
   onClose: () => void;
 }) {
-  const [qty, setQty] = useState(1);
   const [color, setColor] = useState(product.colors[0]);
-
-  useEffect(() => {
-    if (open) setQty(1);
-  }, [open]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -105,18 +100,9 @@ export function QuickView({
                 </div>
               </div>
 
-              {/* qty + add */}
+              {/* add (turns into a quantity stepper) */}
               <div className="mt-auto flex items-center gap-3 pt-6">
-                <div className="flex items-center rounded-full border border-border">
-                  <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid size-10 place-items-center" aria-label="Decrease">
-                    <Minus size={15} />
-                  </button>
-                  <span className="w-8 text-center text-sm font-semibold tabular-nums">{qty}</span>
-                  <button onClick={() => setQty((q) => q + 1)} className="grid size-10 place-items-center" aria-label="Increase">
-                    <Plus size={15} />
-                  </button>
-                </div>
-                <AddToCartButton product={product} quantity={qty} color={color} variant="full" className="flex-1" />
+                <AddToCartButton product={product} color={color} variant="full" className="flex-1" />
               </div>
 
               <Link

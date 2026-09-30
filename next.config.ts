@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
   // Pin the workspace root to this project so Next doesn't pick up a stray
   // lockfile in a parent directory (e.g. C:\Users\<you>\package-lock.json).
   outputFileTracingRoot: path.join(__dirname),
+  // Don't advertise the framework in response headers.
+  poweredByHeader: false,
+  // Keep recently visited pages in the browser's router cache so moving between
+  // pages (and back) is instant instead of re-fetching every time.
+  experimental: {
+    staleTimes: { dynamic: 60, static: 300 },
+  },
   images: {
     // WebP only — AVIF encoding is much slower on first request and was making
     // images feel sluggish to load. WebP is nearly as small and encodes fast.
@@ -31,6 +38,9 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
           { key: "X-DNS-Prefetch-Control", value: "on" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          // No plugins, no <base> hijacking, forms only post back to us, no framing by other sites.
+          { key: "Content-Security-Policy", value: "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
         ],
       },
       {
@@ -47,6 +57,16 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "no-store, max-age=0" },
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
+      },
+      {
+        // Browsers must always pick up a new service worker straight away.
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, max-age=0, must-revalidate" }],
+      },
+      {
+        // Account APIs carry personal data — never cache them anywhere.
+        source: "/api/auth/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
       },
     ];
   },

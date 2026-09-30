@@ -147,6 +147,8 @@ export interface Order {
   timeline: OrderEvent[];
   notes: OrderNote[];
   archived?: boolean;
+  /** customer account that placed the order (set server-side from the session) */
+  userId?: string;
 }
 
 export interface Announcement {

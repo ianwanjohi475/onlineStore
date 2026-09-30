@@ -4,24 +4,23 @@ import Image from "next/image";
 import { useState } from "react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { ProductArt } from "./product-art";
 
-const studioBg =
-  "relative overflow-hidden bg-gradient-to-b from-white to-neutral-100 dark:from-[#1a1d25] dark:to-[#0c0e14]";
+const frame = "relative overflow-hidden bg-white dark:bg-[#15181d]";
 
 /**
- * Prefers a real photograph (local /products/* via next/image, or a remote URL via <img>),
- * fades it in on load, and gracefully falls back to the studio render on any error.
+ * The product's real photo (local /products/* via next/image, or an uploaded
+ * URL). Products without a photo yet get a plain, empty space — the owner adds
+ * the picture from Admin → Products and it appears here automatically.
  */
 export function ProductImage({
   product,
   className,
-  glow = true,
   sizes = "(max-width: 768px) 50vw, 25vw",
   priority = false,
 }: {
   product: Product;
   className?: string;
+  /** kept for backwards compatibility; no longer used */
   glow?: boolean;
   sizes?: string;
   priority?: boolean;
@@ -31,14 +30,14 @@ export function ProductImage({
   const [loaded, setLoaded] = useState(false);
 
   if (!src || failed) {
-    return <ProductArt category={product.category} accent={product.accent} className={className} glow={glow} />;
+    return <div className={cn(frame, "bg-surface-2 dark:bg-surface-2", className)} role="img" aria-label={`${product.name} — photo coming soon`} />;
   }
 
-  const fade = cn("transition-opacity duration-500", loaded ? "opacity-100" : "opacity-0");
+  const fade = cn("transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0");
 
   return (
-    <div className={cn(studioBg, className)}>
-      {!loaded && <div className="absolute inset-0 animate-pulse bg-surface-2" aria-hidden />}
+    <div className={cn(frame, className)}>
+      {!loaded && <div className="absolute inset-0 bg-surface-2" aria-hidden />}
       {src.startsWith("/") ? (
         <Image
           src={src}
@@ -56,6 +55,7 @@ export function ProductImage({
           src={src}
           alt={product.name}
           loading={priority ? "eager" : "lazy"}
+          decoding="async"
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
           className={cn("absolute inset-0 size-full object-cover", fade)}

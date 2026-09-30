@@ -1,7 +1,8 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { list, put } from "@vercel/blob";
+import { del, list, put } from "@vercel/blob";
 import type { InStatement } from "@libsql/client";
 import { TURSO_ON, db, ensureSchema } from "@/lib/db/turso";
 import type { CategorySlug, Order, Product, StoreData } from "@/lib/types";
@@ -69,16 +70,30 @@ function refreshed(parsed: Persisted): StoreData {
 
 /* ── Blob backend (durable, shared) ───────────────────────── */
 const BLOB_ON = !!process.env.BLOB_READ_WRITE_TOKEN;
-const BLOB_KEY = "store/store.json";
+/** Old, guessable location — only read once to migrate, then deleted. */
+const LEGACY_BLOB_KEY = "store/store.json";
+/** Blob URLs are public, so the store lives at a path derived from the secret
+ *  token: nobody can find (and read orders / customer details from) it by URL. */
+const BLOB_KEY = `private/store-${createHash("sha256").update(`store:${process.env.BLOB_READ_WRITE_TOKEN ?? ""}`).digest("hex").slice(0, 40)}.json`;
+
+async function readBlob(key: string): Promise<Persisted | null> {
+  const { blobs } = await list({ prefix: key, limit: 1 });
+  const blob = blobs.find((b) => b.pathname === key);
+  if (!blob) return null;
+  const res = await fetch(blob.url, { cache: "no-store" });
+  return res.ok ? ((await res.json()) as Persisted) : null;
+}
 
 async function loadFromBlob(): Promise<StoreData | null> {
   try {
-    const { blobs } = await list({ prefix: BLOB_KEY, limit: 1 });
-    const blob = blobs.find((b) => b.pathname === BLOB_KEY);
-    if (!blob) return null;
-    const res = await fetch(blob.url, { cache: "no-store" });
-    if (!res.ok) return null;
-    return refreshed((await res.json()) as Persisted);
+    const current = await readBlob(BLOB_KEY);
+    if (current) return refreshed(current);
+    const legacy = await readBlob(LEGACY_BLOB_KEY);
+    if (!legacy) return null;
+    const data = refreshed(legacy);
+    await saveToBlob(data);
+    await del(LEGACY_BLOB_KEY).catch(() => {});
+    return data;
   } catch {
     return null;
   }
@@ -427,6 +442,20 @@ export async function findOrdersByContact(contact: string): Promise<Order[]> {
   return (await getOrders()).filter(
     (o) => o.customer.email?.toLowerCase() === v || (o.customer.phone ?? "").replace(/[\s+]/g, "") === digits,
   );
+}
+
+/** Orders placed while signed in to this customer account. */
+export async function findOrdersByUser(userId: string): Promise<Order[]> {
+  if (!userId) return [];
+  if (TURSO_ON) {
+    await ensureSchema();
+    const res = await db().execute({
+      sql: `SELECT data FROM orders WHERE json_extract(data, '$.userId') = ? ORDER BY created_at DESC LIMIT 100`,
+      args: [userId],
+    });
+    return res.rows.map((r) => normalizeOrder(JSON.parse(String(r.data)) as Order));
+  }
+  return (await getOrders()).filter((o) => o.userId === userId);
 }
 
 /** Only active slides currently within their optional schedule window. */

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OrderSummary } from "@/components/cart/order-summary";
 import { ProductImage } from "@/components/product/product-image";
+import { useAuth } from "@/context/auth";
 import { useCart } from "@/context/cart";
 import { rememberOrder } from "@/hooks/use-my-orders";
 import { OrderCard } from "@/components/orders/order-card";
@@ -14,9 +15,9 @@ import { cn, formatPrice } from "@/lib/utils";
 
 const steps = ["Details", "Payment", "Review"] as const;
 
-function Field({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+function Field({ label, className, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label className="flex flex-col gap-1.5 text-sm">
+    <label className={cn("flex flex-col gap-1.5 text-sm", className)}>
       <span className="font-medium">{label}</span>
       <input
         {...props}
@@ -28,6 +29,7 @@ function Field({ label, ...props }: { label: string } & React.InputHTMLAttribute
 
 export default function CheckoutPage() {
   const cart = useCart();
+  const { user, ready } = useAuth();
   const [step, setStep] = useState(0);
   const [pay, setPay] = useState<"mpesa" | "card" | "cod">("mpesa");
   const [placing, setPlacing] = useState(false);
@@ -69,8 +71,14 @@ export default function CheckoutPage() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="card-surface p-6">
+          {step === 0 && ready && !user && (
+            <p className="mb-5 rounded-xl bg-brand-50 p-3 text-sm dark:bg-brand-500/10">
+              <Link href="/account" className="font-semibold text-brand-600 hover:underline">Sign in</Link> to fill in your details and see this order on every device — or continue as a guest.
+            </p>
+          )}
           {step === 0 && (
             <form
+              key={user?.id ?? "guest"}
               className="grid gap-4 sm:grid-cols-2"
               onSubmit={(e) => {
                 e.preventDefault();
@@ -85,11 +93,11 @@ export default function CheckoutPage() {
                 setStep(1);
               }}
             >
-              <Field name="name" label="Full name" required placeholder="Jane Wanjiru" className="sm:col-span-2" />
-              <Field name="email" label="Email" type="email" required placeholder="jane@email.com" />
-              <Field name="phone" label="Phone" type="tel" required placeholder="+254 7…" />
-              <Field name="address" label="Delivery address" required placeholder="Street, building, apt" className="sm:col-span-2" />
-              <Field name="city" label="City / Town" required placeholder="Nairobi" />
+              <Field name="name" label="Full name" required autoComplete="name" defaultValue={customer.name || user?.name} placeholder="Jane Wanjiru" className="sm:col-span-2" />
+              <Field name="email" label="Email" type="email" required autoComplete="email" defaultValue={customer.email || user?.email} placeholder="jane@email.com" />
+              <Field name="phone" label="Phone" type="tel" required autoComplete="tel" defaultValue={customer.phone || user?.phone} placeholder="+254 7…" />
+              <Field name="address" label="Delivery address" required autoComplete="street-address" defaultValue={customer.address} placeholder="Street, building, apt" className="sm:col-span-2" />
+              <Field name="city" label="City / Town" required autoComplete="address-level2" defaultValue={customer.city} placeholder="Nairobi" />
               <Field name="postal" label="Postal code" placeholder="00100" />
               <div className="sm:col-span-2">
                 <Button type="submit" size="lg" className="w-full">Continue to payment</Button>
@@ -169,6 +177,7 @@ export default function CheckoutPage() {
                       subtotal: cart.subtotal,
                       shipping: cart.shipping,
                       discount: cart.discount,
+                      promoCode: cart.promoCode,
                       total: cart.total,
                       payment: pay === "mpesa" ? "M-Pesa" : pay === "card" ? "Card" : "Cash on Delivery",
                       customer,

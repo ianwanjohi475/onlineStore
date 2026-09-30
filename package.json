@@ -8,7 +8,8 @@
     "prebuild": "npm run clean",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:security": "node scripts/security-test.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
