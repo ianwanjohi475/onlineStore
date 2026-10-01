@@ -1,7 +1,6 @@
 "use client";
 
-import { AlertTriangle, Clock } from "lucide-react";
-import Link from "next/link";
+import { Clock } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const IDLE_MS = 15 * 60 * 1000;
@@ -18,7 +17,6 @@ export function IdleGuard() {
   const lastActive = useRef(Date.now());
   const lastBeat = useRef(Date.now());
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-  const [defaultPw, setDefaultPw] = useState(false);
 
   const signOut = useCallback(async (reason: "idle" | "expired") => {
     await fetch("/api/admin/login", { method: "DELETE" }).catch(() => {});
@@ -32,11 +30,6 @@ export function IdleGuard() {
   }, [signOut]);
 
   useEffect(() => {
-    fetch("/api/admin/session")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setDefaultPw(!!d.defaultPassword))
-      .catch(() => {});
-
     const onActivity = () => {
       lastActive.current = Date.now();
       if (Date.now() - lastBeat.current > HEARTBEAT_EVERY) void beat();
@@ -59,14 +52,6 @@ export function IdleGuard() {
 
   return (
     <>
-      {defaultPw && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-800 dark:text-amber-200">
-          <AlertTriangle size={16} className="shrink-0" />
-          <span className="flex-1">You&apos;re using the default admin password. Set your own to keep the store safe.</span>
-          <Link href="/admin/settings?tab=Security" className="font-semibold underline">Change password</Link>
-        </div>
-      )}
-
       {secondsLeft !== null && (
         <div className="fixed inset-0 z-[200] grid place-items-center bg-black/50 p-4" role="alertdialog" aria-labelledby="idle-title">
           <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-6 text-center shadow-2xl">

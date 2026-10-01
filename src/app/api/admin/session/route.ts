@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ADMIN_COOKIE, IDLE_MS, adminCookieOptions, createSession, readSession } from "@/lib/admin/auth";
-import { credentialVersion, passwordSource } from "@/lib/admin/credentials";
+import { credentialVersion } from "@/lib/admin/credentials";
 
 export const runtime = "nodejs";
 
@@ -14,7 +14,7 @@ async function current() {
 export async function GET() {
   const s = await current();
   if (!s) return NextResponse.json({ active: false }, { status: 401 });
-  return NextResponse.json({ active: true, expiresAt: s.expiresAt, idleMinutes: IDLE_MS / 60000, defaultPassword: (await passwordSource()) === "default" });
+  return NextResponse.json({ active: true, expiresAt: s.expiresAt, idleMinutes: IDLE_MS / 60000 });
 }
 
 /** POST — the admin is active: extend the session by another 15 minutes. */
