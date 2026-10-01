@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { readStore, writeStore } from "@/lib/store/store";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
-import type { SiteSettings } from "@/lib/types";
+import { isSafeMediaUrl } from "@/lib/media";
+import type { HeroSlide, SiteSettings } from "@/lib/types";
 
 export async function GET() {
   if (!(await isAuthed())) return unauthorized();
@@ -17,6 +18,38 @@ const safeHref = (v: unknown) => {
   const h = String(v ?? "").trim().slice(0, 300);
   return /^(https?:\/\/|\/|mailto:|tel:)/i.test(h) || h === "" ? h : "";
 };
+
+const color = (v: unknown, fallback: string) => (typeof v === "string" && /^#[0-9a-f]{3,8}$/i.test(v.trim()) ? v.trim() : fallback);
+const day = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
+const media = (v: unknown) => (isSafeMediaUrl(v) ? v : undefined);
+
+/** Homepage banners — only known fields, trimmed, with safe links/images. */
+function cleanSlides(v: unknown[]): HeroSlide[] {
+  return v.slice(0, 20).flatMap((raw, i) => {
+    if (!raw || typeof raw !== "object") return [];
+    const s = raw as Record<string, unknown>;
+    const slide: HeroSlide = {
+      id: str(s.id, 60, "") .replace(/[^\w-]/g, "") || `slide-${Date.now()}-${i}`,
+      slug: str(s.slug, 120, ""),
+      eyebrow: str(s.eyebrow, 60, ""),
+      title: str(s.title, 80, ""),
+      subtitle: str(s.subtitle, 120, "") || undefined,
+      headline: str(s.headline, 120, "") || undefined,
+      copy: str(s.copy, 300, ""),
+      buttonText: str(s.buttonText, 40, "Shop now"),
+      buttonLink: safeHref(s.buttonLink),
+      from: color(s.from, "#eef4ff"),
+      to: color(s.to, "#0b57d0"),
+      overlay: Math.max(0, Math.min(1, Number(s.overlay) || 0)),
+      active: s.active !== false,
+      startDate: day(s.startDate),
+      endDate: day(s.endDate),
+      image: media(s.image),
+      bannerImage: media(s.bannerImage),
+    };
+    return [slide];
+  });
+}
 
 /** Save store settings. Every field is validated/trimmed — only known keys are kept. */
 export async function PUT(req: Request) {
@@ -50,7 +83,7 @@ export async function PUT(req: Request) {
     mpesaTill: str(body.mpesaTill, 12, cur.mpesaTill ?? "").replace(/\D/g, ""),
     mpesaTillName: str(body.mpesaTillName, 60, cur.mpesaTillName ?? ""),
     // hero slides & promo codes have their own admin pages
-    heroSlides: Array.isArray(body.heroSlides) ? body.heroSlides : cur.heroSlides,
+    heroSlides: Array.isArray(body.heroSlides) ? cleanSlides(body.heroSlides) : cur.heroSlides,
     promos: Array.isArray(body.promos) ? body.promos : cur.promos,
   };
   store.settings = next;

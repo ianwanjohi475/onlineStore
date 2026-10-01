@@ -24,9 +24,26 @@ export function PosterSlide({
   /** smaller type for the admin preview */
   compact?: boolean;
 }) {
+  if (slide.bannerImage) {
+    // The admin's own finished banner design: show it whole on phones (padded
+    // with the banner colour), filling the frame on bigger screens.
+    return (
+      <div className="relative h-full w-full overflow-hidden" style={{ background: slide.from }}>
+        <Image
+          src={slide.bannerImage}
+          alt={slide.title || product.name}
+          fill
+          priority={priority}
+          unoptimized={!optimizable(slide.bannerImage)}
+          sizes={compact ? "480px" : "(max-width: 1024px) 100vw, 900px"}
+          className="object-contain transition-transform duration-500 group-hover/poster:scale-[1.02] sm:object-cover"
+        />
+      </div>
+    );
+  }
   const off = product.compareAt ? discountPercent(product.compareAt, product.price) : 0;
   const save = off > 0 && product.compareAt ? product.compareAt - product.price : 0;
-  const img = product.image;
+  const img = slide.image || product.image;
   const cutout = !!img && /\.png($|\?)/i.test(img);
   const top = `${slide.eyebrow || "SIR VERT DEALS"}`.toUpperCase();
   const ribbonTop = Array.from({ length: 8 }, () => `◂◂◂ ${top} ◂◂`);
@@ -156,6 +173,7 @@ export function PosterSlide({
                 fill
                 priority={priority}
                 sizes="(max-width: 640px) 45vw, 340px"
+                unoptimized={!optimizable(img)}
                 className={cn("object-contain", cutout ? "drop-shadow-[0_18px_22px_rgba(0,0,0,0.3)]" : "p-1")}
               />
             ) : null}
@@ -186,6 +204,11 @@ export function PosterSlide({
       <Ribbon items={ribbonBottom} color={slide.to} compact={compact} reverse />
     </div>
   );
+}
+
+/** next/image can only resize our own files and Vercel Blob; other links load as-is. */
+function optimizable(src: string) {
+  return (src.startsWith("/") && !src.startsWith("//")) || /^https:\/\/[^/]+\.public\.blob\.vercel-storage\.com\//.test(src);
 }
 
 function Ribbon({ items, color, compact, reverse }: { items: string[]; color: string; compact: boolean; reverse?: boolean }) {

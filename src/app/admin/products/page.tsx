@@ -200,15 +200,10 @@ function ImageUploader({ preview, value, onChange }: { preview: Product; value: 
 
   const upload = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast("Please choose an image file", "info"); return; }
-    if (file.size > 5 * 1024 * 1024) { toast("Image must be 5MB or smaller", "info"); return; }
+    if (file.size > 25 * 1024 * 1024) { toast("That photo is too big (max 25MB)", "info"); return; }
     setUploading(true);
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      onChange(data.url);
+      onChange(await uploadMedia(file, undefined, { maxSide: 1600 }));
       toast("Photo uploaded");
     } catch (e) {
       toast(e instanceof Error ? e.message : "Upload failed", "info");
@@ -236,7 +231,7 @@ function ImageUploader({ preview, value, onChange }: { preview: Product; value: 
         >
           {uploading ? <Loader2 size={20} className="animate-spin text-brand-500" /> : <Upload size={20} className="text-muted" />}
           <p className="text-sm font-medium">{uploading ? "Uploading…" : "Upload photo"}</p>
-          <p className="text-xs text-muted">Drag & drop or click · PNG/JPG up to 5MB</p>
+          <p className="text-xs text-muted">Drag & drop or click · any photo, we shrink it for you</p>
         </div>
       </div>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) upload(file); e.target.value = ""; }} />

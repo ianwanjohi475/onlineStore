@@ -78,6 +78,10 @@ export interface HeroSlide {
   active: boolean;
   startDate?: string;
   endDate?: string;
+  /** Replaces the product photo inside the designed poster. */
+  image?: string;
+  /** Your own finished banner design — shown instead of the designed poster. */
+  bannerImage?: string;
 }
 
 export interface Brand {

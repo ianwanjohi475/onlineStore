@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { put } from "@vercel/blob";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
+import { MAX_DB_MEDIA_BYTES, MEDIA_DB_ON, saveMedia } from "@/lib/store/media";
 
 export const runtime = "nodejs";
 
@@ -58,12 +59,30 @@ export async function POST(req: Request) {
     }
   }
 
+  // No Blob store → keep images in the database so uploads still work on Vercel.
+  if (MEDIA_DB_ON) {
+    if (!kind.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Video uploads need Vercel Blob (Vercel → Storage → Blob → Connect). You can paste a YouTube link instead." }, { status: 400 });
+    }
+    if (bytes.length > MAX_DB_MEDIA_BYTES) return NextResponse.json({ error: "Image must be 3MB or smaller" }, { status: 400 });
+    try {
+      return NextResponse.json({ url: await saveMedia(bytes, kind.type) });
+    } catch (e) {
+      console.error("[upload] database save failed:", e instanceof Error ? e.message : e);
+      return NextResponse.json({ error: "Couldn't save the image to the database. Check Settings → Connections." }, { status: 500 });
+    }
+  }
+
+  // Local development: write into public/uploads.
   try {
     const dir = path.join(process.cwd(), "public", "uploads");
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, name), bytes);
     return NextResponse.json({ url: `/uploads/${name}` });
-  } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Upload failed" }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Uploads need storage. In Vercel open Storage → Create → Blob → Connect to this project, then redeploy." },
+      { status: 503 },
+    );
   }
 }

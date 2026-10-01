@@ -41,14 +41,17 @@ function findEnv(names: string[], pattern: RegExp, accept: (v: string) => boolea
 }
 
 function resolveConfig() {
-  let url = findEnv(["TURSO_DATABASE_URL", "TURSO_URL", "LIBSQL_URL", "LIBSQL_DATABASE_URL", "DATABASE_URL"], /(TURSO|LIBSQL).*_URL$/, looksLikeDbUrl);
-  let token = findEnv(
-    ["TURSO_AUTH_TOKEN", "TURSO_TOKEN", "LIBSQL_AUTH_TOKEN", "DATABASE_AUTH_TOKEN", url ? url.key.replace(/(DATABASE_)?URL$/, "AUTH_TOKEN") : ""].filter(Boolean),
-    /(TURSO|LIBSQL).*TOKEN$/,
-    (v) => isJwt(v.replace(/^Bearer\s+/i, "").replace(/\s+/g, "")),
-  );
+  let url =
+    findEnv(["TURSO_DATABASE_URL", "TURSO_URL", "LIBSQL_URL", "LIBSQL_DATABASE_URL", "DATABASE_URL"], /(TURSO|LIBSQL).*_URL$/, looksLikeDbUrl) ??
+    // Vercel's one-click Turso integration (any prefix): find it by its value.
+    findEnv([], /^[A-Z][A-Z0-9_]*$/, (v) => /^libsql:\/\//i.test(v));
+  const jwt = (v: string) => isJwt(v.replace(/^Bearer\s+/i, "").replace(/\s+/g, ""));
+  const sibling = url ? url.key.replace(/(DATABASE_)?URL$/, "AUTH_TOKEN") : "";
+  let token =
+    findEnv(["TURSO_AUTH_TOKEN", "TURSO_TOKEN", "LIBSQL_AUTH_TOKEN", "DATABASE_AUTH_TOKEN", sibling, sibling.replace(/AUTH_TOKEN$/, "TOKEN")].filter(Boolean), /(TURSO|LIBSQL).*TOKEN$/, jwt) ??
+    findEnv([], /(DATABASE|DB).*TOKEN$/, jwt);
   // The two values pasted into each other's boxes → swap them back.
-  if (!url && isJwt(clean(process.env.TURSO_DATABASE_URL).replace(/\s+/g, "")) && looksLikeDbUrl(clean(process.env.TURSO_AUTH_TOKEN))) {
+  if ((!url || url.key === "TURSO_AUTH_TOKEN") && isJwt(clean(process.env.TURSO_DATABASE_URL).replace(/\s+/g, "")) && looksLikeDbUrl(clean(process.env.TURSO_AUTH_TOKEN))) {
     url = { key: "TURSO_AUTH_TOKEN", value: clean(process.env.TURSO_AUTH_TOKEN) };
     token = { key: "TURSO_DATABASE_URL", value: clean(process.env.TURSO_DATABASE_URL) };
   }
@@ -154,6 +157,13 @@ const SCHEMA = [
      session_version INTEGER NOT NULL DEFAULT 1
    )`,
   `CREATE INDEX IF NOT EXISTS idx_orders_user ON orders (json_extract(data, '$.userId'))`,
+  `CREATE TABLE IF NOT EXISTS media (
+     id TEXT PRIMARY KEY,
+     type TEXT NOT NULL,
+     size INTEGER NOT NULL,
+     created_at TEXT NOT NULL,
+     data BLOB NOT NULL
+   )`,
   `CREATE TABLE IF NOT EXISTS password_resets (
      token_hash TEXT PRIMARY KEY,
      user_id TEXT NOT NULL,
