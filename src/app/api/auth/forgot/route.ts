@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { clientIp, rateLimit, sameOrigin } from "@/lib/auth/rate-limit";
 import { EMAIL_ON, resetEmail, sendEmail, siteUrl } from "@/lib/email/send";
 import { createResetToken, findUserByEmail } from "@/lib/store/users";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
   if (!byEmail.ok) return NextResponse.json(generic);
 
   const user = await findUserByEmail(email);
+  if (user) await logActivity("customer", "info", `Password reset requested by ${user.email}`, { ref: user.email, req });
   if (user && EMAIL_ON) {
     const token = await createResetToken(user.id);
     const mail = resetEmail(user.name.split(" ")[0] || "there", `${siteUrl(req)}/account/reset?token=${token}`);

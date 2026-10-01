@@ -63,7 +63,8 @@ type Persisted = StoreData & { seedVersion?: number };
 
 /** Apply the seed-version refresh to parsed data (keep real orders + suspensions). */
 function refreshed(parsed: Persisted): StoreData {
-  if ((parsed.seedVersion ?? 0) < SEED_VERSION) {
+  // Once the shop has its own products, keep everything as the admin left it.
+  if ((parsed.seedVersion ?? 0) < SEED_VERSION && !parsed.products?.length) {
     // keep the shop's real data: orders, suspensions and the admin's settings
     return assemble({ orders: parsed.orders, suspendedCustomers: parsed.suspendedCustomers, settings: parsed.settings });
   }
@@ -158,8 +159,13 @@ async function loadFromTurso(): Promise<StoreData | null> {
     ]);
 
     const seedVersion = Number(meta.rows[0]?.value ?? 0);
-    // Empty database, or the code-managed catalogue moved on → (re)seed it.
-    if (products.rows.length === 0 || seedVersion < SEED_VERSION) {
+    // Seed the starter catalogue ONLY into an empty database. Once the shop has
+    // products, the admin owns them — updates to the site never overwrite
+    // products, prices, stock, banners or settings edited in the admin.
+    if (products.rows.length > 0 && seedVersion < SEED_VERSION) {
+      await c.execute({ sql: "INSERT INTO meta (key, value) VALUES ('seedVersion', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", args: [String(SEED_VERSION)] });
+    }
+    if (products.rows.length === 0) {
       const keepOrders = orders.rows.map((r) => JSON.parse(String(r.data)) as Order);
       const keepSettings = settings.rows[0] ? (JSON.parse(String(settings.rows[0].data)) as StoreData["settings"]) : undefined;
       const fresh = assemble({ orders: keepOrders, suspendedCustomers: suspended.rows.map((r) => String(r.email)), settings: keepSettings });

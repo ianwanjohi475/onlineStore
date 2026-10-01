@@ -4,7 +4,10 @@ import { clientIp, rateLimit, sameOrigin } from "@/lib/auth/rate-limit";
 import { addOrder, findOrderByNumber, getProducts, getSettings } from "@/lib/store/store";
 import { currentUser } from "@/lib/store/users";
 import { normalizeMpesaCode } from "@/lib/payments";
+import { MPESA_ON, normalizePhone, payToken } from "@/lib/mpesa";
+import { promptStatus, sendPrompt } from "@/lib/mpesa-orders";
 import type { Order } from "@/lib/types";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -55,6 +58,13 @@ export async function POST(req: Request) {
   const customerRef = method === "M-Pesa" && body.mpesaCode ? normalizeMpesaCode(body.mpesaCode) : null;
   if (method === "M-Pesa" && body.mpesaCode && !customerRef) {
     return NextResponse.json({ error: "That M-Pesa code doesn't look right — it has 10 letters and numbers, e.g. QJK3ABC12D." }, { status: 400 });
+  }
+
+  // "Pay now" with an M-Pesa prompt to the customer's phone (when set up).
+  const wantsPrompt = method === "M-Pesa" && !customerRef && body.stk === true && MPESA_ON;
+  const promptPhone = wantsPrompt ? normalizePhone(body.mpesaPhone || customer.phone) : null;
+  if (wantsPrompt && !promptPhone) {
+    return NextResponse.json({ error: "Enter the Safaricom number to pay with, e.g. 0712 345 678." }, { status: 400 });
   }
 
   // Validate line items against the real catalogue — never trust client prices.
@@ -117,5 +127,19 @@ export async function POST(req: Request) {
     console.error("Failed to save order:", e);
     return NextResponse.json({ error: "Could not save your order. Please try again." }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, number: order.number });
+  await logActivity(
+    "order",
+    "success",
+    `New order ${order.number} from ${customer.name} — Ksh ${total.toLocaleString("en-KE")} · ${method === "M-Pesa" ? "M-Pesa" : "Cash on delivery"} · ${items.reduce((n, i) => n + i.quantity, 0)} item(s)`,
+    { ref: order.number, req },
+  );
+  if (customerRef) await logActivity("payment", "info", `Customer entered M-Pesa code ${customerRef} for ${order.number} — waiting for you to verify`, { ref: order.number });
+  const pay = wantsPrompt ? await sendPrompt(order, promptPhone, req) : null;
+  return NextResponse.json({
+    ok: true,
+    number: order.number,
+    total: order.total,
+    t: method === "M-Pesa" ? payToken(order.id) : undefined,
+    prompt: pay ? { ...promptStatus(pay.order), sent: pay.ok, message: pay.message } : null,
+  });
 }

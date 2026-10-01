@@ -5,6 +5,7 @@ import { checkAdminPassword, credentialVersion, passwordSource, setAdminPassword
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import { passwordProblem } from "@/lib/auth/password";
 import { clientIp, rateLimit, sameOrigin } from "@/lib/auth/rate-limit";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -30,5 +31,6 @@ export async function PUT(req: Request) {
 
   await setAdminPassword(body.newPassword!);
   (await cookies()).set(ADMIN_COOKIE, await createSession(await credentialVersion()), adminCookieOptions);
+  await logActivity("security", "success", "Admin password changed", { req });
   return NextResponse.json({ ok: true, source: "custom" });
 }

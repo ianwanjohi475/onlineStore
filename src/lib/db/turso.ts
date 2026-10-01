@@ -157,6 +157,16 @@ const SCHEMA = [
      session_version INTEGER NOT NULL DEFAULT 1
    )`,
   `CREATE INDEX IF NOT EXISTS idx_orders_user ON orders (json_extract(data, '$.userId'))`,
+  `CREATE TABLE IF NOT EXISTS activity (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     at TEXT NOT NULL,
+     kind TEXT NOT NULL,
+     level TEXT NOT NULL,
+     message TEXT NOT NULL,
+     ref TEXT,
+     ip TEXT
+   )`,
+  `CREATE INDEX IF NOT EXISTS idx_activity_kind ON activity (kind, id)`,
   `CREATE TABLE IF NOT EXISTS media (
      id TEXT PRIMARY KEY,
      type TEXT NOT NULL,

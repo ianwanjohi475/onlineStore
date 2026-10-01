@@ -3,6 +3,7 @@ import { hashPassword, passwordProblem } from "@/lib/auth/password";
 import { clientIp, rateLimit, sameOrigin } from "@/lib/auth/rate-limit";
 import { setUserCookie } from "@/lib/auth/session";
 import { createUser, toPublic } from "@/lib/store/users";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -31,5 +32,6 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "An account with this email already exists. Please sign in." }, { status: 409 });
 
   await setUserCookie(user.id, user.sessionVersion);
+  await logActivity("customer", "success", `New customer account: ${user.name} (${user.email})`, { ref: user.email, req });
   return NextResponse.json({ user: toPublic(user) }, { status: 201 });
 }

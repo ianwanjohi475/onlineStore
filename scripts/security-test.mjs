@@ -261,8 +261,8 @@ section("Continue with Google");
   }
   const x = await req("/api/auth/google", { method: "POST", origin: "https://evil.example", body: { credential: none } });
   ok("cross-site Google sign-in blocked (403)", x.status === 403, x.status);
-  const sys = await req("/api/admin/system");
-  ok("system status is admin-only", sys.status === 401, sys.status);
+  const act = await req("/api/admin/activity");
+  ok("activity log is admin-only", act.status === 401, act.status);
 }
 
 section("Payments");

@@ -24,6 +24,23 @@ export default function OrderDetail() {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [resolving, setResolving] = useState<"M-Pesa" | "Cash" | null>(null);
+  const [stkOn, setStkOn] = useState(false);
+  useEffect(() => { fetch("/api/mpesa/pay").then((r) => r.json()).then((d) => setStkOn(!!d.enabled)).catch(() => {}); }, []);
+
+  const sendPrompt = async () => {
+    if (!order) return;
+    const phone = window.prompt("Send an M-Pesa payment prompt to this number:", order.stk?.phone ? `0${order.stk.phone.slice(3)}` : order.customer.phone);
+    if (!phone) return;
+    setSaving(true);
+    try {
+      setOrder(await api("/api/admin/payments/prompt", "POST", { orderId: order.id, phone }));
+      toast("M-Pesa prompt sent — the customer enters their PIN to pay");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not send the prompt");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const load = () =>
     api("/api/admin/orders", "GET")
@@ -170,7 +187,16 @@ export default function OrderDetail() {
           <Card className="p-5">
             <h2 className="mb-3 flex items-center gap-2 font-display font-bold"><CreditCard size={16} className="text-brand-500" /> Payment</h2>
             <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between"><span className="text-muted">Method</span><span className="font-medium">{o.payment === "M-Pesa" ? "M-Pesa (Till)" : o.payment}</span></div>
+              <div className="flex justify-between"><span className="text-muted">Method</span><span className="font-medium">{o.payment}</span></div>
+              {o.stk && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted">M-Pesa prompt</span>
+                  <span className="text-right text-xs">
+                    <b className={o.stk.status === "paid" ? "text-emerald-600" : o.stk.status === "pending" ? "text-brand-600" : "text-amber-600"}>{titleCase(o.stk.status)}</b>
+                    <span className="text-muted"> · 0{o.stk.phone.slice(3)}{o.stk.resultDesc && o.stk.status !== "paid" ? ` · ${o.stk.resultDesc}` : ""}</span>
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between"><span className="text-muted">Status</span><StatusPill status={o.paymentStatus} /></div>
               <div className="flex justify-between"><span className="text-muted">Paid</span><span className="font-semibold tabular-nums">{formatPrice(o.amountPaid ?? (o.paymentStatus === "paid" ? o.total : 0))}</span></div>
               {due > 0 && <div className="flex justify-between"><span className="text-muted">Balance due</span><span className="font-bold text-amber-600 tabular-nums">{formatPrice(due)}</span></div>}
@@ -181,7 +207,7 @@ export default function OrderDetail() {
               <ul className="mt-3 space-y-1.5 border-t border-border pt-3 text-xs">
                 {o.payments!.map((p, i) => (
                   <li key={i} className="flex justify-between gap-2">
-                    <span>{p.method === "M-Pesa" ? <span className="font-mono">{p.code}</span> : "Cash"} <span className="text-muted">· {new Date(p.at).toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" })}</span></span>
+                    <span>{p.method === "M-Pesa" ? <span className="font-mono">{p.code ?? "M-Pesa"}</span> : "Cash"} <span className="text-muted">{p.by && p.by !== "Admin" ? `· ${p.by} ` : ""}· {new Date(p.at).toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" })}</span></span>
                     <span className="font-semibold text-emerald-600 tabular-nums">+{formatPrice(p.amount)}</span>
                   </li>
                 ))}
@@ -189,7 +215,8 @@ export default function OrderDetail() {
             )}
             {!["cancelled", "refunded"].includes(o.status) && (due > 0 || o.status !== "delivered") && (
               <div className="mt-4 flex flex-col gap-2">
-                {due > 0 && <Btn size="sm" onClick={() => setResolving("M-Pesa")}><Smartphone size={15} /> Record M-Pesa payment</Btn>}
+                {due > 0 && stkOn && <Btn size="sm" disabled={saving} onClick={sendPrompt}><Smartphone size={15} /> Send M-Pesa prompt to customer</Btn>}
+                {due > 0 && <Btn size="sm" variant={stkOn ? "outline" : "primary"} onClick={() => setResolving("M-Pesa")}><Smartphone size={15} /> Record M-Pesa payment</Btn>}
                 {o.status !== "delivered" && (
                   <Btn size="sm" variant="outline" disabled={saving} onClick={() => (due > 0 ? setResolving("Cash") : update({ status: "delivered" }, "Marked delivered"))}><Banknote size={15} /> {due > 0 ? "Delivered & cash received" : "Mark delivered"}</Btn>
                 )}

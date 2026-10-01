@@ -25,26 +25,27 @@ export function usedCodes(orders: Order[], exceptOrderId?: string): Set<string> 
  */
 export function applyPayment(
   o: Order,
-  p: { method: PaymentRecord["method"]; code?: string; amount: number; markDelivered?: boolean },
+  p: { method: PaymentRecord["method"]; code?: string; amount: number; markDelivered?: boolean; by?: string },
   now = new Date().toISOString(),
 ): Order {
-  const record: PaymentRecord = { at: now, method: p.method, amount: p.amount, by: "Admin", ...(p.code ? { code: p.code } : {}) };
+  const by = p.by ?? "Admin";
+  const record: PaymentRecord = { at: now, method: p.method, amount: p.amount, by, ...(p.code ? { code: p.code } : {}) };
   o.payments = [...(o.payments ?? []), record];
   o.amountPaid = (o.amountPaid ?? 0) + p.amount;
   o.timeline = o.timeline ?? [];
   const money = `Ksh ${p.amount.toLocaleString("en-KE")}`;
   o.timeline.push({
     at: now,
-    label: p.method === "Cash" ? `Cash received · ${money}` : `M-Pesa payment ${p.code} verified · ${money}`,
-    by: "Admin",
+    label: p.method === "Cash" ? `Cash received · ${money}` : by === "Admin" ? `M-Pesa payment ${p.code} verified · ${money}` : `M-Pesa payment${p.code ? ` ${p.code}` : ""} received · ${money}`,
+    by,
   });
   if (o.amountPaid >= o.total) {
-    if (o.paymentStatus !== "paid") o.timeline.push({ at: now, label: "Payment complete", by: "Admin" });
+    if (o.paymentStatus !== "paid") o.timeline.push({ at: now, label: "Payment complete", by });
     o.paymentStatus = "paid";
     o.transactionId = p.code ?? o.transactionId ?? `CASH-${o.id.replace(/^SVE-/, "")}`;
     if (o.status === "pending") o.status = "confirmed";
   } else {
-    o.timeline.push({ at: now, label: `Balance due · Ksh ${(o.total - o.amountPaid).toLocaleString("en-KE")}`, by: "Admin" });
+    o.timeline.push({ at: now, label: `Balance due · Ksh ${(o.total - o.amountPaid).toLocaleString("en-KE")}`, by });
   }
   if (p.markDelivered && o.status !== "delivered") {
     o.status = "delivered";

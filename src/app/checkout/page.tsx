@@ -1,6 +1,7 @@
 "use client";
 
 import { Banknote, Check, Loader2, Lock, Smartphone } from "lucide-react";
+import { MpesaPrompt, type PromptInfo } from "@/components/checkout/mpesa-prompt";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -40,9 +41,18 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [orderNo, setOrderNo] = useState("");
   const [customer, setCustomer] = useState({ name: "", email: "", phone: "", address: "", city: "" });
+  // M-Pesa "pay now" prompt to the customer's phone (when the shop has it set up)
+  const [stkEnabled, setStkEnabled] = useState(false);
+  const [manual, setManual] = useState(false);
+  const [payPhone, setPayPhone] = useState("");
+  const [payInfo, setPayInfo] = useState<PromptInfo | null>(null);
+  useEffect(() => {
+    fetch("/api/mpesa/pay", { cache: "no-store" }).then((r) => r.json()).then((d) => setStkEnabled(!!d.enabled)).catch(() => {});
+  }, []);
+  const usePrompt = pay === "mpesa" && stkEnabled && !manual;
 
   if (done) {
-    return <OrderPlaced number={orderNo} />;
+    return <OrderPlaced number={orderNo} pay={payInfo} />;
   }
 
   if (cart.hydrated && cart.lines.length === 0) {
@@ -93,6 +103,7 @@ export default function CheckoutPage() {
                   address: String(f.get("address") || ""),
                   city: String(f.get("city") || ""),
                 });
+                if (!payPhone) setPayPhone(String(f.get("phone") || ""));
                 setStep(1);
               }}
             >
@@ -113,7 +124,7 @@ export default function CheckoutPage() {
               <h2 className="font-display text-lg font-bold">Payment method</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { id: "mpesa" as const, icon: Smartphone, label: "M-Pesa", sub: "Lipa na M-Pesa · Till" },
+                  { id: "mpesa" as const, icon: Smartphone, label: "M-Pesa", sub: stkEnabled ? "Pay now — prompt on your phone" : "Lipa na M-Pesa · Till" },
                   { id: "cod" as const, icon: Banknote, label: "Cash on delivery", sub: "Pay when it arrives" },
                 ].map((m) => (
                   <button
@@ -131,7 +142,28 @@ export default function CheckoutPage() {
                   </button>
                 ))}
               </div>
-              {pay === "mpesa" && (
+              {usePrompt && (
+                <div className="flex flex-col gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+                  <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Pay with M-Pesa — no Till number to type</p>
+                  <p className="text-sm">When you place your order we&apos;ll send an M-Pesa request for <b>{formatPrice(cart.total)}</b> to this phone. Just enter your M-Pesa PIN.</p>
+                  <label className="flex flex-col gap-1.5 text-sm">
+                    <span className="font-medium">M-Pesa phone number</span>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={payPhone}
+                      onChange={(e) => setPayPhone(e.target.value.replace(/[^\d+ ]/g, "").slice(0, 16))}
+                      placeholder="0712 345 678"
+                      autoComplete="tel"
+                      className="h-11 rounded-xl border border-border bg-surface px-4 text-base tracking-wide outline-none focus:border-brand-500"
+                    />
+                  </label>
+                  <button type="button" onClick={() => setManual(true)} className="self-start text-xs font-semibold text-brand-600 hover:underline">
+                    Prefer to pay to our Till number yourself?
+                  </button>
+                </div>
+              )}
+              {pay === "mpesa" && !usePrompt && (
                 <div className="flex flex-col gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
                   <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">How to pay with M-Pesa</p>
                   <ol className="list-decimal space-y-1 pl-5 text-sm">
@@ -158,14 +190,32 @@ export default function CheckoutPage() {
                     />
                   </label>
                   <p className="text-xs text-muted">You can also pay after placing the order. We confirm every payment and update your order straight away.</p>
+                  {stkEnabled && (
+                    <button type="button" onClick={() => setManual(false)} className="self-start text-xs font-semibold text-brand-600 hover:underline">
+                      Get an M-Pesa prompt on my phone instead
+                    </button>
+                  )}
                 </div>
               )}
               {pay === "cod" && (
                 <p className="rounded-xl bg-surface-2 p-3 text-sm text-muted">Pay in cash (or M-Pesa) when your order is delivered. Please have the exact amount ready.</p>
               )}
+              {error && <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-500">{error}</p>}
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
-                <Button className="flex-1" onClick={() => setStep(2)}>Review order</Button>
+                <Button variant="outline" onClick={() => { setError(""); setStep(0); }}>Back</Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    if (usePrompt && !/^(?:\+?254|0)?[71]\d{8}$/.test(payPhone.replace(/\s/g, ""))) {
+                      setError("Enter a valid Safaricom number, e.g. 0712 345 678.");
+                      return;
+                    }
+                    setError("");
+                    setStep(2);
+                  }}
+                >
+                  Review order
+                </Button>
               </div>
             </div>
           )}
@@ -205,7 +255,9 @@ export default function CheckoutPage() {
                       promoCode: cart.promoCode,
                       total: cart.total,
                       payment: pay === "mpesa" ? "M-Pesa" : "Cash on Delivery",
-                      mpesaCode: pay === "mpesa" ? mpesaCode : undefined,
+                      mpesaCode: pay === "mpesa" && !usePrompt ? mpesaCode : undefined,
+                      stk: usePrompt,
+                      mpesaPhone: usePrompt ? payPhone : undefined,
                       customer,
                     };
                     try {
@@ -213,6 +265,7 @@ export default function CheckoutPage() {
                       const d = await res.json().catch(() => ({}));
                       if (!res.ok) throw new Error(d.error || "Could not place your order.");
                       setOrderNo(d.number || "");
+                      if (d.prompt && d.t) setPayInfo({ number: d.number, t: d.t, total: d.total, ...d.prompt });
                       rememberOrder(d.number || "");
                       cart.clear();
                       setDone(true);
@@ -222,7 +275,7 @@ export default function CheckoutPage() {
                     }
                   }}
                 >
-                  {placing ? <><Loader2 size={18} className="animate-spin" /> Placing…</> : <>Place order · {formatPrice(cart.total)}</>}
+                  {placing ? <><Loader2 size={18} className="animate-spin" /> {usePrompt ? "Sending M-Pesa prompt…" : "Placing…"}</> : <>{usePrompt ? "Place order & pay" : "Place order"} · {formatPrice(cart.total)}</>}
                 </Button>
               </div>
             </div>
@@ -255,15 +308,16 @@ export default function CheckoutPage() {
 }
 
 /** Confirmation screen: the new order with its live tracker, plus next steps. */
-function OrderPlaced({ number }: { number: string }) {
+function OrderPlaced({ number, pay }: { number: string; pay: PromptInfo | null }) {
   const [order, setOrder] = useState<PublicOrder | null>(null);
+  const [reload, setReload] = useState(0);
   useEffect(() => {
     if (!number) return;
     fetch(`/api/track?number=${encodeURIComponent(number)}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setOrder(d))
       .catch(() => {});
-  }, [number]);
+  }, [number, reload]);
 
   return (
     <div className="container-x max-w-2xl py-10 sm:py-14">
@@ -277,6 +331,7 @@ function OrderPlaced({ number }: { number: string }) {
           <Link href="/track-order" className="font-semibold text-brand-600 hover:underline">My orders</Link> — no number to remember.
         </p>
       </div>
+      {pay && <div className="mt-6"><MpesaPrompt info={pay} onPaid={() => setReload((n) => n + 1)} /></div>}
       <div className="mt-6">
         {order ? <OrderCard order={order} defaultOpen /> : <div className="h-56 animate-pulse rounded-2xl bg-surface-2" />}
       </div>

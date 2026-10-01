@@ -115,6 +115,21 @@ export async function findUserById(id: string): Promise<UserRecord | null> {
   return (await loadAll()).find((u) => u.id === id) ?? null;
 }
 
+/** Every customer account, newest first — for the admin (never includes password hashes). */
+export async function listUsers(): Promise<(PublicUser & { google: boolean })[]> {
+  if (TURSO_ON) {
+    await ensureSchema();
+    const res = await db().execute("SELECT id, email, name, phone, created_at, substr(password_hash, 1, 7) AS kind FROM users ORDER BY created_at DESC LIMIT 5000");
+    return res.rows.map((r) => ({
+      id: String(r.id), email: String(r.email), name: String(r.name ?? ""), phone: String(r.phone ?? ""),
+      createdAt: String(r.created_at), google: String(r.kind) === "google$",
+    }));
+  }
+  return (await loadAll())
+    .map((u) => ({ ...toPublic(u), google: u.passwordHash.startsWith("google$") }))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 /** Create an account. Returns null if the email is already registered. */
 export async function createUser(input: { email: string; name: string; phone: string; passwordHash: string }): Promise<UserRecord | null> {
   const user: UserRecord = {

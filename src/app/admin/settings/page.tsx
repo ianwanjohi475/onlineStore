@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Btn, Card, Field, PageHeader, TextArea, api } from "@/components/admin/kit";
 import { useToast } from "@/context/toast";
 import type { Announcement, SiteSettings } from "@/lib/types";
@@ -56,8 +56,6 @@ export default function SettingsAdmin() {
           <Field label="Hero tagline" className="sm:col-span-2" value={s.heroTagline} onChange={(e) => set("heroTagline", e.target.value)} />
         </Card>
       )}
-
-      {tab === "Store" && <SystemStatus />}
 
       {tab === "Payments" && (
         <Card className="flex flex-col gap-4 p-6">
@@ -176,37 +174,3 @@ function SecurityTab() {
   );
 }
 
-function SystemStatus() {
-  type Sys = { database: boolean; google: boolean; email: boolean };
-  const [sys, setSys] = useState<Sys | null>(null);
-  const [checking, setChecking] = useState(false);
-  const load = useCallback(() => api("/api/admin/system", "GET").then(setSys).catch(() => {}), []);
-  useEffect(() => { load(); }, [load]);
-  const check = () => {
-    setChecking(true);
-    load().finally(() => setChecking(false));
-  };
-  if (!sys) return null;
-  const rows = [
-    { label: "Database", good: sys.database },
-    { label: "Continue with Google", good: sys.google },
-    { label: "Password-reset emails", good: sys.email },
-  ];
-  return (
-    <Card className="mt-4 p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display font-bold">Connections</h2>
-        <Btn variant="outline" size="sm" onClick={check} disabled={checking}>{checking ? "Checking…" : "Check again"}</Btn>
-      </div>
-      <ul className="mt-3 flex flex-col gap-2.5">
-        {rows.map((r) => (
-          <li key={r.label} className="flex items-center gap-2.5 text-sm">
-            <span className={`size-2.5 shrink-0 rounded-full ${r.good ? "bg-emerald-500" : "bg-slate-400"}`} aria-hidden />
-            <span className="min-w-0 flex-1 font-medium">{r.label}</span>
-            <span className={r.good ? "font-semibold text-emerald-600 dark:text-emerald-400" : "text-muted"}>{r.good ? "Connected" : "Not connected"}</span>
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}

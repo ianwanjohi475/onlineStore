@@ -3,6 +3,7 @@
 import { AlertTriangle, DollarSign, Package, ShoppingCart, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { ActivityFeed } from "@/components/admin/activity-feed";
 import { BarChart, Card, PageHeader, StatCard, StatusPill, api } from "@/components/admin/kit";
 import { useLive } from "@/hooks/use-live";
 import { CANCELLED_STATUSES, COMPLETED_STATUSES, OPEN_STATUSES } from "@/lib/orders";
@@ -12,10 +13,12 @@ import { cn, formatPrice } from "@/lib/utils";
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [products, setProducts] = useState<Product[] | null>(null);
+  const [accounts, setAccounts] = useState<string[]>([]);
 
   const load = () => {
     api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([]));
     api("/api/admin/products", "GET").then(setProducts).catch(() => setProducts([]));
+    api("/api/admin/customers", "GET").then((r) => setAccounts((r.accounts ?? []).map((a: { email: string }) => a.email.toLowerCase()))).catch(() => {});
   };
   useEffect(() => { load(); }, []);
   useLive(load);
@@ -26,7 +29,7 @@ export default function AdminDashboard() {
     const revenue = valid.reduce((n, o) => n + o.total, 0);
     const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
     const todayRevenue = valid.filter((o) => new Date(o.date) >= startToday).reduce((n, o) => n + o.total, 0);
-    const customers = new Set(orders.map((o) => o.customer.email)).size;
+    const customers = new Set([...orders.map((o) => (o.customer.email || o.customer.phone).toLowerCase()), ...accounts]).size;
 
     const pending = orders.filter((o) => OPEN_STATUSES.includes(o.status)).length;
     const completed = orders.filter((o) => COMPLETED_STATUSES.includes(o.status)).length;
@@ -53,7 +56,7 @@ export default function AdminDashboard() {
     const bestSellers = [...units.values()].sort((a, b) => b.qty - a.qty).slice(0, 5);
 
     return { revenue, todayRevenue, customers, orders: orders.length, pending, completed, cancelled, paidPayments, pendingPayments, buckets, bestSellers };
-  }, [orders]);
+  }, [accounts, orders]);
 
   const lowStock = (products ?? []).filter((p) => (p.stock ?? 0) <= 5).sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0)).slice(0, 5);
   const recent = (orders ?? []).slice(0, 6);
@@ -174,6 +177,17 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
+
+      <Card className="mt-6 overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5">
+          <div>
+            <h2 className="font-display font-bold">Activity log</h2>
+            <p className="text-xs text-muted">Live — sign-ups, orders, payments, M-Pesa and admin changes</p>
+          </div>
+          <Link href="/admin/activity" className="text-sm font-semibold text-brand-600 hover:underline">View all</Link>
+        </div>
+        <ActivityFeed compact />
+      </Card>
     </div>
   );
 }

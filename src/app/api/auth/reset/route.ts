@@ -3,6 +3,7 @@ import { hashPassword, passwordProblem } from "@/lib/auth/password";
 import { clientIp, rateLimit, resetLimit, sameOrigin } from "@/lib/auth/rate-limit";
 import { setUserCookie } from "@/lib/auth/session";
 import { consumeResetToken, toPublic } from "@/lib/store/users";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -21,5 +22,6 @@ export async function POST(req: Request) {
 
   resetLimit(`login:acct:${user.email}`); // the owner proved access — lift any sign-in lock
   await setUserCookie(user.id, user.sessionVersion);
+  await logActivity("customer", "info", `${user.email} set a new password with a reset link`, { ref: user.email, req });
   return NextResponse.json({ user: toPublic(user) });
 }

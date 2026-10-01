@@ -1,11 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  BadgePercent, CreditCard, ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Menu,
-  MessageSquareQuote, Package, Settings as SettingsIcon, ShapesIcon, ShoppingCart,
-  Tag, Users, X,
-} from "lucide-react";
+import { Activity, BadgePercent, CreditCard, ExternalLink, Image as ImageIcon, LayoutDashboard, LogOut, Menu, MessageSquareQuote, Package, Settings as SettingsIcon, ShapesIcon, ShoppingCart, Tag, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,6 +17,7 @@ const groups = [
     { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
     { href: "/admin/payments", label: "Payments", icon: CreditCard },
     { href: "/admin/customers", label: "Customers", icon: Users },
+    { href: "/admin/activity", label: "Activity log", icon: Activity },
   ] },
   { label: "Catalog", items: [
     { href: "/admin/products", label: "Products", icon: Package },

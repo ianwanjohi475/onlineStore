@@ -3,6 +3,7 @@ import { readStore, writeStore } from "@/lib/store/store";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import { isSafeMediaUrl } from "@/lib/media";
 import type { HeroSlide, SiteSettings } from "@/lib/types";
+import { logActivity } from "@/lib/store/activity";
 
 export async function GET() {
   if (!(await isAuthed())) return unauthorized();
@@ -88,5 +89,6 @@ export async function PUT(req: Request) {
   };
   store.settings = next;
   await writeStore(store);
+  await logActivity("admin", "info", Array.isArray(body.heroSlides) ? "Homepage banners updated" : Array.isArray(body.promos) ? "Coupons updated" : "Store settings updated", { req });
   return NextResponse.json(next);
 }

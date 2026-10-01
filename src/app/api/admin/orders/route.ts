@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { clearOrders, getOrders, updateOrder } from "@/lib/store/store";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import type { OrderStatus, PaymentStatus } from "@/lib/types";
+import { logActivity } from "@/lib/store/activity";
 
 const statusLabels: Record<OrderStatus, string> = {
   pending: "Marked pending",
@@ -69,12 +70,20 @@ export async function PUT(req: Request) {
   });
 
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const changes = [
+    body.status && `status → ${body.status}`,
+    body.paymentStatus && `payment → ${body.paymentStatus}`,
+    typeof body.archived === "boolean" && (body.archived ? "archived" : "restored"),
+    body.note?.trim() && "note added",
+  ].filter(Boolean);
+  if (changes.length) await logActivity("order", "info", `${order.number} updated by admin: ${changes.join(", ")}`, { ref: order.number, req });
   return NextResponse.json(order);
 }
 
 /** Clear every order — a clean slate for orders and customers. */
-export async function DELETE() {
+export async function DELETE(req: Request) {
   if (!(await isAuthed())) return unauthorized();
   await clearOrders();
+  await logActivity("admin", "warning", "All orders were cleared by admin", { req });
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import { siteUrl } from "@/lib/email/send";
 import { createResetToken, findUserByEmail } from "@/lib/store/users";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -14,5 +15,6 @@ export async function POST(req: Request) {
   const user = email ? await findUserByEmail(email) : null;
   if (!user) return NextResponse.json({ error: "No customer account uses that email." }, { status: 404 });
   const token = await createResetToken(user.id);
+  await logActivity("admin", "info", `Password reset link created for ${user.email}`, { ref: user.email, req });
   return NextResponse.json({ link: `${siteUrl(req)}/account/reset?token=${token}`, name: user.name, phone: user.phone, expiresInMinutes: 30 });
 }

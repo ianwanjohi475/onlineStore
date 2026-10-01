@@ -3,6 +3,7 @@ import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import { sameOrigin } from "@/lib/auth/rate-limit";
 import { amountDue, applyPayment, normalizeMpesaCode, usedCodes } from "@/lib/payments";
 import { getOrders, updateOrder } from "@/lib/store/store";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -52,6 +53,15 @@ export async function POST(req: Request) {
     amountDue(o) === 0 ? (body.markDelivered ? applyPaymentDeliveredOnly(o) : o) : applyPayment(o, { method, code, amount, markDelivered: !!body.markDelivered }),
   );
   if (!updated) return NextResponse.json({ error: "Order not found." }, { status: 404 });
+  await logActivity(
+    "payment",
+    "success",
+    method === "Cash"
+      ? `Cash received for ${updated.number} — Ksh ${amount.toLocaleString("en-KE")} (recorded by admin)`
+      : `M-Pesa payment ${code} for ${updated.number} — Ksh ${amount.toLocaleString("en-KE")} (verified by admin)`,
+    { ref: updated.number, req },
+  );
+  if (updated.paymentStatus === "paid") await logActivity("payment", "success", `${updated.number} is fully paid`, { ref: updated.number });
   return NextResponse.json(updated);
 }
 

@@ -4,6 +4,7 @@ import { GOOGLE_CLIENT_ID, verifyGoogleCredential } from "@/lib/auth/google";
 import { clientIp, rateLimit, resetLimit, sameOrigin } from "@/lib/auth/rate-limit";
 import { setUserCookie } from "@/lib/auth/session";
 import { createUser, findUserByEmail, toPublic } from "@/lib/store/users";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Could not sign you in. Please try again." }, { status: 500 });
 
   resetLimit(`login:acct:${user.email}`);
+  await logActivity("customer", created ? "success" : "info", created ? `New customer account via Google: ${user.name} (${user.email})` : `${user.name} signed in with Google`, { ref: user.email, req });
   await setUserCookie(user.id, user.sessionVersion);
   return NextResponse.json({ user: toPublic(user), created }, { status: created ? 201 : 200 });
 }

@@ -4,6 +4,7 @@ import { isAuthed, unauthorized } from "@/lib/admin/guard";
 import { slugify } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 import { isSafeMediaUrl, parseVideo } from "@/lib/media";
+import { logActivity } from "@/lib/store/activity";
 
 /** Keep only safe media URLs (same-site paths or https), max 12 extra photos. */
 function cleanMedia(body: Partial<Product>) {
@@ -51,6 +52,7 @@ export async function POST(req: Request) {
   };
   store.products.unshift(product);
   await writeStore(store);
+  await logActivity("admin", "info", `Product added: ${product.name} (Ksh ${product.price.toLocaleString("en-KE")})`, { ref: product.slug, req });
   return NextResponse.json(product);
 }
 
@@ -69,14 +71,18 @@ export async function PUT(req: Request) {
     ...cleanMedia(body),
   };
   await writeStore(store);
-  return NextResponse.json(store.products[idx]);
+  const p = store.products[idx];
+  await logActivity("admin", "info", `Product updated: ${p.name} — Ksh ${p.price.toLocaleString("en-KE")}${p.inStock === false ? " · out of stock" : typeof p.stock === "number" ? ` · ${p.stock} in stock` : ""}`, { ref: p.slug, req });
+  return NextResponse.json(p);
 }
 
 export async function DELETE(req: Request) {
   if (!(await isAuthed())) return unauthorized();
   const slug = new URL(req.url).searchParams.get("slug");
   const store = (await readStore());
+  const gone = store.products.find((p) => p.slug === slug);
   store.products = store.products.filter((p) => p.slug !== slug);
   await writeStore(store);
+  if (gone) await logActivity("admin", "warning", `Product deleted: ${gone.name}`, { ref: gone.slug, req });
   return NextResponse.json({ ok: true });
 }

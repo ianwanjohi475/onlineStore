@@ -14,16 +14,24 @@ import { formatPrice } from "@/lib/utils";
 interface Customer {
   name: string; email: string; phone: string; city: string; address: string;
   orders: Order[]; spent: number; last: string; first: string;
+  /** has a customer account (signed up), with the date it was created */
+  account: { createdAt: string; google: boolean } | null;
 }
+interface Account { id: string; email: string; name: string; phone: string; createdAt: string; google: boolean }
+
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
 
 export default function CustomersAdmin() {
   const toast = useToast();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [suspended, setSuspended] = useState<string[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [filter, setFilter] = useState<"all" | "accounts" | "guests">("all");
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<Customer | null>(null);
 
-  const loadSuspended = () => api("/api/admin/customers", "GET").then((r) => setSuspended(r.suspended ?? [])).catch(() => {});
+  const loadSuspended = () =>
+    api("/api/admin/customers", "GET").then((r) => { setSuspended(r.suspended ?? []); setAccounts(r.accounts ?? []); }).catch(() => {});
   const load = () => {
     api("/api/admin/orders", "GET").then(setOrders).catch(() => setOrders([]));
     loadSuspended();
@@ -33,22 +41,36 @@ export default function CustomersAdmin() {
 
   const customers = useMemo<Customer[]>(() => {
     const map = new Map<string, Customer>();
+    const byId = new Map(accounts.map((a) => [a.id, a]));
+    // everyone who signed up — even before their first order
+    for (const a of accounts) {
+      map.set(a.email.toLowerCase(), {
+        name: a.name || a.email.split("@")[0], email: a.email, phone: a.phone, city: "", address: "",
+        orders: [], spent: 0, last: a.createdAt, first: a.createdAt, account: { createdAt: a.createdAt, google: a.google },
+      });
+    }
     for (const o of orders ?? []) {
-      const key = o.customer.email || o.customer.name;
-      const c = map.get(key) ?? { ...o.customer, orders: [], spent: 0, last: o.date, first: o.date };
+      const acct = o.userId ? byId.get(o.userId) : undefined;
+      const key = (acct?.email || o.customer.email || o.customer.name).toLowerCase();
+      const c = map.get(key) ?? { ...o.customer, email: o.customer.email ?? "", orders: [], spent: 0, last: o.date, first: o.date, account: null };
+      if (!c.phone) c.phone = o.customer.phone;
+      if (!c.city) { c.city = o.customer.city; c.address = o.customer.address; }
       c.orders.push(o);
       if (o.status !== "cancelled" && o.status !== "refunded") c.spent += o.total;
       if (new Date(o.date) > new Date(c.last)) c.last = o.date;
       if (new Date(o.date) < new Date(c.first)) c.first = o.date;
       map.set(key, c);
     }
-    return [...map.values()].sort((a, b) => b.spent - a.spent);
-  }, [orders]);
+    return [...map.values()].sort((a, b) => +new Date(b.last) - +new Date(a.last));
+  }, [orders, accounts]);
 
   const filtered = customers.filter((c) => {
+    if (filter === "accounts" && !c.account) return false;
+    if (filter === "guests" && c.account) return false;
     const q = query.toLowerCase();
-    return !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+    return !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.includes(q);
   });
+  const accountCount = customers.filter((c) => c.account).length;
   const { slice, page, pages, setPage } = usePaginated(filtered, 12);
 
   const isSuspended = (email: string) => suspended.includes(email);
@@ -62,22 +84,30 @@ export default function CustomersAdmin() {
 
   return (
     <div>
-      <PageHeader title="Customers" subtitle={orders ? `${customers.length} customers` : "Loading…"} />
+      <PageHeader title="Customers" subtitle={orders ? `${customers.length} customers · ${accountCount} with an account` : "Loading…"} />
       <ResetLinkCard />
-      <Card className="mb-4 p-3"><SearchInput value={query} onChange={setQuery} placeholder="Search name or email" /></Card>
+      <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
+        <SearchInput value={query} onChange={setQuery} placeholder="Search name, email or phone" />
+        <div className="flex gap-1 rounded-xl bg-surface-2 p-1">
+          {([["all", "All"], ["accounts", "Accounts"], ["guests", "Guest buyers"]] as const).map(([k, label]) => (
+            <button key={k} onClick={() => setFilter(k)} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${filter === k ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground"}`}>{label}</button>
+          ))}
+        </div>
+      </Card>
 
       <Card>
         {orders === null ? (
           <div className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-12 animate-pulse rounded-lg bg-surface-2" />)}</div>
         ) : filtered.length === 0 ? (
-          <EmptyState icon={Users} title="No customers yet" desc="Customers appear after their first order." />
+          <EmptyState icon={Users} title="No customers yet" desc="Customers appear here as soon as they sign up or place an order." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm [&_td]:px-3 [&_th]:px-3 sm:[&_td]:px-5 sm:[&_th]:px-5">
               <thead className="text-left text-xs uppercase tracking-wide text-muted">
                 <tr className="border-b border-border">
                   <th className="px-5 py-3 font-semibold">Customer</th>
-                  <th className="hidden px-5 py-3 font-semibold sm:table-cell">City</th>
+                  <th className="hidden px-5 py-3 font-semibold lg:table-cell">Phone</th>
+                  <th className="hidden px-5 py-3 font-semibold sm:table-cell">Joined</th>
                   <th className="px-5 py-3 font-semibold">Orders</th>
                   <th className="px-5 py-3 text-right font-semibold">Spent</th>
                   <th className="hidden px-5 py-3 text-right font-semibold md:table-cell">Status</th>
@@ -85,14 +115,18 @@ export default function CustomersAdmin() {
               </thead>
               <tbody>
                 {slice.map((c) => (
-                  <tr key={c.email} onClick={() => setOpen(c)} className="cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-2">
+                  <tr key={c.email || c.name} onClick={() => setOpen(c)} className="cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-2">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <span className="grid size-9 place-items-center rounded-full bg-brand-500/12 text-sm font-bold text-brand-700 dark:text-brand-300">{c.name[0]}</span>
-                        <div><p className="font-medium">{c.name}</p><p className="text-xs text-muted">{c.email}</p></div>
+                        <div className="min-w-0">
+                          <p className="flex flex-wrap items-center gap-1.5 font-medium">{c.name} {c.account ? <AccountBadge google={c.account.google} /> : <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-muted">Guest</span>}</p>
+                          <p className="truncate text-xs text-muted">{c.email || "—"}</p>
+                        </div>
                       </div>
                     </td>
-                    <td className="hidden px-5 py-3 text-muted sm:table-cell">{c.city}</td>
+                    <td className="hidden whitespace-nowrap px-5 py-3 text-muted lg:table-cell">{c.phone || "—"}</td>
+                    <td className="hidden whitespace-nowrap px-5 py-3 text-muted sm:table-cell">{shortDate(c.account?.createdAt ?? c.first)}</td>
                     <td className="px-5 py-3 font-semibold tabular-nums">{c.orders.length}</td>
                     <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatPrice(c.spent)}</td>
                     <td className="hidden px-5 py-3 text-right md:table-cell"><StatusPill status={isSuspended(c.email) ? "suspended" : c.orders.length > 1 ? "active" : "pending"} /></td>
@@ -117,7 +151,11 @@ export default function CustomersAdmin() {
               <span className="grid size-12 place-items-center rounded-full bg-brand-500/12 text-lg font-bold text-brand-700 dark:text-brand-300">{open.name[0]}</span>
               <div>
                 <p className="font-semibold">{open.name}</p>
-                <StatusPill status={isSuspended(open.email) ? "suspended" : open.orders.length > 1 ? "active" : "pending"} />
+                <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                  <StatusPill status={isSuspended(open.email) ? "suspended" : open.orders.length > 1 ? "active" : "pending"} />
+                  {open.account ? <AccountBadge google={open.account.google} /> : <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-muted">Guest buyer</span>}
+                </div>
+                {open.account && <p className="mt-1 text-xs text-muted">Account created {shortDate(open.account.createdAt)}</p>}
               </div>
             </div>
 
@@ -131,12 +169,13 @@ export default function CustomersAdmin() {
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Contact</p>
               <p className="flex items-center gap-2"><Mail size={14} className="text-muted" /> {open.email || "—"}</p>
               <p className="mt-1 flex items-center gap-2"><Phone size={14} className="text-muted" /> {open.phone || "—"}</p>
-              <p className="mt-1 flex items-center gap-2"><MapPin size={14} className="text-muted" /> {open.address}, {open.city}</p>
+              <p className="mt-1 flex items-center gap-2"><MapPin size={14} className="text-muted" /> {[open.address, open.city].filter(Boolean).join(", ") || "No delivery address yet"}</p>
             </div>
 
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Order history</p>
-              <div className="divide-y divide-border rounded-xl border border-border">
+              {open.orders.length === 0 && <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted">No orders yet.</p>}
+              <div className="divide-y divide-border rounded-xl border border-border empty:hidden">
                 {[...open.orders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((o) => (
                   <Link key={o.id} href={`/admin/orders/${o.id}`} className="flex items-center justify-between p-3 text-sm hover:bg-surface-2">
                     <div>
@@ -156,6 +195,10 @@ export default function CustomersAdmin() {
       </Drawer>
     </div>
   );
+}
+
+function AccountBadge({ google }: { google: boolean }) {
+  return <span className="rounded-full bg-brand-500/12 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:text-brand-300">{google ? "Google account" : "Account"}</span>;
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

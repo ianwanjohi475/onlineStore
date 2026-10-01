@@ -159,10 +159,26 @@ export interface Order {
   userId?: string;
   /** M-Pesa code the customer typed at checkout (unverified until admin resolves it) */
   customerRef?: string;
-  /** verified payments recorded by the admin (M-Pesa till / cash) */
+  /** verified payments (M-Pesa prompt, M-Pesa till confirmed by admin, cash) */
   payments?: PaymentRecord[];
+  /** latest M-Pesa payment prompt (STK Push) sent to the customer's phone */
+  stk?: StkRequest;
   /** sum of verified payments */
   amountPaid?: number;
+}
+
+export interface StkRequest {
+  checkoutRequestId: string;
+  merchantRequestId?: string;
+  /** 2547XXXXXXXX */
+  phone: string;
+  amount: number;
+  at: string;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  resultDesc?: string;
+  receipt?: string;
+  checkedAt?: string;
+  attempts: number;
 }
 
 export interface PaymentRecord {

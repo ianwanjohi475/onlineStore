@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { ADMIN_COOKIE, adminCookieOptions, createSession } from "@/lib/admin/auth";
 import { checkAdminPassword, credentialVersion } from "@/lib/admin/credentials";
 import { clientIp, rateLimit, resetLimit, sameOrigin } from "@/lib/auth/rate-limit";
+import { logActivity } from "@/lib/store/activity";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,7 @@ export async function POST(req: Request) {
   const key = `admin-login:${clientIp(req)}`;
   const limit = rateLimit(key, 8, WINDOW_MS);
   if (!limit.ok) {
+    await logActivity("security", "error", "Admin sign-in blocked after too many wrong passwords", { req });
     return NextResponse.json(
       { error: `Too many attempts. Please wait ${Math.ceil(limit.retryAfter / 60)} minutes and try again.` },
       { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
@@ -22,11 +24,13 @@ export async function POST(req: Request) {
 
   const { password } = (await req.json().catch(() => ({}))) as { password?: string };
   if (!(await checkAdminPassword(password ?? ""))) {
+    await logActivity("security", "warning", "Wrong admin password entered", { req });
     return NextResponse.json({ error: "Incorrect password. Please try again." }, { status: 401 });
   }
 
   resetLimit(key);
   (await cookies()).set(ADMIN_COOKIE, await createSession(await credentialVersion()), adminCookieOptions);
+  await logActivity("security", "info", "Admin signed in", { req });
   return NextResponse.json({ ok: true });
 }
 
