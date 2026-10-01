@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Btn, Card, Field, PageHeader, TextArea, api } from "@/components/admin/kit";
 import { useToast } from "@/context/toast";
 import type { Announcement, SiteSettings } from "@/lib/types";
@@ -177,26 +177,39 @@ function SecurityTab() {
 }
 
 function SystemStatus() {
-  const [sys, setSys] = useState<{ storage: string; ok: boolean; error: string; email: boolean; google: boolean; host: string | null } | null>(null);
-  useEffect(() => { api("/api/admin/system", "GET").then(setSys).catch(() => {}); }, []);
+  type Sys = { storage: string; ok: boolean; error: string; email: boolean; google: boolean; host: string | null; urlVar: string | null; tokenVar: string | null; deployment: string };
+  const [sys, setSys] = useState<Sys | null>(null);
+  const [checking, setChecking] = useState(false);
+  const load = useCallback(() => api("/api/admin/system", "GET").then(setSys).catch(() => {}), []);
+  useEffect(() => { load(); }, [load]);
+  const check = () => {
+    setChecking(true);
+    load().finally(() => setChecking(false));
+  };
   if (!sys) return null;
+  const dbGood = sys.storage === "turso" && sys.ok;
   const rows = [
     {
       label: "Database",
-      good: sys.storage === "turso" && sys.ok,
+      good: dbGood,
       text:
         sys.storage === "turso"
-          ? sys.ok ? `Turso connected (${sys.host})` : `Turso not reachable — check TURSO_DATABASE_URL / TURSO_AUTH_TOKEN. ${sys.error}`
-          : sys.storage === "blob"
-            ? "Vercel Blob (works — Turso recommended)"
-            : "Not connected — orders & accounts are temporary. Add TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in Vercel.",
+          ? sys.ok ? `Turso connected (${sys.host}) — orders and accounts are saved permanently.` : `Turso not working: ${sys.error}`
+          : sys.error
+            ? `Not connected: ${sys.error}`
+            : sys.storage === "blob"
+              ? "Vercel Blob (works — Turso recommended)"
+              : `Not connected — this ${sys.deployment} deployment can't see TURSO_DATABASE_URL, so orders & accounts are temporary.`,
     },
     { label: "Continue with Google", good: sys.google, text: sys.google ? "On" : "Off — add NEXT_PUBLIC_GOOGLE_CLIENT_ID in Vercel" },
     { label: "Password-reset emails", good: sys.email, text: sys.email ? "On" : "Off — reset links can be sent from Customers (optional: RESEND_API_KEY)" },
   ];
   return (
     <Card className="mt-4 p-5">
-      <h2 className="font-display font-bold">Connections</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-display font-bold">Connections</h2>
+        <Btn variant="outline" size="sm" onClick={check} disabled={checking}>{checking ? "Checking…" : "Check again"}</Btn>
+      </div>
       <ul className="mt-3 flex flex-col gap-2.5">
         {rows.map((r) => (
           <li key={r.label} className="flex items-start gap-2.5 text-sm">
@@ -205,6 +218,24 @@ function SystemStatus() {
           </li>
         ))}
       </ul>
+      {!dbGood && (
+        <div className="mt-4 rounded-xl bg-surface-2 p-4 text-sm text-muted">
+          <p className="font-semibold text-foreground">How to fix the database</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>Vercel → this project → Settings → Environment Variables.</li>
+            <li>
+              You need exactly two names: <code className="break-all">TURSO_DATABASE_URL</code> (starts with <code>libsql://</code>) and{" "}
+              <code className="break-all">TURSO_AUTH_TOKEN</code> (starts with <code>eyJ</code>). Paste values exactly as Turso shows them.
+            </li>
+            <li>Tick <b>Production</b> (and Preview) for both — this site is running as <b>{sys.deployment}</b>.</li>
+            <li>Deployments → ⋮ on the newest one → <b>Redeploy</b>. New variables only reach new deployments.</li>
+            <li>Come back here and press <b>Check again</b>.</li>
+          </ol>
+          <p className="mt-2 text-xs">
+            Found by this deployment: database URL {sys.urlVar ? <b>{sys.urlVar} ✓</b> : <b>none</b>} · token {sys.tokenVar ? <b>{sys.tokenVar} ✓</b> : <b>none</b>}
+          </p>
+        </div>
+      )}
     </Card>
   );
 }
