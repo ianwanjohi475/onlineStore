@@ -17,6 +17,8 @@ interface AuthValue {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (input: { name: string; email: string; phone: string; password: string }) => Promise<void>;
   signOut: () => Promise<void>;
+  /** sign in / sign up with a Google ID token from Google Identity Services */
+  signInWithGoogle: (credential: string) => Promise<{ created: boolean }>;
   update: (patch: Record<string, string>) => Promise<void>;
 }
 
@@ -53,15 +55,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = useCallback(async (input: { name: string; email: string; phone: string; password: string }) => {
     setUser((await call("/api/auth/signup", "POST", input)).user);
   }, []);
+  const signInWithGoogle = useCallback(async (credential: string) => {
+    const d = await call("/api/auth/google", "POST", { credential });
+    setUser(d.user);
+    return { created: !!d.created };
+  }, []);
   const signOut = useCallback(async () => {
     await call("/api/auth/logout", "POST").catch(() => {});
+    // don't let Google One Tap sign them straight back in
+    (window as unknown as { google?: { accounts?: { id?: { disableAutoSelect?: () => void } } } }).google?.accounts?.id?.disableAutoSelect?.();
     setUser(null);
   }, []);
   const update = useCallback(async (patch: Record<string, string>) => {
     setUser((await call("/api/auth/me", "PATCH", patch)).user);
   }, []);
 
-  return <AuthContext.Provider value={{ user, ready, signIn, signUp, signOut, update }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, ready, signIn, signUp, signOut, update, signInWithGoogle }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

@@ -4,6 +4,7 @@ import { Eye, EyeOff, Heart, KeyRound, Loader2, LogOut, Package, User } from "lu
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { OrderCard } from "@/components/orders/order-card";
+import { GoogleButton } from "@/components/auth/google";
 import { ProductImage } from "@/components/product/product-image";
 import { useAuth } from "@/context/auth";
 import { useCatalog } from "@/context/catalog";
@@ -89,6 +90,7 @@ function AuthForms() {
         </div>}
 
         <form onSubmit={submit} className="mt-5 flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 sm:p-6">
+          {mode !== "forgot" && <GoogleButton text={mode === "signup" ? "signup_with" : "continue_with"} divider />}
           {mode === "signup" && (
             <Input name="name" label="Full name" autoComplete="name" required minLength={2} maxLength={80} placeholder="Jane Wanjiru" />
           )}

@@ -247,6 +247,24 @@ section("Checkout: price & payload tampering");
   ok("order spam from one connection is rate-limited (429)", last === 429, last);
 }
 
+section("Continue with Google");
+{
+  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
+  const now = Math.floor(Date.now() / 1000);
+  const claims = { iss: "https://accounts.google.com", aud: "x", sub: "1", email: emailA, email_verified: true, iat: now, exp: now + 3600 };
+  const none = `${b64({ alg: "none", typ: "JWT" })}.${b64(claims)}.`;
+  const fakeSig = `${b64({ alg: "RS256", kid: "fake" })}.${b64(claims)}.${Buffer.from("not-a-signature").toString("base64url")}`;
+  for (const [label, credential] of [["unsigned (alg:none) token", none], ["token with a fake signature", fakeSig], ["garbage", "abc.def"]]) {
+    const r = await req("/api/auth/google", { method: "POST", body: { credential } });
+    ok(`Google sign-in rejects ${label} (never takes over ${emailA.split("@")[0]}…)`, r.status === 401 || r.status === 503, r.status);
+    ok(`…and sets no session`, !cookieFrom(r, "sv_session"));
+  }
+  const x = await req("/api/auth/google", { method: "POST", origin: "https://evil.example", body: { credential: none } });
+  ok("cross-site Google sign-in blocked (403)", x.status === 403, x.status);
+  const sys = await req("/api/admin/system");
+  ok("system status is admin-only", sys.status === 401, sys.status);
+}
+
 section("Payments");
 {
   const card = await req("/api/orders", { method: "POST", body: { items: [{ slug: "watch-nova-am", quantity: 1 }], payment: "Card", customer: { name: "Q", phone: "0700", address: "x", city: "Nairobi" } } });

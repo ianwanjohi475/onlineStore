@@ -40,7 +40,8 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           // No plugins, no <base> hijacking, forms only post back to us, no framing by other sites.
           { key: "Content-Security-Policy", value: "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests" },
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          // "allow-popups" so the Google sign-in popup can report back to us
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
         ],
       },
       {

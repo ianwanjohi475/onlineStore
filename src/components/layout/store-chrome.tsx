@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { SiteHeader } from "./site-header";
 import { WhatsAppButton } from "./whatsapp-button";
+import { GoogleOneTap } from "@/components/auth/google";
 
 /** Renders the storefront chrome everywhere except the /admin area.
  *  (No live polling here: it pinged the server every 4s per visitor, which is
@@ -16,6 +17,7 @@ export function StoreChrome({ children, footer }: { children: React.ReactNode; f
       <main className="flex-1">{children}</main>
       {footer}
       <WhatsAppButton />
+      <GoogleOneTap />
     </>
   );
 }

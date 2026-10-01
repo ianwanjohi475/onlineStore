@@ -57,6 +57,8 @@ export default function SettingsAdmin() {
         </Card>
       )}
 
+      {tab === "Store" && <SystemStatus />}
+
       {tab === "Payments" && (
         <Card className="flex flex-col gap-4 p-6">
           <div>
@@ -170,6 +172,39 @@ function SecurityTab() {
         <p className="font-semibold text-foreground">Session security</p>
         <p className="mt-1">Admins are signed out automatically after 15 minutes without activity, and after 12 hours at most.</p>
       </div>
+    </Card>
+  );
+}
+
+function SystemStatus() {
+  const [sys, setSys] = useState<{ storage: string; ok: boolean; error: string; email: boolean; google: boolean; host: string | null } | null>(null);
+  useEffect(() => { api("/api/admin/system", "GET").then(setSys).catch(() => {}); }, []);
+  if (!sys) return null;
+  const rows = [
+    {
+      label: "Database",
+      good: sys.storage === "turso" && sys.ok,
+      text:
+        sys.storage === "turso"
+          ? sys.ok ? `Turso connected (${sys.host})` : `Turso not reachable — check TURSO_DATABASE_URL / TURSO_AUTH_TOKEN. ${sys.error}`
+          : sys.storage === "blob"
+            ? "Vercel Blob (works — Turso recommended)"
+            : "Not connected — orders & accounts are temporary. Add TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in Vercel.",
+    },
+    { label: "Continue with Google", good: sys.google, text: sys.google ? "On" : "Off — add NEXT_PUBLIC_GOOGLE_CLIENT_ID in Vercel" },
+    { label: "Password-reset emails", good: sys.email, text: sys.email ? "On" : "Off — reset links can be sent from Customers (optional: RESEND_API_KEY)" },
+  ];
+  return (
+    <Card className="mt-4 p-5">
+      <h2 className="font-display font-bold">Connections</h2>
+      <ul className="mt-3 flex flex-col gap-2.5">
+        {rows.map((r) => (
+          <li key={r.label} className="flex items-start gap-2.5 text-sm">
+            <span className={`mt-1.5 size-2.5 shrink-0 rounded-full ${r.good ? "bg-emerald-500" : "bg-amber-500"}`} aria-hidden />
+            <span className="min-w-0"><b>{r.label}:</b> <span className="break-words text-muted">{r.text}</span></span>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }
