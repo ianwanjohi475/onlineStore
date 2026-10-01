@@ -3,18 +3,8 @@ import { NextResponse } from "next/server";
 import { clientIp, rateLimit, sameOrigin } from "@/lib/auth/rate-limit";
 import { addOrder, findOrderByNumber, getProducts, getSettings } from "@/lib/store/store";
 import { currentUser } from "@/lib/store/users";
-import type { Order, PaymentStatus } from "@/lib/types";
-
-/** M-Pesa / Card settle instantly in this demo; Cash on Delivery is collected later. */
-function derivePaymentStatus(method: string): PaymentStatus {
-  return /cash|delivery|cod/i.test(method) ? "pending" : "paid";
-}
-
-function makeTxnId(method: string, id: string): string {
-  if (/m-?pesa/i.test(method)) return `MPE${Math.random().toString(36).slice(2, 9).toUpperCase()}`;
-  if (/card/i.test(method)) return `CARD-${Math.floor(100000 + Math.random() * 900000)}`;
-  return `COD-${id.replace(/\D/g, "")}`;
-}
+import { normalizeMpesaCode } from "@/lib/payments";
+import type { Order } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -57,6 +47,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
   }
 
+  // Only M-Pesa (pay to our Till) and Cash on Delivery. Nothing is marked paid
+  // here — an admin verifies the M-Pesa code / cash and resolves the payment.
+  const method = /cash|delivery|cod/i.test(str(body.payment, 40)) ? "Cash on Delivery" : /m-?pesa/i.test(str(body.payment, 40)) ? "M-Pesa" : null;
+  if (!method) return NextResponse.json({ error: "Please choose M-Pesa or Cash on delivery." }, { status: 400 });
+  const paymentStatus = "pending" as const;
+  const customerRef = method === "M-Pesa" && body.mpesaCode ? normalizeMpesaCode(body.mpesaCode) : null;
+  if (method === "M-Pesa" && body.mpesaCode && !customerRef) {
+    return NextResponse.json({ error: "That M-Pesa code doesn't look right — it has 10 letters and numbers, e.g. QJK3ABC12D." }, { status: 400 });
+  }
+
   // Validate line items against the real catalogue — never trust client prices.
   type Line = { slug: string; name: string; price: number; quantity: number };
   const catalogue = await getProducts();
@@ -75,8 +75,6 @@ export async function POST(req: Request) {
 
   let id = newOrderId();
   while (await findOrderByNumber(id)) id = newOrderId();
-  const method = str(body.payment, 40) || "M-Pesa";
-  const paymentStatus = derivePaymentStatus(method);
   const now = new Date().toISOString();
 
   // Recompute ALL money server-side — catalogue prices, the store's delivery
@@ -101,13 +99,15 @@ export async function POST(req: Request) {
     discount,
     total,
     payment: method,
-    transactionId: makeTxnId(method, id),
     refunded: 0,
+    amountPaid: 0,
+    payments: [],
+    ...(customerRef ? { customerRef } : {}),
     customer,
     ...(user ? { userId: user.id } : {}),
     timeline: [
       { at: now, label: "Order placed" },
-      ...(paymentStatus === "paid" ? [{ at: now, label: "Payment received" }] : []),
+      ...(customerRef ? [{ at: now, label: `Customer paid by M-Pesa (${customerRef}) — awaiting confirmation` }] : []),
     ],
     notes: [],
   };

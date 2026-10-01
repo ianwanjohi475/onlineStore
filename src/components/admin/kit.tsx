@@ -50,14 +50,14 @@ export function StatCard({
   hint?: string;
 }) {
   return (
-    <Card className="p-5">
-      <div className="flex items-center gap-2.5">
-        <span className="grid size-9 place-items-center rounded-lg bg-brand-500/12 text-brand-600 dark:text-brand-400">
-          <Icon size={17} />
+    <Card className="min-w-0 p-3.5 sm:p-5">
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-500/12 text-brand-600 sm:size-9 dark:text-brand-400">
+          <Icon size={16} />
         </span>
-        <p className="text-sm font-medium text-muted">{label}</p>
+        <p className="min-w-0 text-xs font-medium leading-tight text-muted sm:text-sm">{label}</p>
       </div>
-      <p className="mt-3.5 text-[1.7rem] font-bold leading-none tabular-nums">{value}</p>
+      <p className="mt-3 truncate text-xl font-bold leading-none tabular-nums sm:mt-3.5 sm:text-[1.7rem]" title={value}>{value}</p>
       {hint && <p className="mt-2 text-xs text-muted">{hint}</p>}
     </Card>
   );
@@ -220,13 +220,13 @@ export function Drawer({ open, title, onClose, children, footer }: { open: boole
       {open && (
         <div className="fixed inset-0 z-[90] flex justify-end">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50" onClick={onClose} />
-          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }} className="relative z-10 flex h-full w-full max-w-lg flex-col bg-surface shadow-2xl">
+          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }} className="relative z-10 flex h-dvh w-full max-w-lg flex-col bg-surface shadow-2xl">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <h2 className="font-display text-lg font-bold">{title}</h2>
               <button onClick={onClose} aria-label="Close" className="grid size-9 place-items-center rounded-full hover:bg-surface-2"><X size={18} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-5">{children}</div>
-            {footer && <div className="border-t border-border p-4">{footer}</div>}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">{children}</div>
+            {footer && <div className="border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{footer}</div>}
           </motion.div>
         </div>
       )}

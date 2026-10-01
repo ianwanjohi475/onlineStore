@@ -139,7 +139,7 @@ export interface Order {
   shipping: number;
   discount: number;
   total: number;
-  /** payment method label — M-Pesa, Card, Bank Transfer, Cash on Delivery, PayPal */
+  /** payment method — "M-Pesa" (Till) or "Cash on Delivery" */
   payment: string;
   /** payment reference / transaction id */
   transactionId?: string;
@@ -153,6 +153,21 @@ export interface Order {
   archived?: boolean;
   /** customer account that placed the order (set server-side from the session) */
   userId?: string;
+  /** M-Pesa code the customer typed at checkout (unverified until admin resolves it) */
+  customerRef?: string;
+  /** verified payments recorded by the admin (M-Pesa till / cash) */
+  payments?: PaymentRecord[];
+  /** sum of verified payments */
+  amountPaid?: number;
+}
+
+export interface PaymentRecord {
+  at: string;
+  method: "M-Pesa" | "Cash";
+  /** M-Pesa transaction code, e.g. QJK3ABC12D */
+  code?: string;
+  amount: number;
+  by: string;
 }
 
 export interface Announcement {
@@ -183,6 +198,10 @@ export interface SiteSettings {
   address: string;
   footerBlurb: string;
   socials: { label: string; href: string }[];
+  /** Lipa na M-Pesa "Buy Goods" till number shown at checkout */
+  mpesaTill?: string;
+  /** business name customers see on the M-Pesa prompt */
+  mpesaTillName?: string;
 }
 
 export interface StoreData {

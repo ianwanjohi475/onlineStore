@@ -47,6 +47,8 @@ export async function PUT(req: Request) {
     announcements: Array.isArray(body.announcements)
       ? body.announcements.slice(0, 10).map((a) => ({ text: str(a?.text, 140, ""), href: safeHref(a?.href) || "/", cta: str(a?.cta, 30, "") })).filter((a) => a.text)
       : cur.announcements,
+    mpesaTill: str(body.mpesaTill, 12, cur.mpesaTill ?? "").replace(/\D/g, ""),
+    mpesaTillName: str(body.mpesaTillName, 60, cur.mpesaTillName ?? ""),
     // hero slides & promo codes have their own admin pages
     heroSlides: Array.isArray(body.heroSlides) ? body.heroSlides : cur.heroSlides,
     promos: Array.isArray(body.promos) ? body.promos : cur.promos,

@@ -19,7 +19,7 @@ export default function TermsPage() {
           "We work hard to keep prices and stock accurate, but errors happen. If a genuine pricing error affects your order we'll contact you before charging or shipping.",
         ] },
         { heading: "Orders & payment", paragraphs: [
-          "An order is confirmed once payment is authorised. We accept M-Pesa, major cards, and pay-on-delivery in eligible areas. We may cancel and refund orders we can't fulfil.",
+          "An order is confirmed once we verify your payment. We accept M-Pesa (to our official Till number) and cash on delivery in eligible areas. We may cancel and refund orders we can't fulfil.",
         ] },
         { heading: "Warranty & liability", paragraphs: [
           "Products are covered by the warranty described on our Returns & Warranty page. To the extent permitted by law, our liability is limited to the value of the product purchased.",

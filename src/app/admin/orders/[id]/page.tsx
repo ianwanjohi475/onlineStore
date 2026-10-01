@@ -1,9 +1,11 @@
 "use client";
 
 import {
-  Archive, ArchiveRestore, ArrowLeft, Ban, CreditCard, MapPin, Printer,
-  RotateCcw, StickyNote, User,
+  Archive, ArchiveRestore, ArrowLeft, Ban, Banknote, CreditCard, MapPin, Printer,
+  RotateCcw, Smartphone, StickyNote, User,
 } from "lucide-react";
+import { ResolvePayment } from "@/components/admin/resolve-payment";
+import { amountDue } from "@/lib/payments";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -21,6 +23,7 @@ export default function OrderDetail() {
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [resolving, setResolving] = useState<"M-Pesa" | "Cash" | null>(null);
 
   const load = () =>
     api("/api/admin/orders", "GET")
@@ -58,6 +61,7 @@ export default function OrderDetail() {
 
   const o = order;
   const bill = o.billing ?? o.customer;
+  const due = amountDue(o);
 
   return (
     <div>
@@ -166,10 +170,31 @@ export default function OrderDetail() {
           <Card className="p-5">
             <h2 className="mb-3 flex items-center gap-2 font-display font-bold"><CreditCard size={16} className="text-brand-500" /> Payment</h2>
             <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between"><span className="text-muted">Method</span><span className="font-medium">{o.payment}</span></div>
+              <div className="flex justify-between"><span className="text-muted">Method</span><span className="font-medium">{o.payment === "M-Pesa" ? "M-Pesa (Till)" : o.payment}</span></div>
               <div className="flex justify-between"><span className="text-muted">Status</span><StatusPill status={o.paymentStatus} /></div>
+              <div className="flex justify-between"><span className="text-muted">Paid</span><span className="font-semibold tabular-nums">{formatPrice(o.amountPaid ?? (o.paymentStatus === "paid" ? o.total : 0))}</span></div>
+              {due > 0 && <div className="flex justify-between"><span className="text-muted">Balance due</span><span className="font-bold text-amber-600 tabular-nums">{formatPrice(due)}</span></div>}
+              {o.customerRef && <div className="flex justify-between gap-3"><span className="text-muted">Customer&apos;s code</span><span className="font-mono text-xs">{o.customerRef}</span></div>}
               {o.transactionId && <div className="flex justify-between gap-3"><span className="text-muted">Reference</span><span className="font-mono text-xs">{o.transactionId}</span></div>}
             </div>
+            {(o.payments ?? []).length > 0 && (
+              <ul className="mt-3 space-y-1.5 border-t border-border pt-3 text-xs">
+                {o.payments!.map((p, i) => (
+                  <li key={i} className="flex justify-between gap-2">
+                    <span>{p.method === "M-Pesa" ? <span className="font-mono">{p.code}</span> : "Cash"} <span className="text-muted">· {new Date(p.at).toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" })}</span></span>
+                    <span className="font-semibold text-emerald-600 tabular-nums">+{formatPrice(p.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!["cancelled", "refunded"].includes(o.status) && (due > 0 || o.status !== "delivered") && (
+              <div className="mt-4 flex flex-col gap-2">
+                {due > 0 && <Btn size="sm" onClick={() => setResolving("M-Pesa")}><Smartphone size={15} /> Record M-Pesa payment</Btn>}
+                {o.status !== "delivered" && (
+                  <Btn size="sm" variant="outline" disabled={saving} onClick={() => (due > 0 ? setResolving("Cash") : update({ status: "delivered" }, "Marked delivered"))}><Banknote size={15} /> {due > 0 ? "Delivered & cash received" : "Mark delivered"}</Btn>
+                )}
+              </div>
+            )}
           </Card>
 
           <Card className="p-5">
@@ -189,6 +214,15 @@ export default function OrderDetail() {
           </Card>
         </div>
       </div>
+
+      <ResolvePayment
+        open={!!resolving}
+        orders={[o]}
+        initialOrderId={o.id}
+        initialMethod={resolving ?? "M-Pesa"}
+        onClose={() => setResolving(null)}
+        onDone={(u) => { setOrder(u); toast(u.paymentStatus === "paid" ? (u.status === "delivered" ? "Delivered & paid — order closed" : "Payment complete") : "Payment recorded"); }}
+      />
     </div>
   );
 }

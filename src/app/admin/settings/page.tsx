@@ -6,7 +6,7 @@ import { Btn, Card, Field, PageHeader, TextArea, api } from "@/components/admin/
 import { useToast } from "@/context/toast";
 import type { Announcement, SiteSettings } from "@/lib/types";
 
-const tabs = ["Store", "SEO", "Shipping", "Footer", "Announcements", "Security"] as const;
+const tabs = ["Store", "Payments", "SEO", "Shipping", "Footer", "Announcements", "Security"] as const;
 
 export default function SettingsAdmin() {
   const toast = useToast();
@@ -57,6 +57,20 @@ export default function SettingsAdmin() {
         </Card>
       )}
 
+      {tab === "Payments" && (
+        <Card className="flex flex-col gap-4 p-6">
+          <div>
+            <h2 className="font-display text-lg font-bold">Lipa na M-Pesa</h2>
+            <p className="mt-1 text-sm text-muted">Customers pay to this Till (Buy Goods and Services) at checkout. Confirm each payment in Payments → Resolve payment using the M-Pesa code.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Till number" inputMode="numeric" placeholder="e.g. 5123456" value={s.mpesaTill ?? ""} onChange={(e) => set("mpesaTill", e.target.value.replace(/\D/g, "").slice(0, 10))} />
+            <Field label="Business name on M-Pesa" placeholder="SIR VERT ENTERPRISE" value={s.mpesaTillName ?? ""} onChange={(e) => set("mpesaTillName", e.target.value)} />
+          </div>
+          <p className="rounded-xl bg-surface-2 p-3 text-sm text-muted">Accepted at checkout: <b className="text-foreground">M-Pesa (Till)</b> and <b className="text-foreground">Cash on delivery</b>.</p>
+        </Card>
+      )}
+
       {tab === "SEO" && (
         <Card className="flex flex-col gap-4 p-6">
           <Field label="Meta title" hint="Shown in the browser tab and search results" value={s.seoTitle} onChange={(e) => set("seoTitle", e.target.value)} />
@@ -78,9 +92,9 @@ export default function SettingsAdmin() {
             <span className="text-sm font-medium">Social links</span>
             <div className="mt-2 flex flex-col gap-2">
               {s.socials.map((soc, i) => (
-                <div key={i} className="grid grid-cols-[8rem_1fr] gap-2">
-                  <input value={soc.label} onChange={(e) => set("socials", s.socials.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-brand-500" />
-                  <input value={soc.href} onChange={(e) => set("socials", s.socials.map((x, j) => j === i ? { ...x, href: e.target.value } : x))} placeholder="https://…" className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-brand-500" />
+                <div key={i} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] gap-2">
+                  <input value={soc.label} onChange={(e) => set("socials", s.socials.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} className="h-10 min-w-0 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-brand-500" />
+                  <input value={soc.href} onChange={(e) => set("socials", s.socials.map((x, j) => j === i ? { ...x, href: e.target.value } : x))} placeholder="https://…" className="h-10 min-w-0 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-brand-500" />
                 </div>
               ))}
             </div>

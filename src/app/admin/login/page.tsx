@@ -47,7 +47,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-2">
+    <div className="grid min-h-dvh grid-cols-[minmax(0,1fr)] lg:grid-cols-2">
       {/* brand panel */}
       <div className="relative hidden overflow-hidden bg-brand-900 p-10 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="flex items-center gap-3">
@@ -66,8 +66,8 @@ export default function AdminLogin() {
       </div>
 
       {/* form */}
-      <div className="flex flex-col items-center justify-center bg-background p-5">
-        <div className="w-full max-w-sm">
+      <div className="flex min-w-0 flex-col items-center justify-center bg-background px-4 py-8 sm:p-5">
+        <div className="w-full min-w-0 max-w-sm">
           <div className="mb-6 flex flex-col items-center text-center lg:items-start lg:text-left">
             <LogoMark className="size-11 text-emerald-600 lg:hidden" />
             <h1 className="mt-3 font-display text-2xl font-bold lg:mt-0">Welcome back</h1>
@@ -76,7 +76,7 @@ export default function AdminLogin() {
 
           {info && <p role="status" className="mb-4 rounded-xl bg-brand-50 p-3 text-sm text-brand-800 dark:bg-brand-500/10 dark:text-brand-200">{info}</p>}
 
-          <form onSubmit={submit} className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
+          <form onSubmit={submit} className="w-full rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-6">
             <label htmlFor="admin-password" className="text-sm font-medium">Password</label>
             <div className={`mt-1.5 flex h-12 items-center rounded-xl border bg-background pr-1 transition-colors focus-within:border-brand-500 ${error ? "border-rose-400" : "border-border"}`}>
               <Lock size={16} className="ml-3.5 shrink-0 text-muted" />

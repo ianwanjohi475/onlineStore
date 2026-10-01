@@ -1,12 +1,13 @@
 "use client";
 
-import { Banknote, Check, CreditCard, Loader2, Lock, Smartphone } from "lucide-react";
+import { Banknote, Check, Loader2, Lock, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OrderSummary } from "@/components/cart/order-summary";
 import { ProductImage } from "@/components/product/product-image";
 import { useAuth } from "@/context/auth";
+import { useCatalog } from "@/context/catalog";
 import { useCart } from "@/context/cart";
 import { rememberOrder } from "@/hooks/use-my-orders";
 import { OrderCard } from "@/components/orders/order-card";
@@ -30,8 +31,10 @@ function Field({ label, className, ...props }: { label: string } & React.InputHT
 export default function CheckoutPage() {
   const cart = useCart();
   const { user, ready } = useAuth();
+  const { settings } = useCatalog();
   const [step, setStep] = useState(0);
-  const [pay, setPay] = useState<"mpesa" | "card" | "cod">("mpesa");
+  const [pay, setPay] = useState<"mpesa" | "cod">("mpesa");
+  const [mpesaCode, setMpesaCode] = useState("");
   const [placing, setPlacing] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -108,35 +111,57 @@ export default function CheckoutPage() {
           {step === 1 && (
             <div className="flex flex-col gap-4">
               <h2 className="font-display text-lg font-bold">Payment method</h2>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { id: "mpesa" as const, icon: Smartphone, label: "M-Pesa", sub: "Pay via STK push" },
-                  { id: "card" as const, icon: CreditCard, label: "Card", sub: "Visa / Mastercard" },
+                  { id: "mpesa" as const, icon: Smartphone, label: "M-Pesa", sub: "Lipa na M-Pesa · Till" },
                   { id: "cod" as const, icon: Banknote, label: "Cash on delivery", sub: "Pay when it arrives" },
                 ].map((m) => (
                   <button
                     key={m.id}
+                    type="button"
                     onClick={() => setPay(m.id)}
-                    className={cn("flex items-center gap-3 rounded-2xl border p-4 text-left transition-colors", pay === m.id ? "border-brand-500 bg-brand-500/8" : "border-border hover:border-brand-500/50")}
+                    aria-pressed={pay === m.id}
+                    className={cn("flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-colors", pay === m.id ? "border-brand-500 bg-brand-50 dark:bg-brand-500/10" : "border-border hover:border-brand-500/50")}
                   >
-                    <m.icon size={22} className="text-brand-600 dark:text-brand-400" />
-                    <div>
+                    <m.icon size={22} className="shrink-0 text-brand-600 dark:text-brand-400" />
+                    <div className="min-w-0">
                       <p className="font-semibold">{m.label}</p>
                       <p className="text-xs text-muted">{m.sub}</p>
                     </div>
                   </button>
                 ))}
               </div>
-              {pay === "mpesa" && <Field label="M-Pesa phone number" type="tel" placeholder="+254 7…" />}
-              {pay === "card" && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Card number" placeholder="4242 4242 4242 4242" className="sm:col-span-2" />
-                  <Field label="Expiry" placeholder="MM / YY" />
-                  <Field label="CVC" placeholder="123" />
+              {pay === "mpesa" && (
+                <div className="flex flex-col gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+                  <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">How to pay with M-Pesa</p>
+                  <ol className="list-decimal space-y-1 pl-5 text-sm">
+                    <li>Open <b>M-Pesa</b> → <b>Lipa na M-Pesa</b> → <b>Buy Goods and Services</b></li>
+                    <li>
+                      Till number:{" "}
+                      {settings.mpesaTill ? (
+                        <b className="rounded bg-white px-1.5 py-0.5 font-mono text-base tracking-wider text-[#111] dark:bg-black/30 dark:text-white">{settings.mpesaTill}</b>
+                      ) : (
+                        <b>we&apos;ll send it to you on WhatsApp</b>
+                      )}
+                      {settings.mpesaTillName && <span className="text-muted"> ({settings.mpesaTillName})</span>}
+                    </li>
+                    <li>Amount: <b>{formatPrice(cart.total)}</b>, then enter your M-Pesa PIN</li>
+                  </ol>
+                  <label className="flex flex-col gap-1.5 text-sm">
+                    <span className="font-medium">M-Pesa confirmation code <span className="font-normal text-muted">(from the SMS — optional)</span></span>
+                    <input
+                      value={mpesaCode}
+                      onChange={(e) => setMpesaCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12))}
+                      placeholder="e.g. QJK3ABC12D"
+                      autoComplete="off"
+                      className="h-11 rounded-xl border border-border bg-surface px-4 font-mono uppercase tracking-wider outline-none placeholder:font-sans placeholder:normal-case placeholder:tracking-normal focus:border-brand-500"
+                    />
+                  </label>
+                  <p className="text-xs text-muted">You can also pay after placing the order. We confirm every payment and update your order straight away.</p>
                 </div>
               )}
               {pay === "cod" && (
-                <p className="rounded-xl bg-surface-2 p-3 text-sm text-muted">Pay in cash when your order is delivered. Please have the exact amount ready.</p>
+                <p className="rounded-xl bg-surface-2 p-3 text-sm text-muted">Pay in cash (or M-Pesa) when your order is delivered. Please have the exact amount ready.</p>
               )}
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
@@ -161,7 +186,7 @@ export default function CheckoutPage() {
                 ))}
               </ul>
               <div className="flex items-center gap-2 rounded-xl bg-surface-2 p-3 text-xs text-muted">
-                <Lock size={14} /> Payments are encrypted end-to-end. You can cancel within 1 hour.
+                <Lock size={14} /> Pay only to our official Till number or in cash on delivery. You can cancel within 1 hour.
               </div>
               {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-500">{error}</p>}
               <div className="flex gap-3">
@@ -179,7 +204,8 @@ export default function CheckoutPage() {
                       discount: cart.discount,
                       promoCode: cart.promoCode,
                       total: cart.total,
-                      payment: pay === "mpesa" ? "M-Pesa" : pay === "card" ? "Card" : "Cash on Delivery",
+                      payment: pay === "mpesa" ? "M-Pesa" : "Cash on Delivery",
+                      mpesaCode: pay === "mpesa" ? mpesaCode : undefined,
                       customer,
                     };
                     try {

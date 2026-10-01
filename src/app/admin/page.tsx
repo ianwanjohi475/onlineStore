@@ -63,7 +63,7 @@ export default function AdminDashboard() {
       <PageHeader title="Dashboard" subtitle="Your store at a glance" />
 
       {/* four headline KPIs */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 [&>*]:min-w-0">
         <StatCard label="Total revenue" value={m ? formatPrice(m.revenue) : "—"} icon={DollarSign} hint="Paid & fulfilled orders" />
         <StatCard label="Today's revenue" value={m ? formatPrice(m.todayRevenue) : "—"} icon={TrendingUp} hint="Since midnight" />
         <StatCard label="Orders" value={m ? String(m.orders) : "—"} icon={ShoppingCart} hint="All time" />
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* revenue chart + a compact status summary */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.7fr_1fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.7fr_1fr] [&>*]:min-w-0">
         <Card className="p-6">
           <div className="mb-5 flex items-center justify-between">
             <div>
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* recent orders + a slim sidebar */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.7fr_1fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.7fr_1fr] [&>*]:min-w-0">
         <Card>
           <div className="flex items-center justify-between border-b border-border p-5">
             <h2 className="font-display text-lg font-bold">Recent orders</h2>
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
               <thead className="text-left text-xs uppercase tracking-wide text-muted">
                 <tr className="border-b border-border">
                   <th className="px-5 py-3 font-semibold">Order</th>
-                  <th className="px-5 py-3 font-semibold">Customer</th>
+                  <th className="hidden px-5 py-3 font-semibold sm:table-cell">Customer</th>
                   <th className="px-5 py-3 font-semibold">Status</th>
                   <th className="px-5 py-3 text-right font-semibold">Total</th>
                 </tr>
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
                 ) : recent.map((o) => (
                   <tr key={o.id} className="border-b border-border last:border-0">
                     <td className="px-5 py-3"><Link href={`/admin/orders/${o.id}`} className="font-medium hover:text-brand-600 dark:hover:text-brand-400">{o.number}</Link></td>
-                    <td className="px-5 py-3 text-muted">{o.customer.name}</td>
+                    <td className="hidden px-5 py-3 text-muted sm:table-cell">{o.customer.name}</td>
                     <td className="px-5 py-3"><StatusPill status={o.status} /></td>
                     <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatPrice(o.total)}</td>
                   </tr>

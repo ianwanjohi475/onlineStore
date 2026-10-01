@@ -74,7 +74,7 @@ export function OrderSummary({ children, className }: { children?: React.ReactNo
       {children}
 
       <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted">
-        <Lock size={13} /> Secure checkout · M-Pesa &amp; cards · 15-day returns
+        <Lock size={13} /> Secure checkout · M-Pesa &amp; cash on delivery · 15-day returns
       </div>
     </div>
   );

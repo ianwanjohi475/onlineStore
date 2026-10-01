@@ -22,7 +22,7 @@ export const PAYMENT_STATUSES: PaymentStatus[] = [
   "partially-refunded",
 ];
 
-export const PAYMENT_METHODS = ["M-Pesa", "Card", "Bank Transfer", "PayPal", "Cash on Delivery"];
+export const PAYMENT_METHODS = ["M-Pesa", "Cash on Delivery"];
 
 /** Statuses that count as an open/active order (not closed out). */
 export const OPEN_STATUSES: OrderStatus[] = [

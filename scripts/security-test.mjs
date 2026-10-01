@@ -247,6 +247,30 @@ section("Checkout: price & payload tampering");
   ok("order spam from one connection is rate-limited (429)", last === 429, last);
 }
 
+section("Payments");
+{
+  const card = await req("/api/orders", { method: "POST", body: { items: [{ slug: "watch-nova-am", quantity: 1 }], payment: "Card", customer: { name: "Q", phone: "0700", address: "x", city: "Nairobi" } } });
+  ok("card payments refused (M-Pesa / cash only)", card.status === 400, card.status);
+  const mp = await req("/api/orders", { method: "POST", body: { items: [{ slug: "spacebuds-lite", quantity: 1 }], payment: "M-Pesa", mpesaCode: "QAB1CDE2FG", customer: { name: "Q", phone: "0700", address: "x", city: "Nairobi" } } });
+  const mpNo = mp.json?.number?.replace("#", "");
+  const t = await req(`/api/track?number=${mpNo}`);
+  ok("M-Pesa orders are NOT auto-marked paid", t.json?.paymentStatus === "pending", t.json?.paymentStatus);
+  const noAdmin = await req("/api/admin/payments", { method: "POST", body: { orderId: "x", method: "Cash", amount: 1 } });
+  ok("resolving payments is admin-only (401)", noAdmin.status === 401, noAdmin.status);
+  if (admin) {
+    const all = (await req("/api/admin/orders", { cookie: admin })).json ?? [];
+    const order = all.find((o) => o.number === `#${mpNo}`);
+    const bad = await req("/api/admin/payments", { method: "POST", cookie: admin, body: { orderId: order?.id, method: "M-Pesa", code: "' OR 1=1", amount: 100 } });
+    ok("malformed M-Pesa code refused", bad.status === 400, bad.status);
+    const over = await req("/api/admin/payments", { method: "POST", cookie: admin, body: { orderId: order?.id, method: "M-Pesa", code: "QAB1CDE2FG", amount: 9_999_999 } });
+    ok("amount above the balance refused", over.status === 400, over.status);
+    const good = await req("/api/admin/payments", { method: "POST", cookie: admin, body: { orderId: order?.id, method: "M-Pesa", code: "QAB1CDE2FG", amount: order?.total } });
+    ok("valid M-Pesa payment resolves the order", good.status === 200 && good.json?.paymentStatus === "paid", good.status);
+    const again = await req("/api/admin/payments", { method: "POST", cookie: admin, body: { orderId: all.find((o) => o.paymentStatus === "pending" && o.id !== order?.id)?.id, method: "M-Pesa", code: "qab1cde2fg", amount: 100 } });
+    ok("an M-Pesa code can't be reused on another order", again.status === 409, again.status);
+  }
+}
+
 section("Account data isolation (IDOR)");
 {
   const a = await req("/api/auth/orders", { cookie: alice });

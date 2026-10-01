@@ -107,7 +107,7 @@ export default function OrdersAdmin() {
                 {slice.map((o) => (
                   <tr key={o.id} onClick={() => router.push(`/admin/orders/${o.id}`)} className="group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-2">
                     <td className="px-5 py-3">
-                      <Link href={`/admin/orders/${o.id}`} onClick={(e) => e.stopPropagation()} className="font-medium group-hover:text-brand-600 dark:group-hover:text-brand-400">{o.number}</Link>
+                      <Link href={`/admin/orders/${o.id}`} onClick={(e) => e.stopPropagation()} className="whitespace-nowrap font-medium group-hover:text-brand-600 dark:group-hover:text-brand-400">{o.number}</Link>
                       {o.archived && <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[0.6rem] text-muted">archived</span>}
                       <div className="mt-1 sm:hidden"><StatusPill status={o.status} /></div>
                     </td>

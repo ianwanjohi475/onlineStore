@@ -27,7 +27,7 @@ export function NewsletterForm({ className }: { className?: string }) {
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@email.com"
+        placeholder="name@gmail.com"
         aria-label="Email address"
         className="h-10 min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-muted sm:px-4"
       />

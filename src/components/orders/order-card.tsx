@@ -66,7 +66,7 @@ export function OrderCard({ order, defaultOpen = false }: { order: PublicOrder; 
       <div className="p-4">
         <p className={cn("font-display text-base font-bold sm:text-lg", h.tone)}>{h.text}</p>
         <p className="text-xs text-muted">
-          {count} item{count !== 1 && "s"} · {order.payment}{order.paymentStatus === "paid" ? " · Paid" : order.payment === "Cash on Delivery" ? " · Pay when it arrives" : ""}
+          {count} item{count !== 1 && "s"} · {order.payment}{order.paymentStatus === "paid" ? " · Paid ✓" : order.payment === "Cash on Delivery" ? " · Pay when it arrives" : " · Awaiting payment confirmation"}
         </p>
 
         {/* progress tracker */}
